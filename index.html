@@ -317,13 +317,13 @@ function show(id){ ["home","quiz","result"].forEach(x=>$(x).classList.toggle("hi
 
 function renderStep(){
   const st=$("stages"); st.innerHTML = STAGES.map((n,i)=>`<div class="${i<q.step?'done':i===q.step?'now':''}">${n}</div>`).join("");
-  // narration: previous steps collapsed, current expanded
+  // narration: previous steps collapsed while narrowing; all hints expanded for the final answer
   let html="";
-  if(q.step>0){
+  if(q.step>0 && q.step<5){
     html += `<details><summary>これまでのメモ</summary><div class="prev">${[...Array(q.step).keys()].map(i=>stepHtml(i,q.s)).join("")}</div></details>`;
   }
   if(q.step<5) html += `<p style="color:var(--mute);font-size:.95rem">${LEAD[q.step]}</p>` + stepHtml(q.step,q.s);
-  else html += `<p>さて。国、地方、スタイルは？</p>`;
+  else html += `<div class="prev">${[...Array(5).keys()].map(i=>`<p style="color:var(--mute);font-size:.85rem;margin-bottom:.2em">${STAGES[i]}</p>`+stepHtml(i,q.s)).join("")}</div><p><b>さて。国、地方、スタイルは？</b></p>`;
   $("narr").innerHTML = html;
 
   if(q.step<5){ $("candPane").classList.remove("hidden"); $("finalPane").classList.add("hidden"); renderCands(); }
