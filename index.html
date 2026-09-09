@@ -82,13 +82,21 @@ li{margin:3px 0}
 .sim b{display:block;margin-bottom:2px}
 .stat{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);font-size:.93rem}
 .stat:last-child{border-bottom:0}
+.version{text-align:center;color:var(--mute);font-size:.78rem;margin:28px 0 0}
 .hidden{display:none}
 .sr{position:absolute;left:-9999px}
-@media (max-width:480px){
-  .tasting{grid-template-columns:72px 1fr;gap:14px}
-  .glass{width:72px;height:112px}
+@media (max-width:640px){
+  .wrap{padding:12px 12px calc(36px + env(safe-area-inset-bottom))}
+  .card{padding:14px}
+  .stages{gap:2px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none}
+  .stages::-webkit-scrollbar{display:none}
+  .stages div{flex:1 0 56px;font-size:.7rem;padding:6px 1px 7px}
+  .tasting{grid-template-columns:64px minmax(0,1fr);gap:12px}
+  .glass{width:64px;height:100px}
   .narr{font-size:1.04rem}
   h1{font-size:1.9rem}
+  .cands{max-height:none;overflow:visible;padding-right:0}
+  #candPane>.row .btn,#finalPane .btn,#result>.row .btn{width:100%}
 }
 @media (prefers-reduced-motion:no-preference){
   .glass .liq{transition:fill .5s}
@@ -129,6 +137,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
+  <p class="version">Version 1.1.0 · 2026-09-09</p>
 </section>
 
 <!-- ===== QUIZ ===== -->
@@ -356,6 +365,7 @@ $("nextBtn").onclick=()=>{
   q.stepScore.push({kept, n:q.cands.size, pts: kept?stepPts(q.cands.size):0, cands:[...q.cands]});
   q.prevCands = new Set(q.cands);
   q.step++; renderStep();
+  requestAnimationFrame(()=>window.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"}));
 };
 $("quitBtn").onclick=()=>{ if(confirm("この一杯を中断しますか？")){ show("home"); renderHome(); } };
 
