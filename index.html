@@ -115,6 +115,13 @@ li{margin:3px 0}
 .key-differences .eyebrow{display:inline-block;color:var(--amber);font-size:.78rem;font-weight:700;letter-spacing:.08em;margin-bottom:2px}
 .key-differences .group-feature{border-color:#D9B477;background:rgba(255,255,255,.86)}
 .key-differences .group-feature b{color:#7A4508}
+.style-summary-list{display:grid;gap:16px}
+.style-summary{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px}
+.style-summary h3{font-family:var(--serif);font-size:1.2rem;margin:0 0 10px;color:var(--ink)}
+.style-summary .style-meta{color:var(--mute);font-size:.88rem;margin:-4px 0 12px}
+.style-fact{display:grid;grid-template-columns:92px 1fr;gap:12px;padding:9px 0;border-top:1px solid var(--line)}
+.style-fact b{font-size:.82rem;color:var(--amber)}
+.style-fact p{margin:0;font-size:.93rem}
 .origin-quote{font-family:var(--serif);font-size:1.2rem;line-height:1.9;border-left:3px solid var(--amber);padding:.3em 0 .3em 1em;margin:18px 0}
 .origin-result{margin-top:18px}
 .origin-axis{display:grid;grid-template-columns:54px 1fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
@@ -138,6 +145,7 @@ li{margin:3px 0}
   .compare-grid>div{border-right:0!important;border-bottom:1px solid var(--line)!important}
   .compare-grid>div:last-child{border-bottom:0!important}
   .compare-label{background:var(--bg)}
+  .style-fact{grid-template-columns:1fr;gap:2px}
 }
 @media (prefers-reduced-motion:no-preference){
   .glass .liq{transition:fill .5s}
@@ -173,7 +181,8 @@ li{margin:3px 0}
       <h2>出題範囲</h2>
       <div class="seg" id="scopeSeg" role="group" aria-label="出題範囲">
         <button data-v="all" aria-pressed="true">全スタイル</button>
-        <button data-v="domens" aria-pressed="false">Domensテキスト</button>
+        <button data-v="d" aria-pressed="false">D教材</button>
+        <button data-v="frequent50" aria-pressed="false">最頻出50</button>
       </div>
       <p class="hint" id="scopeHint"></p>
     </div>
@@ -199,7 +208,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 2.4.0 · 2026-09-10</p>
+  <p class="version">Version 2.5.0 · 2026-09-10</p>
 </section>
 
 <!-- ===== STUDY ===== -->
@@ -325,10 +334,17 @@ const DIFF_HINT = {
 };
 const BOTTOM_FERMENTED = new Set(["helles","pils","rauch","doppelbock","schwarz","marzen","czech_pils","czech_dark","polotmave","vienna","baltic","rice_lager","export","munich_dunkel","festbier","maibock","dark_bock","eisbock","kellerbier","american_lager","american_light_lager","american_amber_lager","american_dark_lager","rye_lager","mexican_lager","alsatian_pils","italian_pils"]);
 const SPONTANEOUS = new Set(["straight_lambic","gueuze","faro","fruit_lambic"]);
-const DOMENS_EXCLUDE = new Set(["czech_dark","polotmave","rice_lager","wcipa","cal_common","imp_stout"]);
-// Domens資料の日本語ページだけに掲載されるスタイル。現行収録分には該当なし。
+const D_EXCLUDE = new Set(["czech_dark","polotmave","rice_lager","wcipa","cal_common","imp_stout"]);
+const FREQUENT_50 = new Set([
+  "helles","pils","weissbier","kolsch","alt","rauch","doppelbock","schwarz","berliner","gose","marzen","weizenbock",
+  "witbier","dubbel","tripel","saison","flanders_red","oud_bruin","gueuze","golden_strong","quad","straight_lambic","fruit_lambic","faro",
+  "bitter","ordinary_bitter","esb","english_pale","eipa","porter","mild","barleywine","wee_heavy","dry_stout","sweet_stout","oat_stout","imperial_stout",
+  "apa","american_ipa","neipa","dipa","amber","american_brown","american_lager","cream_ale","black_ipa",
+  "czech_pils","vienna","baltic","biere_de_garde"
+]);
+// D資料の日本語ページだけに掲載されるスタイル。現行収録分には該当なし。
 const JAPANESE_ONLY = new Set([]);
-function sourceBadge(s){ return JAPANESE_ONLY.has(s.id) ? '<span class="tag" title="Domens資料の日本語ページだけに掲載">日</span>' : ""; }
+function sourceBadge(s){ return JAPANESE_ONLY.has(s.id) ? '<span class="tag" title="D資料の日本語ページだけに掲載">日</span>' : ""; }
 function fermentationInfo(s){
   if(SPONTANEOUS.has(s.id)) return {label:"自然発酵", note:"野生酵母・微生物による発酵"};
   if(s.id==="cal_common") return {label:"下面発酵", note:"ラガー酵母を比較的高温で発酵"};
@@ -374,6 +390,7 @@ let enabled = new Set(countries);
 let q = null; // current question
 let originQ = null;
 let originStats = {n:0,ok:0};
+function inTestScope(s){ return testScope==="d" ? !D_EXCLUDE.has(s.id) : testScope==="frequent50" ? FREQUENT_50.has(s.id) : true; }
 
 // ---------- home ----------
 function renderHome(){
@@ -388,8 +405,8 @@ function renderHome(){
   $("diffHint").textContent = DIFF_HINT[diffMode];
   $("diffSeg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String(+b.dataset.v===diffMode)));
   $("scopeSeg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.v===testScope)));
-  const scoped=S.filter(x=>testScope==="all"||!DOMENS_EXCLUDE.has(x.id));
-  $("scopeHint").textContent=testScope==="all"?`収録中の全${S.length}スタイルから出題します。`:`Domensビアソムリエ教材掲載の${scoped.length}スタイルから出題します。`;
+  const scoped=S.filter(inTestScope);
+  $("scopeHint").textContent=testScope==="all"?`収録中の全${S.length}スタイルから出題します。`:testScope==="d"?`D教材掲載の${scoped.length}スタイルから出題します。`:`試験対策で優先したい主要${scoped.length}スタイルから出題します。`;
   const cp = $("countryPick"); cp.innerHTML="";
   const visibleCountries=[...new Set(scoped.map(x=>x.country))];
   visibleCountries.forEach(c=>{
@@ -403,7 +420,7 @@ function renderHome(){
 }
 $("modeSeg").onclick = e=>{ const b=e.target.closest("button"); if(!b) return; appMode=b.dataset.v; renderHome(); };
 $("diffSeg").onclick = e=>{ const b=e.target.closest("button"); if(!b) return; diffMode=+b.dataset.v; renderHome(); };
-$("scopeSeg").onclick = e=>{ const b=e.target.closest("button"); if(!b) return; testScope=b.dataset.v; const scoped=S.filter(x=>testScope==="all"||!DOMENS_EXCLUDE.has(x.id)); enabled=new Set(scoped.map(x=>x.country)); renderHome(); };
+$("scopeSeg").onclick = e=>{ const b=e.target.closest("button"); if(!b) return; testScope=b.dataset.v; const scoped=S.filter(inTestScope); enabled=new Set(scoped.map(x=>x.country)); renderHome(); };
 
 function renderStats(){
   const st = store.get(); const box=$("statsBox");
@@ -496,7 +513,7 @@ function drawGlass(s){
 }
 
 // ---------- quiz flow ----------
-function pool(){ return S.filter(x=>enabled.has(x.country)&&(testScope==="all"||!DOMENS_EXCLUDE.has(x.id))); }
+function pool(){ return S.filter(x=>enabled.has(x.country)&&inTestScope(x)); }
 function newQuestion(){
   const p = pool(); const s = p[Math.floor(Math.random()*p.length)];
   diff = diffMode===0 ? 1+Math.floor(Math.random()*3) : diffMode;
@@ -662,8 +679,7 @@ function renderStudyGroup(g){
   const parts=[["外観","appearance"],["香り","aroma"],["味・口当たり","taste"],["後味","after"],["度数・温感","strength"],["原材料","ingredients"],["発酵方式","fermentation"]];
   $("studyGroupView").innerHTML=`
     <div class="key-differences"><span class="eyebrow">試験で迷ったら最初にここを見る</span><h2>見分け方：違いのポイント</h2><p class="note">各スタイルを判定する決め手を、暗記用にまとめています。</p>${featureCards(styles,"markers")}</div>
-    <div class="group-part"><h2>${g.name}</h2><div class="group-summary">${styles.map(s=>`<div class="group-style"><span class="country-badge">${s.country}</span><b>${s.style} ${sourceBadge(s)}</b><small>色 ${s.srm} SRM　・　ABV 約${s.abv}%</small><div class="group-swatch" style="background:${srmHex(s.srm)}"></div>${brandHtml(s)}</div>`).join("")}</div><p class="hint">販売状況・価格・販売単位はリンク先で確認してください。「日」はDomens資料の日本語ページだけに掲載される項目です。</p></div>
-    <div class="group-part"><h2>詳細比較</h2>${parts.map(([label,key])=>`<div class="study-section"><h3>${label}</h3>${featureCards(styles,key)}</div>`).join("")}</div>`;
+    <div class="group-part"><h2>${g.name}：スタイル別まとめ</h2><div class="style-summary-list">${styles.map(s=>`<article class="style-summary"><span class="country-badge">${s.country}</span><h3>${s.style} ${sourceBadge(s)}</h3><p class="style-meta">色 ${s.srm} SRM　・　ABV 約${s.abv}%</p><div class="group-swatch" style="background:${srmHex(s.srm)}"></div>${parts.map(([label,key])=>`<div class="style-fact"><b>${label}</b><p>${comparisonValue(s,key)}</p></div>`).join("")}${brandHtml(s)}</article>`).join("")}</div><p class="hint">販売状況・価格・販売単位はリンク先で確認してください。「日」はD資料の日本語ページだけに掲載される項目です。</p></div>`;
   window.scrollTo({top:0,behavior:"auto"});
 }
 function setupStudyGroups(selected){
