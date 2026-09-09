@@ -83,6 +83,7 @@ li{margin:3px 0}
 .stat{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);font-size:.93rem}
 .stat:last-child{border-bottom:0}
 .version{text-align:center;color:var(--mute);font-size:.78rem;margin:28px 0 0}
+.active-diff{display:inline-block;margin:0 0 10px;padding:3px 10px;border-radius:999px;background:var(--amber-soft);color:var(--ink2);font-size:.78rem;font-weight:700}
 .hidden{display:none}
 .sr{position:absolute;left:-9999px}
 @media (max-width:640px){
@@ -117,6 +118,7 @@ li{margin:3px 0}
       <button data-v="1" aria-pressed="true">初級</button>
       <button data-v="2" aria-pressed="false">中級</button>
       <button data-v="3" aria-pressed="false">上級</button>
+      <button data-v="0" aria-pressed="false">全部</button>
     </div>
     <p class="hint" id="diffHint"></p>
 
@@ -137,11 +139,12 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 1.1.0 · 2026-09-09</p>
+  <p class="version">Version 1.2.0 · 2026-09-10</p>
 </section>
 
 <!-- ===== QUIZ ===== -->
 <section id="quiz" class="hidden">
+  <p class="active-diff hidden" id="activeDiff"></p>
   <div class="stages" id="stages"></div>
 
   <div class="card">
@@ -220,6 +223,7 @@ const S = window.STYLES;
 const $ = id => document.getElementById(id);
 const STAGES = ["見た目","香り","味","後味","アルコール","判定"];
 const DIFF_HINT = {
+  0:"初級・中級・上級から、問題ごとにランダムで出題します。開始後に今回の難易度を表示します。",
   1:"テイスターが感じた表現に、官能記述子（例：バナナ→イソアミルアセテート）を添えます。香りと味は麦芽・酵母・ホップに分けて示します。",
   2:"感覚的な表現だけ。記述子は出ません。香り・味の3軸の区別は表示します。",
   3:"感覚表現のみ。香りと味のそれぞれで、1軸ぶんの情報が欠けます（実戦でホップが取れなかった状況の再現）。麦芽・酵母・ホップの区別も表示しません。"
@@ -232,6 +236,7 @@ const store = {
 };
 
 // ---------- state ----------
+let diffMode = 1;
 let diff = 1;
 let countries = [...new Set(S.map(x=>x.country))];
 let enabled = new Set(countries);
@@ -239,8 +244,8 @@ let q = null; // current question
 
 // ---------- home ----------
 function renderHome(){
-  $("diffHint").textContent = DIFF_HINT[diff];
-  $("diffSeg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String(+b.dataset.v===diff)));
+  $("diffHint").textContent = DIFF_HINT[diffMode];
+  $("diffSeg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String(+b.dataset.v===diffMode)));
   const cp = $("countryPick"); cp.innerHTML="";
   countries.forEach(c=>{
     const n = S.filter(x=>x.country===c).length;
@@ -251,7 +256,7 @@ function renderHome(){
   });
   renderStats();
 }
-$("diffSeg").onclick = e=>{ const b=e.target.closest("button"); if(!b) return; diff=+b.dataset.v; renderHome(); };
+$("diffSeg").onclick = e=>{ const b=e.target.closest("button"); if(!b) return; diffMode=+b.dataset.v; renderHome(); };
 
 function renderStats(){
   const st = store.get(); const box=$("statsBox");
@@ -317,6 +322,7 @@ function drawGlass(s){
 function pool(){ return S.filter(x=>enabled.has(x.country)); }
 function newQuestion(){
   const p = pool(); const s = p[Math.floor(Math.random()*p.length)];
+  diff = diffMode===0 ? 1+Math.floor(Math.random()*3) : diffMode;
   const ax=["malt","yeast","hop"];
   q = { s, step:0, cands:new Set(), stepScore:[], hide:{aroma:ax[Math.floor(Math.random()*3)], taste:ax[Math.floor(Math.random()*3)]} };
   drawGlass(s);
@@ -325,6 +331,9 @@ function newQuestion(){
 function show(id){ ["home","quiz","result"].forEach(x=>$(x).classList.toggle("hidden", x!==id)); window.scrollTo({top:0}); }
 
 function renderStep(){
+  const names=["","初級","中級","上級"];
+  $("activeDiff").textContent=`今回の難易度：${names[diff]}`;
+  $("activeDiff").classList.toggle("hidden", diffMode!==0);
   const st=$("stages"); st.innerHTML = STAGES.map((n,i)=>`<div class="${i<q.step?'done':i===q.step?'now':''}">${n}</div>`).join("");
   // narration: previous steps collapsed while narrowing; all hints expanded for the final answer
   let html="";
