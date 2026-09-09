@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>利きビール — スタイル推理トレーニング</title>
+<title>ビールテイスティングクイズ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -109,6 +109,16 @@ li{margin:3px 0}
 .group-part{margin-top:24px}
 .group-part h2{margin-bottom:8px}
 .group-feature p{margin:0;font-size:.92rem}
+.key-differences{background:linear-gradient(135deg,#FFF8EA,#F3E4CC);border:2px solid var(--amber);border-radius:16px;padding:18px;margin-top:18px;box-shadow:0 8px 24px rgba(184,116,26,.12)}
+.key-differences h2{font-family:var(--serif);font-size:1.35rem;margin:0 0 2px}
+.key-differences .eyebrow{display:inline-block;color:var(--amber);font-size:.78rem;font-weight:700;letter-spacing:.08em;margin-bottom:2px}
+.key-differences .group-feature{border-color:#D9B477;background:rgba(255,255,255,.86)}
+.key-differences .group-feature b{color:#7A4508}
+.origin-quote{font-family:var(--serif);font-size:1.2rem;line-height:1.9;border-left:3px solid var(--amber);padding:.3em 0 .3em 1em;margin:18px 0}
+.origin-result{margin-top:18px}
+.origin-axis{display:grid;grid-template-columns:54px 1fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+.origin-axis:last-child{border-bottom:0}
+.origin-axis b{color:var(--amber)}
 .hidden{display:none}
 .sr{position:absolute;left:-9999px}
 @media (max-width:640px){
@@ -138,14 +148,15 @@ li{margin:3px 0}
 
 <!-- ===== HOME ===== -->
 <section id="home">
-  <h1>利きビール</h1>
-  <p class="sub">テイスターの独り言から、国・地方・スタイルを推理する</p>
+  <h1>ビールテイスティングクイズ</h1>
+  <p class="sub">香りと味から、ビールのスタイルや香味の由来を学ぶ</p>
 
   <div class="card">
     <h2 style="margin-top:0">モード</h2>
     <div class="seg" id="modeSeg" role="group" aria-label="モード">
       <button data-v="test" aria-pressed="true">テスト</button>
-      <button data-v="study" aria-pressed="false">学習</button>
+      <button data-v="study" aria-pressed="false">試験対策</button>
+      <button data-v="origin" aria-pressed="false">香味の由来</button>
     </div>
 
     <div id="testOptions">
@@ -187,13 +198,13 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 2.0.0 · 2026-09-10</p>
+  <p class="version">Version 2.2.0 · 2026-09-10</p>
 </section>
 
 <!-- ===== STUDY ===== -->
 <section id="study" class="hidden">
-  <h1>学習モード</h1>
-  <p class="sub">似たスタイルを一つのグループで見比べて覚える</p>
+  <h1>試験対策学習</h1>
+  <p class="sub">似たスタイルの判定ポイントを見比べ、試験で迷わないように覚える</p>
 
   <div class="card">
     <label class="f" for="studyGroupSelect">比較グループ</label>
@@ -206,6 +217,23 @@ li{margin:3px 0}
   <div class="row" style="margin-top:22px">
     <button class="btn amber" id="studyRandomBtn">別のグループ</button>
     <button class="btn ghost" id="studyHomeBtn">ホームへ</button>
+  </div>
+</section>
+
+<!-- ===== FLAVOR ORIGIN QUIZ ===== -->
+<section id="originQuiz" class="hidden">
+  <h1>香味の由来当て</h1>
+  <p class="sub">コメントから、麦芽・酵母・ホップのどれに由来する香り／味かを考える</p>
+  <div class="card">
+    <p><span class="tag" id="originSense"></span></p>
+    <p class="origin-quote" id="originPrompt"></p>
+    <div class="row" id="originChoices"></div>
+    <div class="origin-result hidden" id="originResult"></div>
+  </div>
+  <p class="note" id="originScore"></p>
+  <div class="row" style="margin-top:22px">
+    <button class="btn amber hidden" id="originNextBtn">次の問題</button>
+    <button class="btn ghost" id="originHomeBtn">ホームへ</button>
   </div>
 </section>
 
@@ -235,12 +263,7 @@ li{margin:3px 0}
 
   <div id="candPane">
     <h2 id="candTitle">候補に残すスタイル <span class="count" id="candCount"></span></h2>
-    <div class="card" style="padding:14px;margin-bottom:14px">
-      <label class="f">国で表示を絞る</label>
-      <div class="row" id="candCountryPick"></div>
-      <div class="row" id="candCountryActions" style="margin-top:10px"></div>
-      <p class="hint" style="margin-bottom:0">表示する国を切り替えても、ほかの国で選んだ候補は残ります。</p>
-    </div>
+    <p class="hint">国名を押すと、その国の全スタイルをまとめて候補に残せます。国は複数選択できます。</p>
     <div class="cands" id="cands"></div>
     <p class="hint" id="candHint"></p>
     <div class="row" style="margin-top:14px">
@@ -350,6 +373,8 @@ let testScope = "all";
 let countries = [...new Set(S.map(x=>x.country))];
 let enabled = new Set(countries);
 let q = null; // current question
+let originQ = null;
+let originStats = {n:0,ok:0};
 
 // ---------- home ----------
 function renderHome(){
@@ -360,7 +385,7 @@ function renderHome(){
   $("countryOptions").classList.toggle("hidden", appMode!=="test");
   $("countryTitle").textContent = appMode==="test" ? "出題する国" : "学習する国";
   $("countryHint").textContent = appMode==="test" ? "選んだ国のスタイルだけが出題・選択肢に入ります。" : "選んだ国のスタイルだけを学習できます。";
-  $("startBtn").textContent = appMode==="test" ? "テイスティングを始める" : "学習を始める";
+  $("startBtn").textContent = appMode==="test" ? "テイスティングを始める" : appMode==="study" ? "試験対策を始める" : "由来当てを始める";
   $("diffHint").textContent = DIFF_HINT[diffMode];
   $("diffSeg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String(+b.dataset.v===diffMode)));
   $("scopeSeg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.v===testScope)));
@@ -477,11 +502,11 @@ function newQuestion(){
   const p = pool(); const s = p[Math.floor(Math.random()*p.length)];
   diff = diffMode===0 ? 1+Math.floor(Math.random()*3) : diffMode;
   const ax=["malt","yeast","hop"];
-  q = { s, step:0, cands:new Set(), candCountry:"all", stepScore:[], hide:{aroma:ax[Math.floor(Math.random()*3)], taste:ax[Math.floor(Math.random()*3)]} };
+  q = { s, step:0, cands:new Set(), stepScore:[], hide:{aroma:ax[Math.floor(Math.random()*3)], taste:ax[Math.floor(Math.random()*3)]} };
   drawGlass(s);
   show("quiz"); renderStep();
 }
-function show(id){ ["home","quiz","result","study"].forEach(x=>$(x).classList.toggle("hidden", x!==id)); window.scrollTo({top:0}); }
+function show(id){ ["home","quiz","result","study","originQuiz"].forEach(x=>$(x).classList.toggle("hidden", x!==id)); window.scrollTo({top:0}); }
 
 function renderStep(){
   const names=["","初級","中級","上級"];
@@ -504,25 +529,16 @@ function renderStep(){
 function renderCands(){
   const box=$("cands"); box.innerHTML="";
   const p=pool(); const byC={}; p.forEach(x=>{(byC[x.country]=byC[x.country]||[]).push(x)});
-  const countryPick=$("candCountryPick"); countryPick.innerHTML="";
-  [{id:"all",label:"すべて",styles:p}, ...Object.entries(byC).map(([c,styles])=>({id:c,label:c,styles}))].forEach(item=>{
-    const selected=item.styles.filter(x=>q.cands.has(x.id)).length;
-    const b=document.createElement("button"); b.className="chip";
-    b.textContent=`${item.label} ${selected ? `${selected}/` : ""}${item.styles.length}`;
-    b.setAttribute("aria-pressed", String(q.candCountry===item.id));
-    b.onclick=()=>{ q.candCountry=item.id; renderCands(); };
-    countryPick.appendChild(b);
-  });
-  const activeStyles=q.candCountry==="all" ? p : (byC[q.candCountry]||[]);
-  const activeLabel=q.candCountry==="all" ? "全スタイル" : q.candCountry;
-  const actions=$("candCountryActions"); actions.innerHTML="";
-  [[`${activeLabel}をすべて残す`,true],[`${activeLabel}をすべて外す`,false]].forEach(([label,keep])=>{
-    const b=document.createElement("button"); b.className="btn ghost"; b.style.padding="8px 12px"; b.style.fontSize=".88rem"; b.textContent=label;
-    b.onclick=()=>{ activeStyles.forEach(x=>keep?q.cands.add(x.id):q.cands.delete(x.id)); renderCands(); };
-    actions.appendChild(b);
-  });
-  Object.entries(byC).filter(([c])=>q.candCountry==="all"||q.candCountry===c).forEach(([c,arr])=>{
-    const g=document.createElement("div"); g.className="grp"; g.innerHTML=`<h3>${c}</h3>`;
+  Object.entries(byC).forEach(([c,arr])=>{
+    const g=document.createElement("div"); g.className="grp";
+    const head=document.createElement("h3");
+    const countryBtn=document.createElement("button"); countryBtn.className="chip";
+    const selected=arr.filter(x=>q.cands.has(x.id)).length;
+    countryBtn.textContent=`${c} ${selected ? `${selected}/` : ""}${arr.length}`;
+    countryBtn.setAttribute("aria-pressed",String(selected===arr.length));
+    if(selected>0&&selected<arr.length) countryBtn.classList.add("was");
+    countryBtn.onclick=()=>{ const keep=selected<arr.length; arr.forEach(x=>keep?q.cands.add(x.id):q.cands.delete(x.id)); renderCands(); };
+    head.appendChild(countryBtn); g.appendChild(head);
     const r=document.createElement("div"); r.className="row";
     arr.forEach(x=>{
       const b=document.createElement("button"); b.className="chip"; b.textContent=x.style;
@@ -644,15 +660,16 @@ function brandHtml(s){
 }
 function groupStyles(g){ return g.ids.map(id=>S.find(x=>x.id===id)).filter(Boolean); }
 function featureCards(styles,key){
-  return `<div class="group-items">${styles.map(s=>`<div class="group-feature"><b>${s.style}</b><p>${comparisonValue(s,key)}</p></div>`).join("")}</div>`;
+  return `<div class="group-items">${styles.map(s=>`<div class="group-feature"><b>${s.style}</b>${key==="markers"?`<ul>${s.markers.map(m=>`<li>${m}</li>`).join("")}</ul>`:`<p>${comparisonValue(s,key)}</p>`}</div>`).join("")}</div>`;
 }
 function renderStudyGroup(g){
   const styles=groupStyles(g);
   $("studyGroupNote").textContent=`${g.note}（${styles.length}スタイル）`;
-  const parts=[["発酵方式","fermentation"],["一般的な原材料","ingredients"],["色・外観","appearance"],["香り","aroma"],["味・口当たり","taste"],["後味","after"],["度数・温感","strength"],["見分け方","markers"]];
+  const parts=[["外観","appearance"],["香り","aroma"],["味・口当たり","taste"],["後味","after"],["度数・温感","strength"],["原材料","ingredients"],["発酵方式","fermentation"]];
   $("studyGroupView").innerHTML=`
-    <div class="group-part"><h2>${g.name}</h2><div class="group-summary">${styles.map(s=>{const f=fermentationInfo(s);return `<div class="group-style"><b>${s.style} ${sourceBadge(s)}</b><small>${s.country}</small><small>色 ${s.srm} SRM　・　ABV 約${s.abv}%</small><small>発酵方式：${f.label}</small><small>${f.note}</small><div class="group-swatch" style="background:${srmHex(s.srm)}"></div>${brandHtml(s)}</div>`;}).join("")}</div><p class="hint">販売状況・価格・販売単位はリンク先で確認してください。「日」はDomens資料の日本語ページだけに掲載される項目です。</p></div>
-    ${parts.map(([label,key])=>`<div class="group-part"><h2>${label}</h2>${featureCards(styles,key)}</div>`).join("")}`;
+    <div class="key-differences"><span class="eyebrow">試験で迷ったら最初にここを見る</span><h2>見分け方：違いのポイント</h2><p class="note">各スタイルを判定する決め手を、暗記用にまとめています。</p>${featureCards(styles,"markers")}</div>
+    <div class="group-part"><h2>${g.name}</h2><div class="group-summary">${styles.map(s=>`<div class="group-style"><b>${s.style} ${sourceBadge(s)}</b><small>${s.country}</small><small>色 ${s.srm} SRM　・　ABV 約${s.abv}%</small><div class="group-swatch" style="background:${srmHex(s.srm)}"></div>${brandHtml(s)}</div>`).join("")}</div><p class="hint">販売状況・価格・販売単位はリンク先で確認してください。「日」はDomens資料の日本語ページだけに掲載される項目です。</p></div>
+    <div class="group-part"><h2>詳細比較</h2>${parts.map(([label,key])=>`<div class="study-section"><h3>${label}</h3>${featureCards(styles,key)}</div>`).join("")}</div>`;
   window.scrollTo({top:0,behavior:"auto"});
 }
 function setupStudyGroups(selected){
@@ -672,6 +689,49 @@ $("studyRandomBtn").onclick=()=>{
   $("studyGroupSelect").value=g.id; renderStudyGroup(g);
 };
 $("studyHomeBtn").onclick=()=>{ show("home"); renderHome(); };
+
+// ---------- flavor origin quiz ----------
+const ORIGIN_GUIDE={
+  malt:"穀物、パン、ビスケット、カラメル、ナッツ、コーヒー、チョコなどは、主に麦芽の種類や焙煎度から生まれます。",
+  yeast:"バナナ、洋梨などの果実香や、クローブ、胡椒のような香りは、主に酵母の発酵で生まれます。",
+  hop:"柑橘、花、草、ハーブ、松、樹脂、トロピカルフルーツなどの香りや苦味は、主にホップから生まれます。"
+};
+function originPool(){
+  const out=[];
+  S.forEach(s=>["aroma","taste"].forEach(sense=>["malt","yeast","hop"].forEach(axis=>{
+    const text=plainHint(s[sense][axis]).trim();
+    if(text.length>=8&&!/麦芽|モルト|酵母|ホップ|判別|わからない|取れない|保留/.test(text)) out.push({s,sense,axis,text});
+  })));
+  return out;
+}
+function newOriginQuestion(){
+  const p=originPool(); originQ=p[Math.floor(Math.random()*p.length)];
+  $("originSense").textContent=`${originQ.sense==="aroma"?"香り":"味"}のコメント`;
+  $("originPrompt").textContent=`「${originQ.text}」`;
+  const choices=$("originChoices"); choices.innerHTML="";
+  ["malt","yeast","hop"].forEach(axis=>{
+    const b=document.createElement("button"); b.className="chip"; b.textContent=AX[axis];
+    b.onclick=()=>answerOrigin(axis); choices.appendChild(b);
+  });
+  $("originResult").classList.add("hidden"); $("originResult").innerHTML="";
+  $("originNextBtn").classList.add("hidden");
+  $("originScore").textContent=originStats.n?`今回の成績：${originStats.ok} / ${originStats.n}`:"";
+  show("originQuiz");
+}
+function answerOrigin(answer){
+  const correct=answer===originQ.axis; originStats.n++; if(correct) originStats.ok++;
+  $("originChoices").querySelectorAll("button").forEach((b,i)=>{
+    const axis=["malt","yeast","hop"][i]; b.disabled=true;
+    if(axis===originQ.axis) b.classList.add("hit"); else if(axis===answer) b.classList.add("miss");
+  });
+  const obj=originQ.s[originQ.sense];
+  $("originResult").innerHTML=`<p class="verdict ${correct?"ok":"ng"}">${correct?"正解":"惜しい"} — ${AX[originQ.axis]}由来</p><p>${ORIGIN_GUIDE[originQ.axis]}</p><p class="note">出題スタイル：${originQ.s.style}（${originQ.s.country}）</p><div>${["malt","yeast","hop"].map(axis=>`<div class="origin-axis"><b>${AX[axis]}</b><span>${plainHint(obj[axis])}</span></div>`).join("")}</div>`;
+  $("originResult").classList.remove("hidden");
+  $("originNextBtn").classList.remove("hidden");
+  $("originScore").textContent=`今回の成績：${originStats.ok} / ${originStats.n}`;
+}
+$("originNextBtn").onclick=newOriginQuestion;
+$("originHomeBtn").onclick=()=>{ show("home"); renderHome(); };
 
 function renderResult(fin, finPts, total, g){
   const s=q.s;
@@ -699,7 +759,7 @@ function renderResult(fin, finPts, total, g){
 }
 $("againBtn").onclick=newQuestion;
 $("homeBtn").onclick=()=>{ show("home"); renderHome(); };
-$("startBtn").onclick=()=> appMode==="test" ? newQuestion() : openStudy();
+$("startBtn").onclick=()=> appMode==="test" ? newQuestion() : appMode==="study" ? openStudy() : newOriginQuestion();
 
 renderHome();
 })();
