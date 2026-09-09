@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>利きビール — スタイル推理トレーニング</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF0EC; --paper:#FFFFFF; --ink:#1C2226; --ink2:#4A555A; --mute:#7A868B; --line:#D6DBD8;
+  --amber:#B8741A; --amber-soft:#F3E4CC; --ok:#2F7A5E; --ok-soft:#DDEDE5; --ng:#A8403A; --ng-soft:#F1DDDB;
+  --ui:"Zen Kaku Gothic New",system-ui,sans-serif; --serif:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ui);font-size:16px;line-height:1.6}
+button{font-family:inherit;font-size:1rem;cursor:pointer}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.wrap{max-width:660px;margin:0 auto;padding:20px 16px 60px}
+h1{font-family:var(--serif);font-weight:600;font-size:2.2rem;letter-spacing:.06em;margin:8px 0 2px}
+.sub{color:var(--mute);margin:0 0 28px}
+h2{font-size:1.05rem;font-weight:700;margin:26px 0 10px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{flex:1;border:0;background:var(--paper);padding:10px 8px;color:var(--ink2)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.chip{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:6px 13px;color:var(--ink2);line-height:1.3}
+.chip[aria-pressed="true"]{background:var(--amber-soft);border-color:var(--amber);color:var(--ink)}
+.chip.was{border-style:dashed}
+.chip.hit{background:var(--ok-soft);border-color:var(--ok)}
+.chip.miss{background:var(--ng-soft);border-color:var(--ng);text-decoration:line-through}
+.btn{border:0;border-radius:10px;padding:13px 22px;font-weight:700;background:var(--ink);color:#fff}
+.btn.amber{background:var(--amber)}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.hint{color:var(--mute);font-size:.9rem;margin:6px 0 0}
+.note{font-size:.9rem;color:var(--ink2)}
+
+/* stages */
+.stages{display:flex;gap:4px;margin:0 0 20px}
+.stages div{flex:1;text-align:center;font-size:.78rem;padding:7px 0 9px;border-bottom:3px solid var(--line);color:var(--mute)}
+.stages div.done{border-color:var(--ink);color:var(--ink2)}
+.stages div.now{border-color:var(--amber);color:var(--ink);font-weight:700}
+
+/* glass + narration */
+.tasting{display:grid;grid-template-columns:96px 1fr;gap:20px;align-items:start}
+.glass{width:96px;height:150px}
+.narr{font-family:var(--serif);font-size:1.12rem;line-height:1.95;color:var(--ink)}
+.narr p{margin:0 0 .9em}
+.narr .lbl{font-family:var(--ui);font-size:.75rem;color:var(--amber);margin-right:.5em;vertical-align:.1em}
+.narr .desc{color:var(--ink2);font-size:.85em;font-family:var(--ui)}
+.narr .prev{color:var(--mute);font-size:.98rem}
+.narr details summary{cursor:pointer;color:var(--mute);font-family:var(--ui);font-size:.85rem;margin-bottom:.6em;list-style:none}
+.narr details summary::before{content:"▸ ";}
+.narr details[open] summary::before{content:"▾ ";}
+
+/* candidate groups */
+.grp{margin:12px 0}
+.grp h3{font-size:.85rem;font-weight:500;color:var(--mute);margin:0 0 6px}
+.grp .row{gap:8px}
+.cands{max-height:52vh;overflow:auto;padding-right:4px}
+.count{font-weight:700;font-variant-numeric:tabular-nums}
+
+select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--paper);font-size:1rem;color:var(--ink);margin:6px 0 12px}
+label.f{display:block;font-size:.85rem;color:var(--mute)}
+
+/* result */
+.verdict{font-family:var(--serif);font-size:1.6rem;font-weight:600;margin:0 0 4px}
+.verdict.ok{color:var(--ok)}.verdict.ng{color:var(--ng)}
+.answer{font-size:1.1rem;margin:0 0 4px}
+.answer small{display:block;color:var(--mute);font-size:.9rem}
+table{width:100%;border-collapse:collapse;font-size:.93rem;margin:8px 0}
+td{padding:7px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+td:last-child{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.total td{border-bottom:0;font-weight:700}
+.tag{display:inline-block;background:var(--bg);border-radius:6px;padding:2px 8px;font-size:.8rem;color:var(--ink2);margin:2px 4px 2px 0}
+ul{padding-left:1.2em;margin:6px 0}
+li{margin:3px 0}
+.sim{display:grid;grid-template-columns:1fr;gap:8px}
+.sim div{background:var(--bg);border-radius:10px;padding:10px 12px;font-size:.92rem}
+.sim b{display:block;margin-bottom:2px}
+.stat{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);font-size:.93rem}
+.stat:last-child{border-bottom:0}
+.hidden{display:none}
+.sr{position:absolute;left:-9999px}
+@media (max-width:480px){
+  .tasting{grid-template-columns:72px 1fr;gap:14px}
+  .glass{width:72px;height:112px}
+  .narr{font-size:1.04rem}
+  h1{font-size:1.9rem}
+}
+@media (prefers-reduced-motion:no-preference){
+  .glass .liq{transition:fill .5s}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ===== HOME ===== -->
+<section id="home">
+  <h1>利きビール</h1>
+  <p class="sub">テイスターの独り言から、国・地方・スタイルを推理する</p>
+
+  <div class="card">
+    <h2 style="margin-top:0">難易度</h2>
+    <div class="seg" id="diffSeg" role="group" aria-label="難易度">
+      <button data-v="1" aria-pressed="true">初級</button>
+      <button data-v="2" aria-pressed="false">中級</button>
+      <button data-v="3" aria-pressed="false">上級</button>
+    </div>
+    <p class="hint" id="diffHint"></p>
+
+    <h2>出題する国</h2>
+    <div class="row" id="countryPick"></div>
+    <p class="hint">選んだ国のスタイルだけが出題・選択肢に入ります。</p>
+
+    <div style="margin-top:22px">
+      <button class="btn amber" id="startBtn">テイスティングを始める</button>
+    </div>
+  </div>
+
+  <h2>採点のしかた</h2>
+  <div class="card note">
+    <p style="margin-top:0">ヒントは「見た目 → 香り → 味 → 後味 → アルコール感」の順に開きます。各段階で「まだ候補に残るスタイル」を選び、最後に国・地方・スタイルを一つ確定します。</p>
+    <p>各段階は、正解を候補に残していれば得点。候補が少ないほど高得点（1つで12点、5つで4点、6つ以上で3点）。正解を候補から落とした段階は0点。判定は国10点・地方10点・スタイル30点。満点110点。</p>
+    <p style="margin-bottom:0">当てる力より「消去の精度」を鍛えるための配点です。</p>
+  </div>
+
+  <div id="statsBox"></div>
+</section>
+
+<!-- ===== QUIZ ===== -->
+<section id="quiz" class="hidden">
+  <div class="stages" id="stages"></div>
+
+  <div class="card">
+    <div class="tasting">
+      <svg class="glass" viewBox="0 0 96 150" aria-hidden="true">
+        <defs>
+          <clipPath id="cup"><path d="M14 8 H82 L76 132 Q76 142 66 142 H30 Q20 142 20 132 Z"/></clipPath>
+          <linearGradient id="foamG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#EDE6D6"/></linearGradient>
+        </defs>
+        <g clip-path="url(#cup)">
+          <rect class="liq" id="liq" x="0" y="0" width="96" height="150" fill="#E0B33F"/>
+          <rect id="haze" x="0" y="0" width="96" height="150" fill="#fff" opacity="0"/>
+          <rect id="foam" x="0" y="8" width="96" height="16" fill="url(#foamG)"/>
+          <rect x="18" y="8" width="7" height="142" fill="#fff" opacity=".18"/>
+        </g>
+        <path d="M14 8 H82 L76 132 Q76 142 66 142 H30 Q20 142 20 132 Z" fill="none" stroke="#9AA4A8" stroke-width="1.6"/>
+      </svg>
+      <div class="narr" id="narr"></div>
+    </div>
+  </div>
+
+  <div id="candPane">
+    <h2 id="candTitle">候補に残すスタイル <span class="count" id="candCount"></span></h2>
+    <div class="cands" id="cands"></div>
+    <p class="hint" id="candHint"></p>
+    <div class="row" style="margin-top:14px">
+      <button class="btn" id="nextBtn">次のヒントへ</button>
+      <button class="btn ghost" id="quitBtn">中断してホームへ</button>
+    </div>
+  </div>
+
+  <div id="finalPane" class="hidden">
+    <h2>判定</h2>
+    <div class="card">
+      <label class="f" for="selCountry">国</label>
+      <select id="selCountry"></select>
+      <label class="f" for="selRegion">地方</label>
+      <select id="selRegion"></select>
+      <label class="f" for="selStyle">スタイル</label>
+      <select id="selStyle"></select>
+      <button class="btn amber" id="answerBtn" disabled>答える</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== RESULT ===== -->
+<section id="result" class="hidden">
+  <div class="card">
+    <p class="verdict" id="verdict"></p>
+    <p class="answer" id="ansLine"></p>
+    <div id="ansFacts"></div>
+    <table id="scoreTbl"></table>
+  </div>
+
+  <h2>識別のポイント</h2>
+  <div class="card" id="markers"></div>
+
+  <h2>間違えやすい近縁スタイル</h2>
+  <div class="sim" id="similar"></div>
+
+  <h2>テイスターのメモ全文</h2>
+  <div class="card narr" id="fullNarr" style="font-size:1rem;line-height:1.85"></div>
+
+  <div class="row" style="margin-top:22px">
+    <button class="btn amber" id="againBtn">次の一杯</button>
+    <button class="btn ghost" id="homeBtn">ホームへ</button>
+  </div>
+</section>
+
+</div>
+
+<script src="data/styles.js"></script>
+<script>
+(function(){
+const S = window.STYLES;
+const $ = id => document.getElementById(id);
+const STAGES = ["見た目","香り","味","後味","アルコール","判定"];
+const DIFF_HINT = {
+  1:"テイスターが感じた表現に、官能記述子（例：バナナ→イソアミルアセテート）を添えます。香りと味は麦芽・酵母・ホップに分けて示します。",
+  2:"感覚的な表現だけ。記述子は出ません。香り・味の3軸の区別は表示します。",
+  3:"感覚表現のみ。香りと味のそれぞれで、1軸ぶんの情報が欠けます（実戦でホップが取れなかった状況の再現）。麦芽・酵母・ホップの区別も表示しません。"
+};
+
+// ---------- persistence (fails silently where storage is unavailable) ----------
+const store = {
+  get(){ try{ return JSON.parse(localStorage.getItem("kikibeer")||"{}"); }catch(e){ return {}; } },
+  set(o){ try{ localStorage.setItem("kikibeer", JSON.stringify(o)); }catch(e){} }
+};
+
+// ---------- state ----------
+let diff = 1;
+let countries = [...new Set(S.map(x=>x.country))];
+let enabled = new Set(countries);
+let q = null; // current question
+
+// ---------- home ----------
+function renderHome(){
+  $("diffHint").textContent = DIFF_HINT[diff];
+  $("diffSeg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String(+b.dataset.v===diff)));
+  const cp = $("countryPick"); cp.innerHTML="";
+  countries.forEach(c=>{
+    const n = S.filter(x=>x.country===c).length;
+    const b = document.createElement("button");
+    b.className="chip"; b.textContent=`${c} ${n}`; b.setAttribute("aria-pressed", String(enabled.has(c)));
+    b.onclick=()=>{ enabled.has(c)?enabled.delete(c):enabled.add(c); if(!enabled.size) enabled.add(c); renderHome(); };
+    cp.appendChild(b);
+  });
+  renderStats();
+}
+$("diffSeg").onclick = e=>{ const b=e.target.closest("button"); if(!b) return; diff=+b.dataset.v; renderHome(); };
+
+function renderStats(){
+  const st = store.get(); const box=$("statsBox");
+  const rows = Object.entries(st.styles||{});
+  if(!rows.length){ box.innerHTML=""; return; }
+  const tot = rows.reduce((a,[,v])=>a+v.n,0), ok = rows.reduce((a,[,v])=>a+v.ok,0);
+  const weak = rows.map(([id,v])=>({id,rate:v.ok/v.n,n:v.n})).filter(x=>x.n>=2).sort((a,b)=>a.rate-b.rate).slice(0,5);
+  const name = id=>{ const s=S.find(x=>x.id===id); return s? s.style : id; };
+  box.innerHTML = `<h2>これまでの記録</h2><div class="card">
+    <div class="stat"><span>出題数</span><span>${tot}</span></div>
+    <div class="stat"><span>スタイル正解率</span><span>${Math.round(100*ok/tot)}%</span></div>
+    <div class="stat"><span>平均点</span><span>${(st.pts/tot).toFixed(1)} / 110</span></div>
+    ${weak.length?`<div style="margin-top:12px" class="note">苦手なスタイル：${weak.map(w=>`${name(w.id)}（${Math.round(w.rate*100)}%）`).join("、")}</div>`:""}
+    <button class="btn ghost" style="margin-top:14px;padding:8px 14px;font-size:.9rem" id="resetStats">記録を消す</button>
+  </div>`;
+  $("resetStats").onclick=()=>{ if(confirm("記録をすべて消しますか？")){ store.set({}); renderStats(); } };
+}
+
+// ---------- narration helpers ----------
+// [表現|記述子] → 初級: 表現（記述子） / 中上級: 表現
+function fmt(t){
+  return t.replace(/\[([^|\]]+)\|([^\]]+)\]/g,(m,a,b)=> diff===1 ? `${a}<span class="desc">（${b}）</span>` : a)
+          .replace(/\[([^|\]]+)\]/g,"$1");
+}
+const AX = {malt:"麦芽",yeast:"酵母",hop:"ホップ"};
+const BLANK = {
+  aroma:{malt:"麦芽の香りは……うまく取れない。",yeast:"酵母由来のものは、よくわからない。",hop:"ホップの香りは、この時点では判別できない。"},
+  taste:{malt:"麦の味の輪郭がつかめない。",yeast:"発酵由来の味は判断を保留。",hop:"ホップと苦味の質は、次の一口で確かめたい。"}
+};
+function axesHtml(kind, obj){
+  const hidden = q.hide[kind];
+  return ["malt","yeast","hop"].map(k=>{
+    const text = (diff===3 && k===hidden) ? BLANK[kind][k] : fmt(obj[k]);
+    const lbl = diff<3 ? `<span class="lbl">${AX[k]}</span>` : "";
+    return `<p>${lbl}${text}</p>`;
+  }).join("");
+}
+function stepHtml(i, s){
+  switch(i){
+    case 0: return `<p>${fmt(s.app)}</p>`;
+    case 1: return axesHtml("aroma", s.aroma);
+    case 2: return axesHtml("taste", s.taste) + `<p>${diff<3?'<span class="lbl">口当たり</span>':''}${fmt(s.taste.body)}</p>`;
+    case 3: return `<p>${fmt(s.after)}</p>`;
+    case 4: return `<p>${fmt(s.alcohol)}</p>`;
+  }
+}
+const LEAD = ["グラスを光にかざす。","鼻を近づける。","一口。","飲み込んで、少し待つ。","もう一口、今度は喉に意識を向けて。"];
+
+// ---------- glass ----------
+const SRM_HEX = {1:"#F8F4B4",2:"#F6F095",3:"#F2E56C",4:"#EEDB4D",5:"#E7C93A",6:"#E0B33F",7:"#D9A231",8:"#D1902A",9:"#C98126",10:"#C17322",11:"#B8651F",12:"#AF581B",13:"#A64E18",14:"#9C4415",15:"#933C12",16:"#88340F",17:"#7E2D0D",18:"#74270B",19:"#6A2209",20:"#611D08",22:"#4F1606",25:"#3B0F04",28:"#2A0B03",30:"#220903",35:"#150502",40:"#0B0201"};
+function srmHex(v){ const ks=Object.keys(SRM_HEX).map(Number).sort((a,b)=>a-b); let k=ks[0]; for(const x of ks){ if(x<=v) k=x; } return SRM_HEX[k]; }
+function drawGlass(s){
+  $("liq").setAttribute("fill", srmHex(s.srm));
+  const hazy = /濁|霞/.test(s.app);
+  $("haze").setAttribute("opacity", hazy ? (s.srm<=6 ? .35 : .18) : 0);
+  const low = /泡は薄|すぐ消え|すぐに膜|少なめ|消えやすい/.test(s.app);
+  const dark = s.srm>=18;
+  $("foam").setAttribute("height", low ? 6 : (/山|盛り上が|厚/.test(s.app) ? 26 : 16));
+  $("foam").setAttribute("fill", dark ? "#C9B490" : "url(#foamG)");
+}
+
+// ---------- quiz flow ----------
+function pool(){ return S.filter(x=>enabled.has(x.country)); }
+function newQuestion(){
+  const p = pool(); const s = p[Math.floor(Math.random()*p.length)];
+  const ax=["malt","yeast","hop"];
+  q = { s, step:0, cands:new Set(), stepScore:[], hide:{aroma:ax[Math.floor(Math.random()*3)], taste:ax[Math.floor(Math.random()*3)]} };
+  drawGlass(s);
+  show("quiz"); renderStep();
+}
+function show(id){ ["home","quiz","result"].forEach(x=>$(x).classList.toggle("hidden", x!==id)); window.scrollTo({top:0}); }
+
+function renderStep(){
+  const st=$("stages"); st.innerHTML = STAGES.map((n,i)=>`<div class="${i<q.step?'done':i===q.step?'now':''}">${n}</div>`).join("");
+  // narration: previous steps collapsed, current expanded
+  let html="";
+  if(q.step>0){
+    html += `<details><summary>これまでのメモ</summary><div class="prev">${[...Array(q.step).keys()].map(i=>stepHtml(i,q.s)).join("")}</div></details>`;
+  }
+  if(q.step<5) html += `<p style="color:var(--mute);font-size:.95rem">${LEAD[q.step]}</p>` + stepHtml(q.step,q.s);
+  else html += `<p>さて。国、地方、スタイルは？</p>`;
+  $("narr").innerHTML = html;
+
+  if(q.step<5){ $("candPane").classList.remove("hidden"); $("finalPane").classList.add("hidden"); renderCands(); }
+  else { $("candPane").classList.add("hidden"); $("finalPane").classList.remove("hidden"); renderFinal(); }
+}
+
+function renderCands(){
+  const box=$("cands"); box.innerHTML="";
+  const p=pool(); const byC={}; p.forEach(x=>{(byC[x.country]=byC[x.country]||[]).push(x)});
+  Object.entries(byC).forEach(([c,arr])=>{
+    const g=document.createElement("div"); g.className="grp"; g.innerHTML=`<h3>${c}</h3>`;
+    const r=document.createElement("div"); r.className="row";
+    arr.forEach(x=>{
+      const b=document.createElement("button"); b.className="chip"; b.textContent=x.style;
+      b.setAttribute("aria-pressed", String(q.cands.has(x.id)));
+      if(q.prevCands && q.prevCands.has(x.id) && !q.cands.has(x.id)) b.classList.add("was");
+      b.onclick=()=>{ q.cands.has(x.id)?q.cands.delete(x.id):q.cands.add(x.id); renderCands(); };
+      r.appendChild(b);
+    });
+    g.appendChild(r); box.appendChild(g);
+  });
+  const n=q.cands.size; $("candCount").textContent = n?`（${n}）`:"";
+  $("candHint").textContent = q.step===0 ? "見た目だけで考えられるスタイルを、広めに残してください。" : "前回の候補から、この情報で消えるものを外してください（点線は前回残していたもの）。";
+  $("nextBtn").disabled = n===0;
+  $("nextBtn").textContent = q.step===4 ? "判定へ" : "次のヒントへ";
+}
+function stepPts(n){ return Math.max(3, 12-2*(n-1)); }
+$("nextBtn").onclick=()=>{
+  const kept = q.cands.has(q.s.id);
+  q.stepScore.push({kept, n:q.cands.size, pts: kept?stepPts(q.cands.size):0, cands:[...q.cands]});
+  q.prevCands = new Set(q.cands);
+  q.step++; renderStep();
+};
+$("quitBtn").onclick=()=>{ if(confirm("この一杯を中断しますか？")){ show("home"); renderHome(); } };
+
+// final cascade
+function opt(sel, arr, ph){ sel.innerHTML = `<option value="">${ph}</option>` + arr.map(v=>`<option>${v}</option>`).join(""); }
+function renderFinal(){
+  const p=pool();
+  opt($("selCountry"), [...new Set(p.map(x=>x.country))], "国を選ぶ");
+  opt($("selRegion"), [], "まず国を選ぶ"); opt($("selStyle"), [], "まず地方を選ぶ");
+  $("answerBtn").disabled=true;
+  $("selCountry").onchange=()=>{
+    const c=$("selCountry").value;
+    opt($("selRegion"), [...new Set(p.filter(x=>x.country===c).map(x=>x.region))], "地方を選ぶ");
+    opt($("selStyle"), [], "まず地方を選ぶ"); $("answerBtn").disabled=true;
+  };
+  $("selRegion").onchange=()=>{
+    const c=$("selCountry").value, r=$("selRegion").value;
+    opt($("selStyle"), p.filter(x=>x.country===c&&x.region===r).map(x=>x.style), "スタイルを選ぶ");
+    $("answerBtn").disabled=true;
+  };
+  $("selStyle").onchange=()=>{ $("answerBtn").disabled = !$("selStyle").value; };
+}
+$("answerBtn").onclick=()=>{
+  const c=$("selCountry").value, r=$("selRegion").value, st=$("selStyle").value;
+  const s=q.s;
+  const fin = { country:c===s.country, region:r===s.region, style:st===s.style };
+  const finPts = (fin.country?10:0)+(fin.region?10:0)+(fin.style?30:0);
+  const total = q.stepScore.reduce((a,x)=>a+x.pts,0)+finPts;
+  // persist
+  const d=store.get(); d.styles=d.styles||{}; const e=d.styles[s.id]||{n:0,ok:0}; e.n++; if(fin.style) e.ok++; d.styles[s.id]=e; d.pts=(d.pts||0)+total; store.set(d);
+  renderResult(fin, finPts, total, {c,r,st});
+};
+
+function renderResult(fin, finPts, total, g){
+  const s=q.s;
+  $("verdict").textContent = fin.style ? "正解" : (fin.country ? "国は正解、スタイルは違う" : "はずれ");
+  $("verdict").className = "verdict " + (fin.style?"ok":"ng");
+  $("ansLine").innerHTML = `${s.style}<small>${s.country} ／ ${s.region}</small>` + (fin.style?"":`<small>あなたの答え：${g.c} ／ ${g.r} ／ ${g.st}</small>`);
+  $("ansFacts").innerHTML = `<span class="tag">色 ${s.srm} SRM</span><span class="tag">ABV 約${s.abv}%</span>`;
+  const rows = q.stepScore.map((x,i)=>{
+    const lostAt = !x.kept;
+    return `<tr><td>${STAGES[i]}<br><span class="note">${lostAt?"正解を候補から外した":"候補 "+x.n+"件に残した"}</span></td><td>${x.pts}</td></tr>`;
+  }).join("");
+  $("scoreTbl").innerHTML = rows +
+    `<tr><td>国 ${fin.country?"○":"×"}　地方 ${fin.region?"○":"×"}　スタイル ${fin.style?"○":"×"}</td><td>${finPts}</td></tr>` +
+    `<tr class="total"><td>合計</td><td>${total} / 110</td></tr>`;
+  const firstLoss = q.stepScore.findIndex(x=>!x.kept);
+  $("markers").innerHTML = `<ul>${s.markers.map(m=>`<li>${m}</li>`).join("")}</ul>` +
+    (firstLoss>=0 ? `<p class="note" style="margin-bottom:0">「${STAGES[firstLoss]}」の段階で正解を候補から外しています。ここまでの情報では、まだ正解を消せなかったはずです。</p>` : "");
+  $("similar").innerHTML = s.similar.map(id=>{ const t=S.find(x=>x.id===id); if(!t) return ""; return `<div><b>${t.style}<span class="note">　${t.country}</span></b>${t.markers[0]}</div>`; }).join("");
+  // full narration, beginner formatting for review regardless of mode
+  const save=diff; diff=1; const hideSave=q.hide; q.hide={};
+  $("fullNarr").innerHTML = [0,1,2,3,4].map(i=>`<p style="color:var(--mute);font-size:.85rem;margin-bottom:.2em">${STAGES[i]}</p>`+stepHtml(i,s)).join("");
+  diff=save; q.hide=hideSave;
+  show("result");
+}
+$("againBtn").onclick=newQuestion;
+$("homeBtn").onclick=()=>{ show("home"); renderHome(); };
+$("startBtn").onclick=newQuestion;
+
+renderHome();
+})();
+</script>
+</body>
+</html>
+
