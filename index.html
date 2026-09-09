@@ -84,6 +84,18 @@ li{margin:3px 0}
 .stat:last-child{border-bottom:0}
 .version{text-align:center;color:var(--mute);font-size:.78rem;margin:28px 0 0}
 .active-diff{display:inline-block;margin:0 0 10px;padding:3px 10px;border-radius:999px;background:var(--amber-soft);color:var(--ink2);font-size:.78rem;font-weight:700}
+.study-color{height:14px;border-radius:999px;border:1px solid rgba(0,0,0,.12);margin:10px 0 16px}
+.study-section{margin-top:18px}
+.study-section h3{font-size:.82rem;color:var(--amber);margin:0 0 4px}
+.study-section p{margin:0 0 .65em}
+.study-section .lbl{font-size:.75rem;color:var(--amber);margin-right:.5em;font-weight:700}
+.study-section .desc{color:var(--ink2);font-size:.85em}
+.compare-grid{display:grid;grid-template-columns:92px 1fr 1fr;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--paper)}
+.compare-grid>div{padding:10px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.compare-grid>div:nth-child(3n){border-right:0}
+.compare-grid>div:nth-last-child(-n+3){border-bottom:0}
+.compare-head{font-weight:700;background:var(--bg)}
+.compare-label{font-size:.8rem;color:var(--mute);font-weight:700}
 .hidden{display:none}
 .sr{position:absolute;left:-9999px}
 @media (max-width:640px){
@@ -98,6 +110,10 @@ li{margin:3px 0}
   h1{font-size:1.9rem}
   .cands{max-height:none;overflow:visible;padding-right:0}
   #candPane>.row .btn,#finalPane .btn,#result>.row .btn{width:100%}
+  .compare-grid{grid-template-columns:1fr}
+  .compare-grid>div{border-right:0!important;border-bottom:1px solid var(--line)!important}
+  .compare-grid>div:last-child{border-bottom:0!important}
+  .compare-label{background:var(--bg)}
 }
 @media (prefers-reduced-motion:no-preference){
   .glass .liq{transition:fill .5s}
@@ -113,33 +129,83 @@ li{margin:3px 0}
   <p class="sub">テイスターの独り言から、国・地方・スタイルを推理する</p>
 
   <div class="card">
-    <h2 style="margin-top:0">難易度</h2>
-    <div class="seg" id="diffSeg" role="group" aria-label="難易度">
-      <button data-v="1" aria-pressed="true">初級</button>
-      <button data-v="2" aria-pressed="false">中級</button>
-      <button data-v="3" aria-pressed="false">上級</button>
-      <button data-v="0" aria-pressed="false">全部</button>
+    <h2 style="margin-top:0">モード</h2>
+    <div class="seg" id="modeSeg" role="group" aria-label="モード">
+      <button data-v="test" aria-pressed="true">テスト</button>
+      <button data-v="study" aria-pressed="false">学習</button>
     </div>
-    <p class="hint" id="diffHint"></p>
 
-    <h2>出題する国</h2>
+    <div id="testOptions">
+      <h2>難易度</h2>
+      <div class="seg" id="diffSeg" role="group" aria-label="難易度">
+        <button data-v="1" aria-pressed="true">初級</button>
+        <button data-v="2" aria-pressed="false">中級</button>
+        <button data-v="3" aria-pressed="false">上級</button>
+        <button data-v="0" aria-pressed="false">全部</button>
+      </div>
+      <p class="hint" id="diffHint"></p>
+    </div>
+
+    <h2 id="countryTitle">出題する国</h2>
     <div class="row" id="countryPick"></div>
-    <p class="hint">選んだ国のスタイルだけが出題・選択肢に入ります。</p>
+    <p class="hint" id="countryHint">選んだ国のスタイルだけが出題・選択肢に入ります。</p>
 
     <div style="margin-top:22px">
       <button class="btn amber" id="startBtn">テイスティングを始める</button>
     </div>
   </div>
 
+  <div id="scoringInfo">
   <h2>採点のしかた</h2>
   <div class="card note">
     <p style="margin-top:0">ヒントは「見た目 → 香り → 味 → 後味 → アルコール感」の順に開きます。各段階で「まだ候補に残るスタイル」を選び、最後に国・地方・スタイルを一つ確定します。</p>
     <p>各段階は、正解を候補に残していれば得点。候補が少ないほど高得点（1つで12点、5つで4点、6つ以上で3点）。正解を候補から落とした段階は0点。判定は国10点・地方10点・スタイル30点。満点110点。</p>
     <p style="margin-bottom:0">当てる力より「消去の精度」を鍛えるための配点です。</p>
   </div>
+  </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 1.2.0 · 2026-09-10</p>
+  <p class="version">Version 1.3.0 · 2026-09-10</p>
+</section>
+
+<!-- ===== STUDY ===== -->
+<section id="study" class="hidden">
+  <h1>学習モード</h1>
+  <p class="sub">スタイルの特徴を、答えを見ながら覚える</p>
+
+  <div class="card">
+    <label class="f" for="studyCountry">国</label>
+    <select id="studyCountry"></select>
+    <label class="f" for="studyStyle">スタイル</label>
+    <select id="studyStyle"></select>
+  </div>
+
+  <div id="studyContent" class="hidden">
+    <h2 id="studyTitle"></h2>
+    <div class="card">
+      <p class="answer" id="studyMeta"></p>
+      <div class="study-color" id="studyColor" aria-label="ビールの色の目安"></div>
+      <div id="studyNarr"></div>
+    </div>
+
+    <h2>似たスタイルと比較</h2>
+    <div class="card">
+      <label class="f" for="studyCompareSelect">比較するスタイル</label>
+      <select id="studyCompareSelect"></select>
+      <div id="studyCompare"></div>
+    </div>
+
+    <h2>識別のポイント</h2>
+    <div class="card" id="studyMarkers"></div>
+
+    <h2>間違えやすい近縁スタイル</h2>
+    <div class="sim" id="studySimilar"></div>
+  </div>
+
+  <div class="row" style="margin-top:22px">
+    <button class="btn amber" id="studyRandomBtn">別のスタイル</button>
+    <button class="btn ghost" id="studyHomeBtn">ホームへ</button>
+  </div>
 </section>
 
 <!-- ===== QUIZ ===== -->
@@ -238,12 +304,20 @@ const store = {
 // ---------- state ----------
 let diffMode = 1;
 let diff = 1;
+let appMode = "test";
 let countries = [...new Set(S.map(x=>x.country))];
 let enabled = new Set(countries);
 let q = null; // current question
 
 // ---------- home ----------
 function renderHome(){
+  $("modeSeg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.v===appMode)));
+  $("testOptions").classList.toggle("hidden", appMode!=="test");
+  $("scoringInfo").classList.toggle("hidden", appMode!=="test");
+  $("statsBox").classList.toggle("hidden", appMode!=="test");
+  $("countryTitle").textContent = appMode==="test" ? "出題する国" : "学習する国";
+  $("countryHint").textContent = appMode==="test" ? "選んだ国のスタイルだけが出題・選択肢に入ります。" : "選んだ国のスタイルだけを学習できます。";
+  $("startBtn").textContent = appMode==="test" ? "テイスティングを始める" : "学習を始める";
   $("diffHint").textContent = DIFF_HINT[diffMode];
   $("diffSeg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String(+b.dataset.v===diffMode)));
   const cp = $("countryPick"); cp.innerHTML="";
@@ -256,6 +330,7 @@ function renderHome(){
   });
   renderStats();
 }
+$("modeSeg").onclick = e=>{ const b=e.target.closest("button"); if(!b) return; appMode=b.dataset.v; renderHome(); };
 $("diffSeg").onclick = e=>{ const b=e.target.closest("button"); if(!b) return; diffMode=+b.dataset.v; renderHome(); };
 
 function renderStats(){
@@ -328,7 +403,7 @@ function newQuestion(){
   drawGlass(s);
   show("quiz"); renderStep();
 }
-function show(id){ ["home","quiz","result"].forEach(x=>$(x).classList.toggle("hidden", x!==id)); window.scrollTo({top:0}); }
+function show(id){ ["home","quiz","result","study"].forEach(x=>$(x).classList.toggle("hidden", x!==id)); window.scrollTo({top:0}); }
 
 function renderStep(){
   const names=["","初級","中級","上級"];
@@ -408,6 +483,77 @@ $("answerBtn").onclick=()=>{
   renderResult(fin, finPts, total, {c,r,st});
 };
 
+// ---------- study mode ----------
+function studyFmt(t){
+  return t.replace(/\[([^|\]]+)\|([^\]]+)\]/g, "$1<span class=\"desc\">（$2）</span>")
+          .replace(/\[([^|\]]+)\]/g, "$1");
+}
+function studyPlain(t){
+  return t.replace(/\[([^|\]]+)\|([^\]]+)\]/g, "$1").replace(/\[([^|\]]+)\]/g, "$1");
+}
+function setStudyOptions(sel, items, selected){
+  sel.innerHTML="";
+  items.forEach(x=>{ const o=document.createElement("option"); o.value=x.value; o.textContent=x.label; sel.appendChild(o); });
+  if(selected) sel.value=selected;
+}
+function fillStudySelectors(s){
+  const p=pool();
+  const cs=[...new Set(p.map(x=>x.country))];
+  setStudyOptions($("studyCountry"), cs.map(c=>({value:c,label:c})), s.country);
+  const styles=p.filter(x=>x.country===s.country);
+  setStudyOptions($("studyStyle"), styles.map(x=>({value:x.id,label:x.style})), s.id);
+}
+function comparisonValue(s, kind){
+  if(kind==="appearance") return studyPlain(s.app);
+  if(kind==="aroma") return studyPlain(`${s.aroma.malt} ${s.aroma.yeast} ${s.aroma.hop}`);
+  if(kind==="taste") return studyPlain(`${s.taste.malt} ${s.taste.yeast} ${s.taste.hop} ${s.taste.body}`);
+  if(kind==="after") return studyPlain(s.after);
+  if(kind==="strength") return `約${s.abv}%　${studyPlain(s.alcohol)}`;
+  return s.markers.join("／");
+}
+function renderStudyCompare(a,t){
+  const rows=[
+    ["色・外観","appearance"], ["香り","aroma"], ["味・口当たり","taste"],
+    ["後味","after"], ["度数・温感","strength"], ["見分け方","markers"]
+  ];
+  $("studyCompare").innerHTML=`<div class="compare-grid">
+    <div class="compare-head">比較項目</div><div class="compare-head">${a.style}</div><div class="compare-head">${t.style}</div>
+    ${rows.map(([label,key])=>`<div class="compare-label">${label}</div><div>${comparisonValue(a,key)}</div><div>${comparisonValue(t,key)}</div>`).join("")}
+  </div>`;
+}
+function showStudyStyle(s, syncSelectors=true){
+  if(syncSelectors) fillStudySelectors(s);
+  $("studyContent").classList.remove("hidden");
+  $("studyTitle").textContent=s.style;
+  $("studyMeta").innerHTML=`${s.country} ／ ${s.region}<small>色 ${s.srm} SRM　・　ABV 約${s.abv}%</small>`;
+  $("studyColor").style.background=srmHex(s.srm);
+  $("studyNarr").innerHTML=`
+    <div class="study-section"><h3>見た目</h3><p>${studyFmt(s.app)}</p></div>
+    <div class="study-section"><h3>香り</h3><p><span class="lbl">麦芽</span>${studyFmt(s.aroma.malt)}</p><p><span class="lbl">酵母</span>${studyFmt(s.aroma.yeast)}</p><p><span class="lbl">ホップ</span>${studyFmt(s.aroma.hop)}</p></div>
+    <div class="study-section"><h3>味・口当たり</h3><p><span class="lbl">麦芽</span>${studyFmt(s.taste.malt)}</p><p><span class="lbl">酵母</span>${studyFmt(s.taste.yeast)}</p><p><span class="lbl">ホップ</span>${studyFmt(s.taste.hop)}</p><p><span class="lbl">口当たり</span>${studyFmt(s.taste.body)}</p></div>
+    <div class="study-section"><h3>後味・アルコール感</h3><p>${studyFmt(s.after)}</p><p>${studyFmt(s.alcohol)}</p></div>`;
+  $("studyMarkers").innerHTML=`<ul>${s.markers.map(m=>`<li>${m}</li>`).join("")}</ul>`;
+  const related=s.similar.map(id=>S.find(x=>x.id===id)).filter(Boolean);
+  $("studySimilar").innerHTML=related.map(t=>`<div><b>${t.style}<span class="note">　${t.country}</span></b>${t.markers[0]}</div>`).join("");
+  setStudyOptions($("studyCompareSelect"), related.map(t=>({value:t.id,label:`${t.style}（${t.country}）`})), related[0]?.id);
+  if(related.length){ renderStudyCompare(s,related[0]); $("studyCompareSelect").disabled=false; }
+  else { $("studyCompare").innerHTML='<p class="note">比較できる近縁スタイルはありません。</p>'; $("studyCompareSelect").disabled=true; }
+  $("studyCompareSelect").onchange=()=>{ const t=S.find(x=>x.id===$("studyCompareSelect").value); if(t) renderStudyCompare(s,t); };
+}
+function openStudy(){
+  const p=pool(); const s=p[Math.floor(Math.random()*p.length)];
+  show("study"); showStudyStyle(s);
+}
+$("studyCountry").onchange=()=>{
+  const styles=pool().filter(x=>x.country===$("studyCountry").value);
+  if(!styles.length) return;
+  setStudyOptions($("studyStyle"),styles.map(x=>({value:x.id,label:x.style})),styles[0].id);
+  showStudyStyle(styles[0],false);
+};
+$("studyStyle").onchange=()=>{ const s=S.find(x=>x.id===$("studyStyle").value); if(s) showStudyStyle(s,false); };
+$("studyRandomBtn").onclick=openStudy;
+$("studyHomeBtn").onclick=()=>{ show("home"); renderHome(); };
+
 function renderResult(fin, finPts, total, g){
   const s=q.s;
   $("verdict").textContent = fin.style ? "正解" : (fin.country ? "国は正解、スタイルは違う" : "はずれ");
@@ -433,7 +579,7 @@ function renderResult(fin, finPts, total, g){
 }
 $("againBtn").onclick=newQuestion;
 $("homeBtn").onclick=()=>{ show("home"); renderHome(); };
-$("startBtn").onclick=newQuestion;
+$("startBtn").onclick=()=> appMode==="test" ? newQuestion() : openStudy();
 
 renderHome();
 })();
