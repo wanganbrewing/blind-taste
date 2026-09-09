@@ -101,6 +101,10 @@ li{margin:3px 0}
 .group-style b,.group-feature b{display:block;margin-bottom:3px}
 .group-style small{display:block;color:var(--mute)}
 .group-swatch{height:8px;border-radius:999px;border:1px solid rgba(0,0,0,.12);margin-top:8px}
+.brand{margin-top:9px;padding-top:8px;border-top:1px solid var(--line);font-size:.86rem}
+.brand b{display:inline;margin:0}
+.buy-link{display:inline-block;margin-top:6px;color:var(--amber);font-weight:700;text-decoration:none}
+.buy-link:hover{text-decoration:underline}
 .group-part{margin-top:24px}
 .group-part h2{margin-bottom:8px}
 .group-feature p{margin:0;font-size:.92rem}
@@ -152,6 +156,13 @@ li{margin:3px 0}
         <button data-v="0" aria-pressed="false">全部</button>
       </div>
       <p class="hint" id="diffHint"></p>
+
+      <h2>出題範囲</h2>
+      <div class="seg" id="scopeSeg" role="group" aria-label="出題範囲">
+        <button data-v="all" aria-pressed="true">全スタイル</button>
+        <button data-v="domens" aria-pressed="false">Domensテキスト</button>
+      </div>
+      <p class="hint" id="scopeHint"></p>
     </div>
 
     <div id="countryOptions">
@@ -175,7 +186,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 1.4.0 · 2026-09-10</p>
+  <p class="version">Version 1.8.0 · 2026-09-10</p>
 </section>
 
 <!-- ===== STUDY ===== -->
@@ -283,6 +294,40 @@ const DIFF_HINT = {
   2:"感覚的な表現だけ。記述子は出ません。香り・味の3軸の区別は表示します。",
   3:"感覚表現のみ。香りと味のそれぞれで、1軸ぶんの情報が欠けます（実戦でホップが取れなかった状況の再現）。麦芽・酵母・ホップの区別も表示しません。"
 };
+const BOTTOM_FERMENTED = new Set(["helles","pils","rauch","doppelbock","schwarz","marzen","czech_pils","czech_dark","polotmave","vienna","baltic","rice_lager","export","munich_dunkel","festbier","maibock","dark_bock","eisbock","kellerbier","american_lager","american_light_lager","american_amber_lager","american_dark_lager","rye_lager","mexican_lager","alsatian_pils","italian_pils"]);
+const SPONTANEOUS = new Set(["straight_lambic","gueuze","faro","fruit_lambic"]);
+const DOMENS_EXCLUDE = new Set(["czech_dark","polotmave","rice_lager","wcipa","cal_common","imp_stout"]);
+// Domens資料の日本語ページだけに掲載されるスタイル。現行収録分には該当なし。
+const JAPANESE_ONLY = new Set([]);
+function sourceBadge(s){ return JAPANESE_ONLY.has(s.id) ? '<span class="tag" title="Domens資料の日本語ページだけに掲載">日</span>' : ""; }
+function fermentationInfo(s){
+  if(SPONTANEOUS.has(s.id)) return {label:"自然発酵", note:"野生酵母・微生物による発酵"};
+  if(s.id==="cal_common") return {label:"下面発酵", note:"ラガー酵母を比較的高温で発酵"};
+  if(s.id==="cream_ale") return {label:"上面発酵", note:"下面発酵酵母を併用する場合あり"};
+  if(["flanders_red","oud_bruin"].includes(s.id)) return {label:"上面発酵＋混合発酵", note:"乳酸菌などによる熟成を伴う"};
+  if(["berliner","gose"].includes(s.id)) return {label:"上面発酵＋乳酸発酵", note:"酸味を生む発酵を併用"};
+  return BOTTOM_FERMENTED.has(s.id) ? {label:"下面発酵",note:"低温でクリーンな発酵"} : {label:"上面発酵",note:"エール酵母による発酵"};
+}
+function ingredientInfo(s){
+  const exact={
+    weissbier:"大麦麦芽・小麦麦芽・ホップ・酵母・水", weizenbock:"大麦麦芽・小麦麦芽・ホップ・酵母・水", american_wheat:"大麦麦芽・小麦麦芽・ホップ・酵母・水",
+    witbier:"大麦麦芽・未発芽小麦・ホップ・酵母・水・オレンジピール・コリアンダー", gose:"大麦麦芽・小麦麦芽・ホップ・酵母・水・塩・コリアンダー・乳酸菌",
+    berliner:"大麦麦芽・小麦麦芽・ホップ・酵母・水・乳酸菌", oat_stout:"大麦麦芽・オーツ麦・ホップ・酵母・水", sweet_stout:"大麦麦芽・焙煎麦芽・ホップ・酵母・水・乳糖",
+    dry_stout:"大麦麦芽・焙煎大麦・ホップ・酵母・水", rauch:"燻製麦芽・大麦麦芽・ホップ・酵母・水", smoked_porter:"燻製麦芽・焙煎麦芽・ホップ・酵母・水",
+    straight_lambic:"大麦麦芽・未発芽小麦・熟成ホップ・水・野生酵母・乳酸菌", gueuze:"年代の異なるランビック（大麦麦芽・未発芽小麦・熟成ホップ・野生微生物）のブレンド",
+    faro:"ランビック・糖類・香辛料", fruit_lambic:"ランビック・果実（チェリーやラズベリー等）", flanders_red:"大麦麦芽・ホップ・酵母・乳酸菌等・水（木樽熟成）",
+    oud_bruin:"大麦麦芽・ホップ・酵母・乳酸菌等・水", rice_lager:"大麦麦芽・米・ホップ・酵母・水", american_lager:"大麦麦芽・コーンまたは米・ホップ・酵母・水",
+    mexican_lager:"大麦麦芽・コーンまたは米・ホップ・酵母・水", american_light_lager:"大麦麦芽・コーンまたは米・ホップ・酵母・水", cream_ale:"大麦麦芽・コーンまたは米・ホップ・酵母・水", italian_grape:"大麦麦芽・ブドウまたはブドウ果汁・ホップ・酵母・水",
+    rye_lager:"大麦麦芽・ライ麦麦芽・ホップ・酵母・水", rye_ale:"大麦麦芽・ライ麦麦芽・ホップ・酵母・水", oyster_stout:"大麦麦芽・焙煎大麦・ホップ・酵母・水（牡蠣または牡蠣殻を使う場合あり）",
+    chocolate_porter:"大麦麦芽・焙煎麦芽・ホップ・酵母・水（カカオやチョコレートを使う場合あり）",
+    sahti:"大麦麦芽・ライ麦等・ジュニパー・酵母・水（ホップは少量または不使用）", kornol:"大麦麦芽・オーツ麦やライ麦等・ホップ・伝統的な農家酵母・水"
+  };
+  if(exact[s.id]) return exact[s.id];
+  if(["porter","mild_porter","robust_porter","imperial_porter","baltic","imp_stout","imperial_stout","foreign_extra_stout","tropical_stout"].includes(s.id)) return "大麦麦芽（焙煎麦芽を含む）・ホップ・酵母・水";
+  if(["dubbel","tripel","golden_strong","quad","grand_cru"].includes(s.id)) return "大麦麦芽・ホップ・ベルギー系酵母・水・糖類（使用する場合あり）";
+  if(["saison","biere_de_garde"].includes(s.id)) return "大麦麦芽を中心とする穀物・ホップ・酵母・水（小麦や香辛料を使う場合あり）";
+  return "大麦麦芽・ホップ・酵母・水";
+}
 
 // ---------- persistence (fails silently where storage is unavailable) ----------
 const store = {
@@ -294,6 +339,7 @@ const store = {
 let diffMode = 1;
 let diff = 1;
 let appMode = "test";
+let testScope = "all";
 let countries = [...new Set(S.map(x=>x.country))];
 let enabled = new Set(countries);
 let q = null; // current question
@@ -310,9 +356,13 @@ function renderHome(){
   $("startBtn").textContent = appMode==="test" ? "テイスティングを始める" : "学習を始める";
   $("diffHint").textContent = DIFF_HINT[diffMode];
   $("diffSeg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String(+b.dataset.v===diffMode)));
+  $("scopeSeg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.v===testScope)));
+  const scoped=S.filter(x=>testScope==="all"||!DOMENS_EXCLUDE.has(x.id));
+  $("scopeHint").textContent=testScope==="all"?`収録中の全${S.length}スタイルから出題します。`:`Domensビアソムリエ教材掲載の${scoped.length}スタイルから出題します。`;
   const cp = $("countryPick"); cp.innerHTML="";
-  countries.forEach(c=>{
-    const n = S.filter(x=>x.country===c).length;
+  const visibleCountries=[...new Set(scoped.map(x=>x.country))];
+  visibleCountries.forEach(c=>{
+    const n = scoped.filter(x=>x.country===c).length;
     const b = document.createElement("button");
     b.className="chip"; b.textContent=`${c} ${n}`; b.setAttribute("aria-pressed", String(enabled.has(c)));
     b.onclick=()=>{ enabled.has(c)?enabled.delete(c):enabled.add(c); if(!enabled.size) enabled.add(c); renderHome(); };
@@ -322,6 +372,7 @@ function renderHome(){
 }
 $("modeSeg").onclick = e=>{ const b=e.target.closest("button"); if(!b) return; appMode=b.dataset.v; renderHome(); };
 $("diffSeg").onclick = e=>{ const b=e.target.closest("button"); if(!b) return; diffMode=+b.dataset.v; renderHome(); };
+$("scopeSeg").onclick = e=>{ const b=e.target.closest("button"); if(!b) return; testScope=b.dataset.v; const scoped=S.filter(x=>testScope==="all"||!DOMENS_EXCLUDE.has(x.id)); enabled=new Set(scoped.map(x=>x.country)); renderHome(); };
 
 function renderStats(){
   const st = store.get(); const box=$("statsBox");
@@ -384,7 +435,7 @@ function drawGlass(s){
 }
 
 // ---------- quiz flow ----------
-function pool(){ return S.filter(x=>enabled.has(x.country)); }
+function pool(){ return S.filter(x=>enabled.has(x.country)&&(testScope==="all"||!DOMENS_EXCLUDE.has(x.id))); }
 function newQuestion(){
   const p = pool(); const s = p[Math.floor(Math.random()*p.length)];
   diff = diffMode===0 ? 1+Math.floor(Math.random()*3) : diffMode;
@@ -406,7 +457,7 @@ function renderStep(){
     html += `<details><summary>これまでのメモ</summary><div class="prev">${[...Array(q.step).keys()].map(i=>stepHtml(i,q.s)).join("")}</div></details>`;
   }
   if(q.step<5) html += `<p style="color:var(--mute);font-size:.95rem">${LEAD[q.step]}</p>` + stepHtml(q.step,q.s);
-  else html += `<div class="prev">${[...Array(5).keys()].map(i=>`<p style="color:var(--mute);font-size:.85rem;margin-bottom:.2em">${STAGES[i]}</p>`+stepHtml(i,q.s)).join("")}</div><p><b>さて。国、地方、スタイルは？</b></p>`;
+  else { const f=fermentationInfo(q.s); html += `<div class="prev">${[...Array(5).keys()].map(i=>`<p style="color:var(--mute);font-size:.85rem;margin-bottom:.2em">${STAGES[i]}</p>`+stepHtml(i,q.s)).join("")}</div><p><span class="tag">発酵方式：${f.label}</span><span class="note">${f.note}</span></p><p><span class="tag">一般的な原材料</span>${ingredientInfo(q.s)}</p><p><b>さて。国、地方、スタイルは？</b></p>`; }
   $("narr").innerHTML = html;
 
   if(q.step<5){ $("candPane").classList.remove("hidden"); $("finalPane").classList.add("hidden"); renderCands(); }
@@ -478,30 +529,65 @@ function studyPlain(t){
   return t.replace(/\[([^|\]]+)\|([^\]]+)\]/g, "$1").replace(/\[([^|\]]+)\]/g, "$1");
 }
 function comparisonValue(s, kind){
+  if(kind==="fermentation"){ const f=fermentationInfo(s); return `${f.label}　${f.note}`; }
   if(kind==="appearance") return studyPlain(s.app);
   if(kind==="aroma") return studyPlain(`${s.aroma.malt} ${s.aroma.yeast} ${s.aroma.hop}`);
   if(kind==="taste") return studyPlain(`${s.taste.malt} ${s.taste.yeast} ${s.taste.hop} ${s.taste.body}`);
   if(kind==="after") return studyPlain(s.after);
   if(kind==="strength") return `約${s.abv}%　${studyPlain(s.alcohol)}`;
+  if(kind==="ingredients") return ingredientInfo(s);
   return s.markers.join("／");
 }
 const STUDY_GROUPS = [
-  {id:"pale_lager", name:"淡色ラガー", note:"麦芽の丸さ、ホップの強さ、軽快さの違いを比較。", ids:["helles","pils","czech_pils","export","american_lager","mexican_lager","rice_lager","alsatian_pils","italian_pils"]},
+  {id:"pale_lager", name:"淡色ラガー", note:"麦芽の丸さ、ホップの強さ、軽快さの違いを比較。", ids:["helles","pils","czech_pils","export","american_lager","american_light_lager","mexican_lager","rice_lager","alsatian_pils","italian_pils"]},
   {id:"amber_lager", name:"琥珀色ラガー", note:"トースト、カラメル、甘さ、ドライさの境界を比較。", ids:["vienna","marzen","festbier","polotmave","kellerbier","cal_common"]},
+  {id:"american_lagers", name:"アメリカンスタイル・ラガー", note:"軽さ、色、ライ麦のスパイス感、副原料の違いを比較。", ids:["american_light_lager","american_lager","american_amber_lager","american_dark_lager","rye_lager"]},
   {id:"dark_bock", name:"濃色ラガー／ボック", note:"焦げの有無、パン様の麦芽感、濃度と温感を比較。", ids:["munich_dunkel","schwarz","czech_dark","dark_bock","doppelbock","eisbock","baltic","maibock"]},
   {id:"wheat", name:"小麦・白ビール", note:"バナナ、クローブ、柑橘、酸味と発酵のクリーンさを比較。", ids:["weissbier","weizenbock","witbier","american_wheat","gose","berliner"]},
   {id:"british_bitter", name:"英国ビター／ペールエール", note:"度数、麦芽の厚み、エステル、苦味の強さを段階的に比較。", ids:["ordinary_bitter","bitter","esb","english_pale","eipa","golden_ale"]},
-  {id:"british_malty", name:"英国の麦芽主体エール", note:"ナッツ、カラメル、熟成香、度数の違いを比較。", ids:["mild","english_brown","scottish_export","wee_heavy","old_ale","barleywine"]},
-  {id:"porter", name:"ポーター", note:"チョコ、焙煎、煙、苦味とボディの差を比較。", ids:["porter","robust_porter","smoked_porter","baltic"]},
-  {id:"stout", name:"スタウト", note:"ドライ、甘口、滑らかさ、果実味、焙煎強度を比較。", ids:["dry_stout","oat_stout","sweet_stout","foreign_extra_stout","tropical_stout","imp_stout"]},
-  {id:"belgian_strong", name:"ベルギーのストロングエール", note:"色、果実・スパイス、高炭酸、甘さの切れ方を比較。", ids:["dubbel","tripel","golden_strong","quad","grand_cru","belgian_amber"]},
+  {id:"british_malty", name:"英国の麦芽主体エール", note:"ナッツ、カラメル、熟成香、度数の違いを比較。", ids:["mild","english_brown","english_red","scottish_light","scottish_heavy","scottish_export","wee_heavy","old_ale","barleywine"]},
+  {id:"porter", name:"ポーター", note:"チョコ、焙煎、煙、苦味とボディの差を比較。", ids:["porter","mild_porter","robust_porter","smoked_porter","chocolate_porter","imperial_porter","baltic"]},
+  {id:"stout", name:"スタウト", note:"ドライ、甘口、滑らかさ、果実味、焙煎強度を比較。", ids:["dry_stout","sweet_stout","oat_stout","oyster_stout","foreign_extra_stout","tropical_stout","imperial_stout","imp_stout"]},
+  {id:"belgian_strong", name:"ベルギーのストロングエール", note:"色、果実・スパイス、高炭酸、甘さの切れ方を比較。", ids:["dubbel","tripel","golden_strong","belgian_strong_amber","quad","grand_cru","belgian_amber"]},
   {id:"wild_sour", name:"ベルギーの野生発酵・酸味", note:"発泡、甘さ、果実、酢酸・乳酸、熟成香の違いを比較。", ids:["straight_lambic","gueuze","faro","fruit_lambic","flanders_red","oud_bruin"]},
-  {id:"farmhouse", name:"農家・地方伝統エール", note:"乾燥感、素朴な発酵香、麦芽、果実、ハーブの違いを比較。", ids:["saison","biere_de_garde","kornol","sahti","italian_grape"]},
-  {id:"american_hop", name:"アメリカ系ホッピーエール", note:"透明度、ホップの方向、苦味、濃色麦芽、度数を比較。", ids:["apa","wcipa","neipa","dipa","black_ipa","amber","american_brown","american_barleywine"]},
+  {id:"farmhouse", name:"農家・地方伝統エール", note:"乾燥感、素朴な発酵香、麦芽、果実、ハーブの違いを比較。", ids:["saison","biere_de_garde","american_farmhouse","kornol","sahti","italian_grape"]},
+  {id:"american_hop", name:"アメリカ系ホッピーエール", note:"透明度、ホップの方向、苦味、濃色麦芽、度数を比較。", ids:["apa","american_ipa","wcipa","neipa","dipa","black_ipa","rye_ale","amber","american_brown","american_barleywine"]},
   {id:"southern_hop", name:"豪州・ニュージーランドのホッピーエール", note:"南半球系の果実香、苦味、炭酸とボディを比較。", ids:["australian_pale","australian_xpa","sparkling","nz_ipa"]},
   {id:"clean_ale", name:"クリーンで紛らわしいエール", note:"ラガーに近い発酵の清潔さと、穀物・ホップ・果実香の差を比較。", ids:["kolsch","alt","cream_ale","cal_common","golden_ale"]},
   {id:"smoke_rustic", name:"煙・素朴さ・特殊香", note:"煙、木、針葉樹、土、野性的な香りの由来を比較。", ids:["rauch","smoked_porter","sahti","kornol","gose"]}
 ];
+const REP_BRANDS = {
+  bitter:"フラーズ・ロンドンプライド", eipa:"ワージントン・ホワイトシールド", porter:"フラーズ・ロンドンポーター", mild:"バンクス・マイルド",
+  barleywine:"トーマス・ハーディ・エール", wee_heavy:"トラクエア・ハウスエール", oat_stout:"サミュエルスミス・オートミールスタウト", dry_stout:"ギネス・ドラフト",
+  helles:"アウグスティナー・ラガービア・ヘル", pils:"ビットブルガー・ピルス", weissbier:"ヴァイエンステファン・ヘーフェヴァイス", kolsch:"フリュー・ケルシュ",
+  alt:"ユーリゲ・アルト", rauch:"シュレンケルラ・ラオホビア・メルツェン", doppelbock:"アイインガー・セレブレーター", schwarz:"ケストリッツァー・シュヴァルツビア",
+  berliner:"ベルリナー・キンドル・ヴァイセ", gose:"リッターグーツ・ゴーゼ", marzen:"アイインガー・オクトーバーフェスト・メルツェン", weizenbock:"シュナイダー・アヴェンティヌス",
+  witbier:"ヒューガルデン・ホワイト", dubbel:"ウェストマール・ダブル", tripel:"ウェストマール・トリプル", saison:"セゾン・デュポン",
+  flanders_red:"ローデンバッハ・グランクリュ", oud_bruin:"リーフマンス・グーデンバンド", gueuze:"ブーン・オードグーズ", golden_strong:"デュベル",
+  quad:"ロシュフォール10", czech_pils:"ピルスナー・ウルケル", czech_dark:"ウ・フレクー・フレコフスキー・レジャーク", polotmave:"ベルナルド・アンバーラガー",
+  apa:"シエラネバダ・ペールエール", wcipa:"ストーンIPA", neipa:"ヘディー・トッパー", imp_stout:"ノースコースト・オールドラスプーチン",
+  cal_common:"アンカー・スチーム", amber:"アンダーソンバレー・ブーント・アンバー", dipa:"プリニー・ジ・エルダー", cream_ale:"ジェネシー・クリームエール",
+  vienna:"ネグラ・モデロ", baltic:"ジヴィエツ・ポーター", rice_lager:"アサヒスーパードライ", sparkling:"クーパーズ・スパークリングエール",
+  export:"DABエクスポート", munich_dunkel:"アイインガー・アルトバイリッシュ・デュンケル", festbier:"ヴァイエンステファン・フェストビア", maibock:"アイインガー・マイボック",
+  dark_bock:"アインベッカー・ウルボック・デュンケル", eisbock:"クルムバッハ・アイスボック", kellerbier:"メンヒスホーフ・ケラービア", ordinary_bitter:"アドナムス・サウスウォルド・ビター",
+  esb:"フラーズESB", english_pale:"バス・ペールエール", golden_ale:"フラーズ・ディスカバリー", english_brown:"ニューキャッスル・ブラウンエール",
+  old_ale:"シークストン・オールドペキュリア", scottish_export:"ベルヘイヴン・スコティッシュエール", robust_porter:"スミュティノーズ・ロバストポーター", smoked_porter:"アラスカン・スモークドポーター",
+  sweet_stout:"マキシソン・スタウト", foreign_extra_stout:"ギネス・フォーリンエクストラスタウト", tropical_stout:"ライオン・スタウト", belgian_amber:"デ・コーニンク",
+  straight_lambic:"カンティヨン・グランクリュ・ブルオクセラ", faro:"リンデマンス・ファロ", fruit_lambic:"リンデマンス・クリーク", grand_cru:"ヒューガルデン・グランクリュ",
+  american_lager:"バドワイザー", black_ipa:"ストーン・サブライムリー・セルフライチャス", american_brown:"ブルックリン・ブラウンエール", american_barleywine:"シエラネバダ・ビッグフット",
+  american_wheat:"ウィドマー・ヘーフェヴァイツェン", biere_de_garde:"ジャンラン・アンバー", alsatian_pils:"メテオ・ピルス", italian_pils:"ティポピルス",
+  italian_grape:"バーレーBB10", sahti:"フィンランディア・サハティ", kornol:"キン・ヴェストコーストIPA・クヴェイク", mexican_lager:"コロナ・エキストラ",
+  australian_pale:"クーパーズ・オリジナル・ペールエール", australian_xpa:"クーパーズXPA", nz_ipa:"8ワイアード・ホップワイアードIPA",
+  english_red:"シェパードニーム・スピットファイア", scottish_light:"ベルヘイヴン・ベスト", scottish_heavy:"マキュアン・エイティシリング", mild_porter:"サミュエルスミス・タディポーター",
+  chocolate_porter:"ヤングス・ダブルチョコレートスタウト", imperial_porter:"フラーズ・インペリアルポーター", oyster_stout:"ポーターハウス・オイスタースタウト", imperial_stout:"サミュエルスミス・インペリアルスタウト",
+  american_light_lager:"ミラーライト", american_amber_lager:"ブルックリンラガー", american_dark_lager:"シェイナー・ボック", rye_lager:"サミュエルアダムス・ライラガー",
+  rye_ale:"ベアリパブリック・ホップロッドライ", american_ipa:"ラグニタスIPA", american_farmhouse:"ブルーバード・セゾンルー", belgian_strong_amber:"ブッシュ・アンバー"
+};
+function purchaseUrl(brand){ return `https://search.rakuten.co.jp/search/mall/${encodeURIComponent(brand+" ビール 1本")}/`; }
+function brandHtml(s){
+  const brand=REP_BRANDS[s.id];
+  return brand ? `<div class="brand">代表銘柄：<b>${brand}</b><br><a class="buy-link" href="${purchaseUrl(brand)}" target="_blank" rel="noopener noreferrer">1本販売を探す ↗</a></div>` : "";
+}
 function groupStyles(g){ return g.ids.map(id=>S.find(x=>x.id===id)).filter(Boolean); }
 function featureCards(styles,key){
   return `<div class="group-items">${styles.map(s=>`<div class="group-feature"><b>${s.style}</b><p>${comparisonValue(s,key)}</p></div>`).join("")}</div>`;
@@ -509,9 +595,9 @@ function featureCards(styles,key){
 function renderStudyGroup(g){
   const styles=groupStyles(g);
   $("studyGroupNote").textContent=`${g.note}（${styles.length}スタイル）`;
-  const parts=[["色・外観","appearance"],["香り","aroma"],["味・口当たり","taste"],["後味","after"],["度数・温感","strength"],["見分け方","markers"]];
+  const parts=[["発酵方式","fermentation"],["一般的な原材料","ingredients"],["色・外観","appearance"],["香り","aroma"],["味・口当たり","taste"],["後味","after"],["度数・温感","strength"],["見分け方","markers"]];
   $("studyGroupView").innerHTML=`
-    <div class="group-part"><h2>${g.name}</h2><div class="group-summary">${styles.map(s=>`<div class="group-style"><b>${s.style}</b><small>${s.country} ／ ${s.region}</small><small>色 ${s.srm} SRM　・　ABV 約${s.abv}%</small><div class="group-swatch" style="background:${srmHex(s.srm)}"></div></div>`).join("")}</div></div>
+    <div class="group-part"><h2>${g.name}</h2><div class="group-summary">${styles.map(s=>{const f=fermentationInfo(s);return `<div class="group-style"><b>${s.style} ${sourceBadge(s)}</b><small>${s.country} ／ ${s.region}</small><small>色 ${s.srm} SRM　・　ABV 約${s.abv}%</small><small>発酵方式：${f.label}</small><small>${f.note}</small><div class="group-swatch" style="background:${srmHex(s.srm)}"></div>${brandHtml(s)}</div>`;}).join("")}</div><p class="hint">販売状況・価格・販売単位はリンク先で確認してください。「日」はDomens資料の日本語ページだけに掲載される項目です。</p></div>
     ${parts.map(([label,key])=>`<div class="group-part"><h2>${label}</h2>${featureCards(styles,key)}</div>`).join("")}`;
   window.scrollTo({top:0,behavior:"auto"});
 }
@@ -537,8 +623,9 @@ function renderResult(fin, finPts, total, g){
   const s=q.s;
   $("verdict").textContent = fin.style ? "正解" : (fin.country ? "国は正解、スタイルは違う" : "はずれ");
   $("verdict").className = "verdict " + (fin.style?"ok":"ng");
-  $("ansLine").innerHTML = `${s.style}<small>${s.country} ／ ${s.region}</small>` + (fin.style?"":`<small>あなたの答え：${g.c} ／ ${g.r} ／ ${g.st}</small>`);
-  $("ansFacts").innerHTML = `<span class="tag">色 ${s.srm} SRM</span><span class="tag">ABV 約${s.abv}%</span>`;
+  $("ansLine").innerHTML = `${s.style} ${sourceBadge(s)}<small>${s.country} ／ ${s.region}</small>` + (fin.style?"":`<small>あなたの答え：${g.c} ／ ${g.r} ／ ${g.st}</small>`);
+  const f=fermentationInfo(s);
+  $("ansFacts").innerHTML = `<span class="tag">色 ${s.srm} SRM</span><span class="tag">ABV 約${s.abv}%</span><span class="tag">${f.label}</span><p class="note">一般的な原材料：${ingredientInfo(s)}</p>${brandHtml(s)}`;
   const rows = q.stepScore.map((x,i)=>{
     const lostAt = !x.kept;
     return `<tr><td>${STAGES[i]}<br><span class="note">${lostAt?"正解を候補から外した":"候補 "+x.n+"件に残した"}</span></td><td>${x.pts}</td></tr>`;
