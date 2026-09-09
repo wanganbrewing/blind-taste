@@ -51,6 +51,7 @@ h2{font-size:1.05rem;font-weight:700;margin:26px 0 10px}
 .narr .lbl{font-family:var(--ui);font-size:.75rem;color:var(--amber);margin-right:.5em;vertical-align:.1em}
 .narr .desc{color:var(--ink2);font-size:.85em;font-family:var(--ui)}
 .narr .prev{color:var(--mute);font-size:.98rem}
+.narr .scene{font-family:var(--serif);color:var(--ink);font-style:italic;border-left:3px solid var(--amber);padding:.15em 0 .15em .9em;margin:.2em 0 1em}
 .narr details summary{cursor:pointer;color:var(--mute);font-family:var(--ui);font-size:.85rem;margin-bottom:.6em;list-style:none}
 .narr details summary::before{content:"▸ ";}
 .narr details[open] summary::before{content:"▾ ";}
@@ -186,7 +187,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 1.9.0 · 2026-09-10</p>
+  <p class="version">Version 2.0.0 · 2026-09-10</p>
 </section>
 
 <!-- ===== STUDY ===== -->
@@ -416,13 +417,43 @@ function axesHtml(kind, obj){
     return `<p>${lbl}${text}</p>`;
   }).join("");
 }
+function plainHint(t){ return t.replace(/\[([^|\]]+)\|([^\]]+)\]/g,"$1").replace(/\[([^|\]]+)\]/g,"$1"); }
+function sensoryScene(i,s){
+  const all=plainHint(`${s.app} ${s.aroma.malt} ${s.aroma.yeast} ${s.aroma.hop} ${s.taste.malt} ${s.taste.yeast} ${s.taste.hop} ${s.taste.body} ${s.after}`);
+  if(i===0){
+    if(s.srm>=18) return "夜を一滴ずつ集めたような色。その縁で、泡だけが静かな灯りをともしている。";
+    if(s.srm>=9) return "夕暮れを閉じ込めた琥珀。光の角度を変えるたび、表情がゆっくりとほどけていく。";
+    return /濁|霞/.test(s.app) ? "淡い光の中に、まだ形にならない記憶が漂っている。霞の向こうに何かが待っている。" : "朝の光をすくい取ったような輝き。透明な輪郭が、次の一口をまっすぐに招く。";
+  }
+  if(i===1){
+    if(/燻|煙|スモーク/.test(all)) return "遠い薪火の記憶が立ち上がる。森の静けさまで、煙の向こうから近づいてくる。";
+    if(/焙煎|コーヒー|チョコ|カカオ/.test(all)) return "雨上がりの石畳と、小さな焙煎所。暗い香りの奥に、かすかな甘さが息づいている。";
+    if(/柑橘|グレープフルーツ|レモン|オレンジ|果実|トロピカル/.test(all)) return "果樹園の扉が不意に開く。熟した光を運ぶ風が、グラスの縁で幾重にもほどけていく。";
+    if(/酸|野生|革|馬小屋/.test(all)) return "古い石造りの地下室。時間そのものが香りになり、湿った壁の向こうで静かに呼吸している。";
+    return "焼きたての穀物を思わせる穏やかな香り。派手さはないのに、なぜかもう一度確かめたくなる。";
+  }
+  if(i===2){
+    if(/酸味|酸っぱい|乳酸|酢酸/.test(all)) return "舌の上に張られた銀の糸。その緊張を、果実と穀物の影が左右から支えている。";
+    if(/苦味|苦い|IBU/.test(all)) return "一閃。青い風のような苦味が走り、その背後から麦の厚みがゆっくり姿を現す。";
+    if(/焙煎|コーヒー|チョコ|カカオ/.test(all)) return "深煎りの陰影が幾層にも重なる。黒一色ではない、温度のある暗さだ。";
+    if(/甘|カラメル|蜂蜜|蜜/.test(all)) return "やわらかな布を重ねるように、甘みと麦の旨みが舌を包む。その中心には確かな芯がある。";
+    return "静かな入り口から、味わいの輪郭が一気に広がる。軽やかさと厚みが、短い均衡を結んでいる。";
+  }
+  if(i===3){
+    if(/ドライ|切れ|すっと消|短い/.test(all)) return "潮が引くように、味わいは迷いなく去っていく。あとに残るのは、研ぎ澄まされた輪郭だけ。";
+    if(/長|余韻|残る|持続/.test(all)) return "遠い鐘の音のように、余韻が何度も戻ってくる。消えたと思うたび、別の表情が現れる。";
+    return "幕が静かに降りても、物語はまだ終わらない。舌の奥に小さな手がかりが残されている。";
+  }
+  return s.abv>=8 ? "胸の奥に小さな暖炉がともる。熱は声を荒らげず、ゆっくりと身体の内側へ広がっていく。" : s.abv<=4.5 ? "羽が触れるほどの軽い温度。それでも存在は消えず、涼しい風のように輪郭を残す。" : "穏やかな温度が喉を通り、全体を一つに結ぶ。強さではなく、調和として感じる温かさだ。";
+}
 function stepHtml(i, s){
+  const scene=`<p class="scene">${sensoryScene(i,s)}</p>`;
   switch(i){
-    case 0: return `<p>${fmt(s.app)}</p>`;
-    case 1: return axesHtml("aroma", s.aroma);
-    case 2: return axesHtml("taste", s.taste) + `<p>${diff<3?'<span class="lbl">口当たり</span>':''}${fmt(s.taste.body)}</p>`;
-    case 3: return `<p>${fmt(s.after)}</p>`;
-    case 4: return `<p>${fmt(s.alcohol)}</p>`;
+    case 0: return scene+`<p>${fmt(s.app)}</p>`;
+    case 1: return scene+axesHtml("aroma", s.aroma);
+    case 2: return scene+axesHtml("taste", s.taste) + `<p>${diff<3?'<span class="lbl">口当たり</span>':''}${fmt(s.taste.body)}</p>`;
+    case 3: return scene+`<p>${fmt(s.after)}</p>`;
+    case 4: return scene+`<p>${fmt(s.alcohol)}</p>`;
   }
 }
 const LEAD = ["グラスを光にかざす。","鼻を近づける。","一口。","飲み込んで、少し待つ。","もう一口、今度は喉に意識を向けて。"];
