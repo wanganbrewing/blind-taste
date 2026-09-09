@@ -209,7 +209,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 2.6.0 · 2026-09-10</p>
+  <p class="version">Version 2.7.0 · 2026-09-10</p>
 </section>
 
 <!-- ===== STUDY ===== -->
@@ -226,7 +226,8 @@ li{margin:3px 0}
   <div id="studyGroupView"></div>
 
   <div class="row" style="margin-top:22px">
-    <button class="btn amber" id="studyRandomBtn">別のグループ</button>
+    <button class="btn amber" id="studyTestBtn">このグループでテスト</button>
+    <button class="btn ghost" id="studyRandomBtn">別のグループ</button>
     <button class="btn ghost" id="studyHomeBtn">ホームへ</button>
   </div>
 </section>
@@ -251,6 +252,7 @@ li{margin:3px 0}
 <!-- ===== QUIZ ===== -->
 <section id="quiz" class="hidden">
   <p class="active-diff hidden" id="activeDiff"></p>
+  <p class="active-diff hidden" id="activeGroupTest"></p>
   <div class="stages" id="stages"></div>
 
   <div class="card">
@@ -402,6 +404,8 @@ let enabled = new Set(countries);
 let q = null; // current question
 let originQ = null;
 let originStats = {n:0,ok:0};
+let quizPoolIds = null;
+let quizGroupName = "";
 function inTestScope(s){ return testScope==="d" ? !D_EXCLUDE.has(s.id) : testScope==="frequent50" ? FREQUENT_50.has(s.id) : true; }
 
 // ---------- home ----------
@@ -525,7 +529,7 @@ function drawGlass(s){
 }
 
 // ---------- quiz flow ----------
-function pool(){ return S.filter(x=>enabled.has(x.country)&&inTestScope(x)); }
+function pool(){ return quizPoolIds ? S.filter(x=>quizPoolIds.has(x.id)) : S.filter(x=>enabled.has(x.country)&&inTestScope(x)); }
 function newQuestion(){
   const p = pool(); const s = p[Math.floor(Math.random()*p.length)];
   diff = diffMode===0 ? 1+Math.floor(Math.random()*3) : diffMode;
@@ -540,6 +544,8 @@ function renderStep(){
   const names=["","初級","中級","上級"];
   $("activeDiff").textContent=`今回の難易度：${names[diff]}`;
   $("activeDiff").classList.toggle("hidden", diffMode!==0);
+  $("activeGroupTest").textContent=`グループ限定：${quizGroupName}`;
+  $("activeGroupTest").classList.toggle("hidden", !quizPoolIds);
   const st=$("stages"); st.innerHTML = STAGES.map((n,i)=>`<div class="${i<q.step?'done':i===q.step?'now':''}">${n}</div>`).join("");
   // narration: previous steps collapsed while narrowing; all hints expanded for the final answer
   let html="";
@@ -704,6 +710,10 @@ function openStudy(){
   show("study"); setupStudyGroups($("studyGroupSelect").value||STUDY_GROUPS[0].id);
 }
 $("studyGroupSelect").onchange=()=>renderStudyGroup(STUDY_GROUPS.find(g=>g.id===$("studyGroupSelect").value));
+$("studyTestBtn").onclick=()=>{
+  const g=STUDY_GROUPS.find(x=>x.id===$("studyGroupSelect").value);
+  quizPoolIds=new Set(g.ids); quizGroupName=g.name; newQuestion();
+};
 $("studyRandomBtn").onclick=()=>{
   const current=$("studyGroupSelect").value;
   const choices=STUDY_GROUPS.filter(g=>g.id!==current);
@@ -781,7 +791,11 @@ function renderResult(fin, finPts, total, g){
 }
 $("againBtn").onclick=newQuestion;
 $("homeBtn").onclick=()=>{ show("home"); renderHome(); };
-$("startBtn").onclick=()=> appMode==="test" ? newQuestion() : appMode==="study" ? openStudy() : newOriginQuestion();
+$("startBtn").onclick=()=>{
+  if(appMode==="test"){ quizPoolIds=null; quizGroupName=""; newQuestion(); }
+  else if(appMode==="study") openStudy();
+  else newOriginQuestion();
+};
 
 renderHome();
 })();
