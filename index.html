@@ -101,6 +101,7 @@ li{margin:3px 0}
 .group-style,.group-feature{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px}
 .group-style b,.group-feature b{display:block;margin-bottom:3px}
 .group-style small{display:block;color:var(--mute)}
+.country-badge{display:inline-block;background:var(--ink);color:#fff;border-radius:999px;padding:2px 9px;margin-bottom:7px;font-size:.76rem;font-weight:700;letter-spacing:.03em}
 .group-swatch{height:8px;border-radius:999px;border:1px solid rgba(0,0,0,.12);margin-top:8px}
 .brand{margin-top:9px;padding-top:8px;border-top:1px solid var(--line);font-size:.86rem}
 .brand b{display:inline;margin:0}
@@ -191,14 +192,14 @@ li{margin:3px 0}
   <div id="scoringInfo">
   <h2>採点のしかた</h2>
   <div class="card note">
-    <p style="margin-top:0">ヒントは「見た目 → 香り → 味 → 後味 → アルコール感」の順に開きます。各段階で「まだ候補に残るスタイル」を選び、最後に国・地方・スタイルを一つ確定します。</p>
-    <p>各段階は、正解を候補に残していれば得点。候補が少ないほど高得点（1つで12点、5つで4点、6つ以上で3点）。正解を候補から落とした段階は0点。判定は国10点・地方10点・スタイル30点。満点110点。</p>
+    <p style="margin-top:0">ヒントは「見た目 → 香り → 味 → 後味 → アルコール感」の順に開きます。各段階で「まだ候補に残るスタイル」を選び、最後に国とスタイルを一つ確定します。</p>
+    <p>各段階は、正解を候補に残していれば得点。候補が少ないほど高得点（1つで12点、5つで4点、6つ以上で3点）。正解を候補から落とした段階は0点。判定は国10点・スタイル30点。満点100点。</p>
     <p style="margin-bottom:0">当てる力より「消去の精度」を鍛えるための配点です。</p>
   </div>
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 2.2.0 · 2026-09-10</p>
+  <p class="version">Version 2.4.0 · 2026-09-10</p>
 </section>
 
 <!-- ===== STUDY ===== -->
@@ -277,8 +278,6 @@ li{margin:3px 0}
     <div class="card">
       <label class="f" for="selCountry">国</label>
       <select id="selCountry"></select>
-      <label class="f" for="selRegion">地方</label>
-      <select id="selRegion"></select>
       <label class="f" for="selStyle">スタイル</label>
       <select id="selStyle"></select>
       <button class="btn amber" id="answerBtn" disabled>答える</button>
@@ -416,7 +415,7 @@ function renderStats(){
   box.innerHTML = `<h2>これまでの記録</h2><div class="card">
     <div class="stat"><span>出題数</span><span>${tot}</span></div>
     <div class="stat"><span>スタイル正解率</span><span>${Math.round(100*ok/tot)}%</span></div>
-    <div class="stat"><span>平均点</span><span>${(st.pts/tot).toFixed(1)} / 110</span></div>
+    <div class="stat"><span>平均得点率</span><span>${Math.round(100*(st.pts||0)/(st.max||tot*110))}%</span></div>
     ${weak.length?`<div style="margin-top:12px" class="note">苦手なスタイル：${weak.map(w=>`${name(w.id)}（${Math.round(w.rate*100)}%）`).join("、")}</div>`:""}
     <button class="btn ghost" style="margin-top:14px;padding:8px 14px;font-size:.9rem" id="resetStats">記録を消す</button>
   </div>`;
@@ -519,7 +518,7 @@ function renderStep(){
     html += `<details><summary>これまでのメモ</summary><div class="prev">${[...Array(q.step).keys()].map(i=>stepHtml(i,q.s)).join("")}</div></details>`;
   }
   if(q.step<5) html += `<p style="color:var(--mute);font-size:.95rem">${LEAD[q.step]}</p>` + stepHtml(q.step,q.s);
-  else { const f=fermentationInfo(q.s); html += `<div class="prev">${[...Array(5).keys()].map(i=>`<p style="color:var(--mute);font-size:.85rem;margin-bottom:.2em">${STAGES[i]}</p>`+stepHtml(i,q.s)).join("")}</div><p><span class="tag">発酵方式：${f.label}</span><span class="note">${f.note}</span></p><p><span class="tag">一般的な原材料</span>${ingredientInfo(q.s)}</p><p><b>さて。国、地方、スタイルは？</b></p>`; }
+  else { const f=fermentationInfo(q.s); html += `<div class="prev">${[...Array(5).keys()].map(i=>`<p style="color:var(--mute);font-size:.85rem;margin-bottom:.2em">${STAGES[i]}</p>`+stepHtml(i,q.s)).join("")}</div><p><span class="tag">発酵方式：${f.label}</span><span class="note">${f.note}</span></p><p><span class="tag">一般的な原材料</span>${ingredientInfo(q.s)}</p><p><b>さて。国とスタイルは？</b></p>`; }
   $("narr").innerHTML = html;
 
   if(q.step<5){ $("candPane").classList.remove("hidden"); $("finalPane").classList.add("hidden"); renderCands(); }
@@ -569,29 +568,24 @@ function opt(sel, arr, ph){ sel.innerHTML = `<option value="">${ph}</option>` + 
 function renderFinal(){
   const p=pool();
   opt($("selCountry"), [...new Set(p.map(x=>x.country))], "国を選ぶ");
-  opt($("selRegion"), [], "まず国を選ぶ"); opt($("selStyle"), [], "まず地方を選ぶ");
+  opt($("selStyle"), [], "まず国を選ぶ");
   $("answerBtn").disabled=true;
   $("selCountry").onchange=()=>{
     const c=$("selCountry").value;
-    opt($("selRegion"), [...new Set(p.filter(x=>x.country===c).map(x=>x.region))], "地方を選ぶ");
-    opt($("selStyle"), [], "まず地方を選ぶ"); $("answerBtn").disabled=true;
-  };
-  $("selRegion").onchange=()=>{
-    const c=$("selCountry").value, r=$("selRegion").value;
-    opt($("selStyle"), p.filter(x=>x.country===c&&x.region===r).map(x=>x.style), "スタイルを選ぶ");
+    opt($("selStyle"), p.filter(x=>x.country===c).map(x=>x.style), "スタイルを選ぶ");
     $("answerBtn").disabled=true;
   };
   $("selStyle").onchange=()=>{ $("answerBtn").disabled = !$("selStyle").value; };
 }
 $("answerBtn").onclick=()=>{
-  const c=$("selCountry").value, r=$("selRegion").value, st=$("selStyle").value;
+  const c=$("selCountry").value, st=$("selStyle").value;
   const s=q.s;
-  const fin = { country:c===s.country, region:r===s.region, style:st===s.style };
-  const finPts = (fin.country?10:0)+(fin.region?10:0)+(fin.style?30:0);
+  const fin = { country:c===s.country, style:st===s.style };
+  const finPts = (fin.country?10:0)+(fin.style?30:0);
   const total = q.stepScore.reduce((a,x)=>a+x.pts,0)+finPts;
   // persist
-  const d=store.get(); d.styles=d.styles||{}; const e=d.styles[s.id]||{n:0,ok:0}; e.n++; if(fin.style) e.ok++; d.styles[s.id]=e; d.pts=(d.pts||0)+total; store.set(d);
-  renderResult(fin, finPts, total, {c,r,st});
+  const d=store.get(); d.styles=d.styles||{}; const oldN=Object.values(d.styles).reduce((a,x)=>a+x.n,0); d.max=d.max||oldN*110; const e=d.styles[s.id]||{n:0,ok:0}; e.n++; if(fin.style) e.ok++; d.styles[s.id]=e; d.pts=(d.pts||0)+total; d.max+=100; store.set(d);
+  renderResult(fin, finPts, total, {c,st});
 };
 
 // ---------- study mode ----------
@@ -660,7 +654,7 @@ function brandHtml(s){
 }
 function groupStyles(g){ return g.ids.map(id=>S.find(x=>x.id===id)).filter(Boolean); }
 function featureCards(styles,key){
-  return `<div class="group-items">${styles.map(s=>`<div class="group-feature"><b>${s.style}</b>${key==="markers"?`<ul>${s.markers.map(m=>`<li>${m}</li>`).join("")}</ul>`:`<p>${comparisonValue(s,key)}</p>`}</div>`).join("")}</div>`;
+  return `<div class="group-items">${styles.map(s=>`<div class="group-feature"><span class="country-badge">${s.country}</span><b>${s.style}</b>${key==="markers"?`<ul>${s.markers.map(m=>`<li>${m}</li>`).join("")}</ul>`:`<p>${comparisonValue(s,key)}</p>`}</div>`).join("")}</div>`;
 }
 function renderStudyGroup(g){
   const styles=groupStyles(g);
@@ -668,7 +662,7 @@ function renderStudyGroup(g){
   const parts=[["外観","appearance"],["香り","aroma"],["味・口当たり","taste"],["後味","after"],["度数・温感","strength"],["原材料","ingredients"],["発酵方式","fermentation"]];
   $("studyGroupView").innerHTML=`
     <div class="key-differences"><span class="eyebrow">試験で迷ったら最初にここを見る</span><h2>見分け方：違いのポイント</h2><p class="note">各スタイルを判定する決め手を、暗記用にまとめています。</p>${featureCards(styles,"markers")}</div>
-    <div class="group-part"><h2>${g.name}</h2><div class="group-summary">${styles.map(s=>`<div class="group-style"><b>${s.style} ${sourceBadge(s)}</b><small>${s.country}</small><small>色 ${s.srm} SRM　・　ABV 約${s.abv}%</small><div class="group-swatch" style="background:${srmHex(s.srm)}"></div>${brandHtml(s)}</div>`).join("")}</div><p class="hint">販売状況・価格・販売単位はリンク先で確認してください。「日」はDomens資料の日本語ページだけに掲載される項目です。</p></div>
+    <div class="group-part"><h2>${g.name}</h2><div class="group-summary">${styles.map(s=>`<div class="group-style"><span class="country-badge">${s.country}</span><b>${s.style} ${sourceBadge(s)}</b><small>色 ${s.srm} SRM　・　ABV 約${s.abv}%</small><div class="group-swatch" style="background:${srmHex(s.srm)}"></div>${brandHtml(s)}</div>`).join("")}</div><p class="hint">販売状況・価格・販売単位はリンク先で確認してください。「日」はDomens資料の日本語ページだけに掲載される項目です。</p></div>
     <div class="group-part"><h2>詳細比較</h2>${parts.map(([label,key])=>`<div class="study-section"><h3>${label}</h3>${featureCards(styles,key)}</div>`).join("")}</div>`;
   window.scrollTo({top:0,behavior:"auto"});
 }
@@ -737,7 +731,7 @@ function renderResult(fin, finPts, total, g){
   const s=q.s;
   $("verdict").textContent = fin.style ? "正解" : (fin.country ? "国は正解、スタイルは違う" : "はずれ");
   $("verdict").className = "verdict " + (fin.style?"ok":"ng");
-  $("ansLine").innerHTML = `${s.style} ${sourceBadge(s)}<small>${s.country} ／ ${s.region}</small>` + (fin.style?"":`<small>あなたの答え：${g.c} ／ ${g.r} ／ ${g.st}</small>`);
+  $("ansLine").innerHTML = `${s.style} ${sourceBadge(s)}<small>${s.country} ／ ${s.region}</small>` + (fin.style?"":`<small>あなたの答え：${g.c} ／ ${g.st}</small>`);
   const f=fermentationInfo(s);
   $("ansFacts").innerHTML = `<span class="tag">色 ${s.srm} SRM</span><span class="tag">ABV 約${s.abv}%</span><span class="tag">${f.label}</span><p class="note">一般的な原材料：${ingredientInfo(s)}</p>${brandHtml(s)}`;
   const rows = q.stepScore.map((x,i)=>{
@@ -745,8 +739,8 @@ function renderResult(fin, finPts, total, g){
     return `<tr><td>${STAGES[i]}<br><span class="note">${lostAt?"正解を候補から外した":"候補 "+x.n+"件に残した"}</span></td><td>${x.pts}</td></tr>`;
   }).join("");
   $("scoreTbl").innerHTML = rows +
-    `<tr><td>国 ${fin.country?"○":"×"}　地方 ${fin.region?"○":"×"}　スタイル ${fin.style?"○":"×"}</td><td>${finPts}</td></tr>` +
-    `<tr class="total"><td>合計</td><td>${total} / 110</td></tr>`;
+    `<tr><td>国 ${fin.country?"○":"×"}　スタイル ${fin.style?"○":"×"}</td><td>${finPts}</td></tr>` +
+    `<tr class="total"><td>合計</td><td>${total} / 100</td></tr>`;
   const firstLoss = q.stepScore.findIndex(x=>!x.kept);
   $("markers").innerHTML = `<ul>${s.markers.map(m=>`<li>${m}</li>`).join("")}</ul>` +
     (firstLoss>=0 ? `<p class="note" style="margin-bottom:0">「${STAGES[firstLoss]}」の段階で正解を候補から外しています。ここまでの情報では、まだ正解を消せなかったはずです。</p>` : "");
