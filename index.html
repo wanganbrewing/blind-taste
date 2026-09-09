@@ -96,6 +96,14 @@ li{margin:3px 0}
 .compare-grid>div:nth-last-child(-n+3){border-bottom:0}
 .compare-head{font-weight:700;background:var(--bg)}
 .compare-label{font-size:.8rem;color:var(--mute);font-weight:700}
+.group-summary,.group-items{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.group-style,.group-feature{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px}
+.group-style b,.group-feature b{display:block;margin-bottom:3px}
+.group-style small{display:block;color:var(--mute)}
+.group-swatch{height:8px;border-radius:999px;border:1px solid rgba(0,0,0,.12);margin-top:8px}
+.group-part{margin-top:24px}
+.group-part h2{margin-bottom:8px}
+.group-feature p{margin:0;font-size:.92rem}
 .hidden{display:none}
 .sr{position:absolute;left:-9999px}
 @media (max-width:640px){
@@ -146,9 +154,11 @@ li{margin:3px 0}
       <p class="hint" id="diffHint"></p>
     </div>
 
-    <h2 id="countryTitle">出題する国</h2>
-    <div class="row" id="countryPick"></div>
-    <p class="hint" id="countryHint">選んだ国のスタイルだけが出題・選択肢に入ります。</p>
+    <div id="countryOptions">
+      <h2 id="countryTitle">出題する国</h2>
+      <div class="row" id="countryPick"></div>
+      <p class="hint" id="countryHint">選んだ国のスタイルだけが出題・選択肢に入ります。</p>
+    </div>
 
     <div style="margin-top:22px">
       <button class="btn amber" id="startBtn">テイスティングを始める</button>
@@ -165,45 +175,24 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 1.3.0 · 2026-09-10</p>
+  <p class="version">Version 1.4.0 · 2026-09-10</p>
 </section>
 
 <!-- ===== STUDY ===== -->
 <section id="study" class="hidden">
   <h1>学習モード</h1>
-  <p class="sub">スタイルの特徴を、答えを見ながら覚える</p>
+  <p class="sub">似たスタイルを一つのグループで見比べて覚える</p>
 
   <div class="card">
-    <label class="f" for="studyCountry">国</label>
-    <select id="studyCountry"></select>
-    <label class="f" for="studyStyle">スタイル</label>
-    <select id="studyStyle"></select>
+    <label class="f" for="studyGroupSelect">比較グループ</label>
+    <select id="studyGroupSelect"></select>
+    <p class="hint" id="studyGroupNote"></p>
   </div>
 
-  <div id="studyContent" class="hidden">
-    <h2 id="studyTitle"></h2>
-    <div class="card">
-      <p class="answer" id="studyMeta"></p>
-      <div class="study-color" id="studyColor" aria-label="ビールの色の目安"></div>
-      <div id="studyNarr"></div>
-    </div>
-
-    <h2>似たスタイルと比較</h2>
-    <div class="card">
-      <label class="f" for="studyCompareSelect">比較するスタイル</label>
-      <select id="studyCompareSelect"></select>
-      <div id="studyCompare"></div>
-    </div>
-
-    <h2>識別のポイント</h2>
-    <div class="card" id="studyMarkers"></div>
-
-    <h2>間違えやすい近縁スタイル</h2>
-    <div class="sim" id="studySimilar"></div>
-  </div>
+  <div id="studyGroupView"></div>
 
   <div class="row" style="margin-top:22px">
-    <button class="btn amber" id="studyRandomBtn">別のスタイル</button>
+    <button class="btn amber" id="studyRandomBtn">別のグループ</button>
     <button class="btn ghost" id="studyHomeBtn">ホームへ</button>
   </div>
 </section>
@@ -315,6 +304,7 @@ function renderHome(){
   $("testOptions").classList.toggle("hidden", appMode!=="test");
   $("scoringInfo").classList.toggle("hidden", appMode!=="test");
   $("statsBox").classList.toggle("hidden", appMode!=="test");
+  $("countryOptions").classList.toggle("hidden", appMode!=="test");
   $("countryTitle").textContent = appMode==="test" ? "出題する国" : "学習する国";
   $("countryHint").textContent = appMode==="test" ? "選んだ国のスタイルだけが出題・選択肢に入ります。" : "選んだ国のスタイルだけを学習できます。";
   $("startBtn").textContent = appMode==="test" ? "テイスティングを始める" : "学習を始める";
@@ -484,24 +474,8 @@ $("answerBtn").onclick=()=>{
 };
 
 // ---------- study mode ----------
-function studyFmt(t){
-  return t.replace(/\[([^|\]]+)\|([^\]]+)\]/g, "$1<span class=\"desc\">（$2）</span>")
-          .replace(/\[([^|\]]+)\]/g, "$1");
-}
 function studyPlain(t){
   return t.replace(/\[([^|\]]+)\|([^\]]+)\]/g, "$1").replace(/\[([^|\]]+)\]/g, "$1");
-}
-function setStudyOptions(sel, items, selected){
-  sel.innerHTML="";
-  items.forEach(x=>{ const o=document.createElement("option"); o.value=x.value; o.textContent=x.label; sel.appendChild(o); });
-  if(selected) sel.value=selected;
-}
-function fillStudySelectors(s){
-  const p=pool();
-  const cs=[...new Set(p.map(x=>x.country))];
-  setStudyOptions($("studyCountry"), cs.map(c=>({value:c,label:c})), s.country);
-  const styles=p.filter(x=>x.country===s.country);
-  setStudyOptions($("studyStyle"), styles.map(x=>({value:x.id,label:x.style})), s.id);
 }
 function comparisonValue(s, kind){
   if(kind==="appearance") return studyPlain(s.app);
@@ -511,47 +485,52 @@ function comparisonValue(s, kind){
   if(kind==="strength") return `約${s.abv}%　${studyPlain(s.alcohol)}`;
   return s.markers.join("／");
 }
-function renderStudyCompare(a,t){
-  const rows=[
-    ["色・外観","appearance"], ["香り","aroma"], ["味・口当たり","taste"],
-    ["後味","after"], ["度数・温感","strength"], ["見分け方","markers"]
-  ];
-  $("studyCompare").innerHTML=`<div class="compare-grid">
-    <div class="compare-head">比較項目</div><div class="compare-head">${a.style}</div><div class="compare-head">${t.style}</div>
-    ${rows.map(([label,key])=>`<div class="compare-label">${label}</div><div>${comparisonValue(a,key)}</div><div>${comparisonValue(t,key)}</div>`).join("")}
-  </div>`;
+const STUDY_GROUPS = [
+  {id:"pale_lager", name:"淡色ラガー", note:"麦芽の丸さ、ホップの強さ、軽快さの違いを比較。", ids:["helles","pils","czech_pils","export","american_lager","mexican_lager","rice_lager","alsatian_pils","italian_pils"]},
+  {id:"amber_lager", name:"琥珀色ラガー", note:"トースト、カラメル、甘さ、ドライさの境界を比較。", ids:["vienna","marzen","festbier","polotmave","kellerbier","cal_common"]},
+  {id:"dark_bock", name:"濃色ラガー／ボック", note:"焦げの有無、パン様の麦芽感、濃度と温感を比較。", ids:["munich_dunkel","schwarz","czech_dark","dark_bock","doppelbock","eisbock","baltic","maibock"]},
+  {id:"wheat", name:"小麦・白ビール", note:"バナナ、クローブ、柑橘、酸味と発酵のクリーンさを比較。", ids:["weissbier","weizenbock","witbier","american_wheat","gose","berliner"]},
+  {id:"british_bitter", name:"英国ビター／ペールエール", note:"度数、麦芽の厚み、エステル、苦味の強さを段階的に比較。", ids:["ordinary_bitter","bitter","esb","english_pale","eipa","golden_ale"]},
+  {id:"british_malty", name:"英国の麦芽主体エール", note:"ナッツ、カラメル、熟成香、度数の違いを比較。", ids:["mild","english_brown","scottish_export","wee_heavy","old_ale","barleywine"]},
+  {id:"porter", name:"ポーター", note:"チョコ、焙煎、煙、苦味とボディの差を比較。", ids:["porter","robust_porter","smoked_porter","baltic"]},
+  {id:"stout", name:"スタウト", note:"ドライ、甘口、滑らかさ、果実味、焙煎強度を比較。", ids:["dry_stout","oat_stout","sweet_stout","foreign_extra_stout","tropical_stout","imp_stout"]},
+  {id:"belgian_strong", name:"ベルギーのストロングエール", note:"色、果実・スパイス、高炭酸、甘さの切れ方を比較。", ids:["dubbel","tripel","golden_strong","quad","grand_cru","belgian_amber"]},
+  {id:"wild_sour", name:"ベルギーの野生発酵・酸味", note:"発泡、甘さ、果実、酢酸・乳酸、熟成香の違いを比較。", ids:["straight_lambic","gueuze","faro","fruit_lambic","flanders_red","oud_bruin"]},
+  {id:"farmhouse", name:"農家・地方伝統エール", note:"乾燥感、素朴な発酵香、麦芽、果実、ハーブの違いを比較。", ids:["saison","biere_de_garde","kornol","sahti","italian_grape"]},
+  {id:"american_hop", name:"アメリカ系ホッピーエール", note:"透明度、ホップの方向、苦味、濃色麦芽、度数を比較。", ids:["apa","wcipa","neipa","dipa","black_ipa","amber","american_brown","american_barleywine"]},
+  {id:"southern_hop", name:"豪州・ニュージーランドのホッピーエール", note:"南半球系の果実香、苦味、炭酸とボディを比較。", ids:["australian_pale","australian_xpa","sparkling","nz_ipa"]},
+  {id:"clean_ale", name:"クリーンで紛らわしいエール", note:"ラガーに近い発酵の清潔さと、穀物・ホップ・果実香の差を比較。", ids:["kolsch","alt","cream_ale","cal_common","golden_ale"]},
+  {id:"smoke_rustic", name:"煙・素朴さ・特殊香", note:"煙、木、針葉樹、土、野性的な香りの由来を比較。", ids:["rauch","smoked_porter","sahti","kornol","gose"]}
+];
+function groupStyles(g){ return g.ids.map(id=>S.find(x=>x.id===id)).filter(Boolean); }
+function featureCards(styles,key){
+  return `<div class="group-items">${styles.map(s=>`<div class="group-feature"><b>${s.style}</b><p>${comparisonValue(s,key)}</p></div>`).join("")}</div>`;
 }
-function showStudyStyle(s, syncSelectors=true){
-  if(syncSelectors) fillStudySelectors(s);
-  $("studyContent").classList.remove("hidden");
-  $("studyTitle").textContent=s.style;
-  $("studyMeta").innerHTML=`${s.country} ／ ${s.region}<small>色 ${s.srm} SRM　・　ABV 約${s.abv}%</small>`;
-  $("studyColor").style.background=srmHex(s.srm);
-  $("studyNarr").innerHTML=`
-    <div class="study-section"><h3>見た目</h3><p>${studyFmt(s.app)}</p></div>
-    <div class="study-section"><h3>香り</h3><p><span class="lbl">麦芽</span>${studyFmt(s.aroma.malt)}</p><p><span class="lbl">酵母</span>${studyFmt(s.aroma.yeast)}</p><p><span class="lbl">ホップ</span>${studyFmt(s.aroma.hop)}</p></div>
-    <div class="study-section"><h3>味・口当たり</h3><p><span class="lbl">麦芽</span>${studyFmt(s.taste.malt)}</p><p><span class="lbl">酵母</span>${studyFmt(s.taste.yeast)}</p><p><span class="lbl">ホップ</span>${studyFmt(s.taste.hop)}</p><p><span class="lbl">口当たり</span>${studyFmt(s.taste.body)}</p></div>
-    <div class="study-section"><h3>後味・アルコール感</h3><p>${studyFmt(s.after)}</p><p>${studyFmt(s.alcohol)}</p></div>`;
-  $("studyMarkers").innerHTML=`<ul>${s.markers.map(m=>`<li>${m}</li>`).join("")}</ul>`;
-  const related=s.similar.map(id=>S.find(x=>x.id===id)).filter(Boolean);
-  $("studySimilar").innerHTML=related.map(t=>`<div><b>${t.style}<span class="note">　${t.country}</span></b>${t.markers[0]}</div>`).join("");
-  setStudyOptions($("studyCompareSelect"), related.map(t=>({value:t.id,label:`${t.style}（${t.country}）`})), related[0]?.id);
-  if(related.length){ renderStudyCompare(s,related[0]); $("studyCompareSelect").disabled=false; }
-  else { $("studyCompare").innerHTML='<p class="note">比較できる近縁スタイルはありません。</p>'; $("studyCompareSelect").disabled=true; }
-  $("studyCompareSelect").onchange=()=>{ const t=S.find(x=>x.id===$("studyCompareSelect").value); if(t) renderStudyCompare(s,t); };
+function renderStudyGroup(g){
+  const styles=groupStyles(g);
+  $("studyGroupNote").textContent=`${g.note}（${styles.length}スタイル）`;
+  const parts=[["色・外観","appearance"],["香り","aroma"],["味・口当たり","taste"],["後味","after"],["度数・温感","strength"],["見分け方","markers"]];
+  $("studyGroupView").innerHTML=`
+    <div class="group-part"><h2>${g.name}</h2><div class="group-summary">${styles.map(s=>`<div class="group-style"><b>${s.style}</b><small>${s.country} ／ ${s.region}</small><small>色 ${s.srm} SRM　・　ABV 約${s.abv}%</small><div class="group-swatch" style="background:${srmHex(s.srm)}"></div></div>`).join("")}</div></div>
+    ${parts.map(([label,key])=>`<div class="group-part"><h2>${label}</h2>${featureCards(styles,key)}</div>`).join("")}`;
+  window.scrollTo({top:0,behavior:"auto"});
+}
+function setupStudyGroups(selected){
+  const sel=$("studyGroupSelect"); sel.innerHTML="";
+  STUDY_GROUPS.forEach(g=>{ const o=document.createElement("option"); o.value=g.id; o.textContent=g.name; sel.appendChild(o); });
+  sel.value=selected||STUDY_GROUPS[0].id;
+  renderStudyGroup(STUDY_GROUPS.find(g=>g.id===sel.value));
 }
 function openStudy(){
-  const p=pool(); const s=p[Math.floor(Math.random()*p.length)];
-  show("study"); showStudyStyle(s);
+  show("study"); setupStudyGroups($("studyGroupSelect").value||STUDY_GROUPS[0].id);
 }
-$("studyCountry").onchange=()=>{
-  const styles=pool().filter(x=>x.country===$("studyCountry").value);
-  if(!styles.length) return;
-  setStudyOptions($("studyStyle"),styles.map(x=>({value:x.id,label:x.style})),styles[0].id);
-  showStudyStyle(styles[0],false);
+$("studyGroupSelect").onchange=()=>renderStudyGroup(STUDY_GROUPS.find(g=>g.id===$("studyGroupSelect").value));
+$("studyRandomBtn").onclick=()=>{
+  const current=$("studyGroupSelect").value;
+  const choices=STUDY_GROUPS.filter(g=>g.id!==current);
+  const g=choices[Math.floor(Math.random()*choices.length)];
+  $("studyGroupSelect").value=g.id; renderStudyGroup(g);
 };
-$("studyStyle").onchange=()=>{ const s=S.find(x=>x.id===$("studyStyle").value); if(s) showStudyStyle(s,false); };
-$("studyRandomBtn").onclick=openStudy;
 $("studyHomeBtn").onclick=()=>{ show("home"); renderHome(); };
 
 function renderResult(fin, finPts, total, g){
