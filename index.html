@@ -59,6 +59,7 @@ h2{font-size:1.05rem;font-weight:700;margin:26px 0 10px}
 /* candidate groups */
 .grp{margin:12px 0}
 .grp h3{font-size:.85rem;font-weight:500;color:var(--mute);margin:0 0 6px}
+.grp h3 .chip{font-size:.95rem;font-weight:700;color:var(--ink)}
 .grp .row{gap:8px}
 .cands{max-height:52vh;overflow:auto;padding-right:4px}
 .count{font-weight:700;font-variant-numeric:tabular-nums}
@@ -208,7 +209,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 2.5.0 · 2026-09-10</p>
+  <p class="version">Version 2.6.0 · 2026-09-10</p>
 </section>
 
 <!-- ===== STUDY ===== -->
@@ -345,6 +346,17 @@ const FREQUENT_50 = new Set([
 // D資料の日本語ページだけに掲載されるスタイル。現行収録分には該当なし。
 const JAPANESE_ONLY = new Set([]);
 function sourceBadge(s){ return JAPANESE_ONLY.has(s.id) ? '<span class="tag" title="D資料の日本語ページだけに掲載">日</span>' : ""; }
+const IBU_RANGES = {
+  bitter:"25–40",eipa:"40–60",porter:"18–35",mild:"10–25",barleywine:"35–70",wee_heavy:"17–35",oat_stout:"25–40",dry_stout:"30–45",
+  helles:"16–22",pils:"22–40",weissbier:"8–15",kolsch:"18–30",alt:"25–50",rauch:"20–30",doppelbock:"16–26",schwarz:"20–35",berliner:"3–8",gose:"5–12",marzen:"18–24",weizenbock:"15–30",
+  witbier:"8–20",dubbel:"15–25",tripel:"20–40",saison:"20–35",flanders_red:"10–25",oud_bruin:"20–25",gueuze:"0–10",golden_strong:"22–35",quad:"20–35",
+  czech_pils:"30–45",czech_dark:"18–34",polotmave:"20–35",apa:"30–50",wcipa:"50–80",neipa:"25–60",imp_stout:"50–90",cal_common:"30–45",amber:"25–40",dipa:"60–100",cream_ale:"8–20",
+  vienna:"18–30",baltic:"20–40",rice_lager:"15–25",sparkling:"20–35",export:"23–30",munich_dunkel:"18–28",festbier:"18–25",maibock:"23–35",dark_bock:"20–30",eisbock:"25–35",kellerbier:"20–35",
+  ordinary_bitter:"25–35",esb:"30–50",english_pale:"30–50",golden_ale:"20–45",english_brown:"20–30",old_ale:"30–60",scottish_export:"15–30",robust_porter:"25–50",smoked_porter:"20–40",sweet_stout:"20–40",foreign_extra_stout:"50–70",tropical_stout:"30–50",belgian_amber:"20–35",
+  straight_lambic:"0–10",faro:"0–10",fruit_lambic:"0–10",grand_cru:"20–35",american_lager:"8–18",black_ipa:"50–90",american_brown:"20–40",american_barleywine:"50–100",american_wheat:"15–30",biere_de_garde:"18–28",alsatian_pils:"25–40",italian_pils:"30–45",italian_grape:"15–40",sahti:"0–15",kornol:"20–40",mexican_lager:"8–20",australian_pale:"20–35",australian_xpa:"25–45",nz_ipa:"40–70",
+  english_red:"20–35",scottish_light:"10–20",scottish_heavy:"10–20",mild_porter:"15–30",chocolate_porter:"20–40",imperial_porter:"35–60",oyster_stout:"25–45",imperial_stout:"50–90",american_light_lager:"5–12",american_amber_lager:"18–30",american_dark_lager:"15–25",rye_lager:"20–35",rye_ale:"30–60",american_ipa:"40–70",american_farmhouse:"25–45",belgian_strong_amber:"20–35"
+};
+function ibuInfo(s){ return IBU_RANGES[s.id]||"—"; }
 function fermentationInfo(s){
   if(SPONTANEOUS.has(s.id)) return {label:"自然発酵", note:"野生酵母・微生物による発酵"};
   if(s.id==="cal_common") return {label:"下面発酵", note:"ラガー酵母を比較的高温で発酵"};
@@ -679,7 +691,7 @@ function renderStudyGroup(g){
   const parts=[["外観","appearance"],["香り","aroma"],["味・口当たり","taste"],["後味","after"],["度数・温感","strength"],["原材料","ingredients"],["発酵方式","fermentation"]];
   $("studyGroupView").innerHTML=`
     <div class="key-differences"><span class="eyebrow">試験で迷ったら最初にここを見る</span><h2>見分け方：違いのポイント</h2><p class="note">各スタイルを判定する決め手を、暗記用にまとめています。</p>${featureCards(styles,"markers")}</div>
-    <div class="group-part"><h2>${g.name}：スタイル別まとめ</h2><div class="style-summary-list">${styles.map(s=>`<article class="style-summary"><span class="country-badge">${s.country}</span><h3>${s.style} ${sourceBadge(s)}</h3><p class="style-meta">色 ${s.srm} SRM　・　ABV 約${s.abv}%</p><div class="group-swatch" style="background:${srmHex(s.srm)}"></div>${parts.map(([label,key])=>`<div class="style-fact"><b>${label}</b><p>${comparisonValue(s,key)}</p></div>`).join("")}${brandHtml(s)}</article>`).join("")}</div><p class="hint">販売状況・価格・販売単位はリンク先で確認してください。「日」はD資料の日本語ページだけに掲載される項目です。</p></div>`;
+    <div class="group-part"><h2>${g.name}：スタイル別まとめ</h2><div class="style-summary-list">${styles.map(s=>`<article class="style-summary"><span class="country-badge">${s.country}</span><h3>${s.style} ${sourceBadge(s)}</h3><p class="style-meta">SRM ${s.srm}　・　IBU ${ibuInfo(s)}　・　ABV 約${s.abv}%</p><div class="group-swatch" style="background:${srmHex(s.srm)}"></div>${parts.map(([label,key])=>`<div class="style-fact"><b>${label}</b><p>${comparisonValue(s,key)}</p></div>`).join("")}${brandHtml(s)}</article>`).join("")}</div><p class="hint">SRM・IBU・ABVはスタイルの一般的な目安です。販売状況・価格・販売単位はリンク先で確認してください。「日」はD資料の日本語ページだけに掲載される項目です。</p></div>`;
   window.scrollTo({top:0,behavior:"auto"});
 }
 function setupStudyGroups(selected){
@@ -749,7 +761,7 @@ function renderResult(fin, finPts, total, g){
   $("verdict").className = "verdict " + (fin.style?"ok":"ng");
   $("ansLine").innerHTML = `${s.style} ${sourceBadge(s)}<small>${s.country} ／ ${s.region}</small>` + (fin.style?"":`<small>あなたの答え：${g.c} ／ ${g.st}</small>`);
   const f=fermentationInfo(s);
-  $("ansFacts").innerHTML = `<span class="tag">色 ${s.srm} SRM</span><span class="tag">ABV 約${s.abv}%</span><span class="tag">${f.label}</span><p class="note">一般的な原材料：${ingredientInfo(s)}</p>${brandHtml(s)}`;
+  $("ansFacts").innerHTML = `<span class="tag">SRM ${s.srm}</span><span class="tag">IBU ${ibuInfo(s)}</span><span class="tag">ABV 約${s.abv}%</span><span class="tag">${f.label}</span><p class="note">SRM・IBU・ABVはスタイルの一般的な目安です。</p><p class="note">一般的な原材料：${ingredientInfo(s)}</p>${brandHtml(s)}`;
   const rows = q.stepScore.map((x,i)=>{
     const lostAt = !x.kept;
     return `<tr><td>${STAGES[i]}<br><span class="note">${lostAt?"正解を候補から外した":"候補 "+x.n+"件に残した"}</span></td><td>${x.pts}</td></tr>`;
