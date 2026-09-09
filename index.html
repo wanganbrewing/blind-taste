@@ -209,7 +209,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 2.7.0 · 2026-09-10</p>
+  <p class="version">Version 2.8.0 · 2026-09-10</p>
 </section>
 
 <!-- ===== STUDY ===== -->
@@ -553,7 +553,7 @@ function renderStep(){
     html += `<details><summary>これまでのメモ</summary><div class="prev">${[...Array(q.step).keys()].map(i=>stepHtml(i,q.s)).join("")}</div></details>`;
   }
   if(q.step<5) html += `<p style="color:var(--mute);font-size:.95rem">${LEAD[q.step]}</p>` + stepHtml(q.step,q.s);
-  else { const f=fermentationInfo(q.s); html += `<div class="prev">${[...Array(5).keys()].map(i=>`<p style="color:var(--mute);font-size:.85rem;margin-bottom:.2em">${STAGES[i]}</p>`+stepHtml(i,q.s)).join("")}</div><p><span class="tag">発酵方式：${f.label}</span><span class="note">${f.note}</span></p><p><span class="tag">一般的な原材料</span>${ingredientInfo(q.s)}</p><p><b>さて。国とスタイルは？</b></p>`; }
+  else { html += `<div class="prev">${[...Array(5).keys()].map(i=>`<p style="color:var(--mute);font-size:.85rem;margin-bottom:.2em">${STAGES[i]}</p>`+stepHtml(i,q.s)).join("")}</div><p><b>さて。国とスタイルは？</b></p>`; }
   $("narr").innerHTML = html;
 
   if(q.step<5){ $("candPane").classList.remove("hidden"); $("finalPane").classList.add("hidden"); renderCands(); }
