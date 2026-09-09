@@ -638,5 +638,78 @@ window.STYLES = [
     taste:{malt:"麦の甘みは低〜中。",yeast:"クリーン。",hop:"強い果実味と中〜高の苦味。",body:"中程度で炭酸は中〜高。"},
     after:"白ブドウとライム、乾いた苦味が長く残る。", alcohol:"明瞭な温かさ。",
     markers:["白ブドウ・ライム系の鮮烈な香りをもつIPA"], similar:["wcipa","australian_xpa","italian_pils"] },
+
+  // ───── Domensテキスト補完 ─────
+  { id:"english_red", country:"イギリス", region:"イングランド", style:"イングリッシュ・レッドエール", srm:15, abv:4.8, alc:1,
+    app:"透明な赤銅色。泡はオフホワイトで中程度。", aroma:{malt:"[トースト、カラメル、軽いナッツ|赤みを伴う香ばしい麦芽香]。",yeast:"[リンゴ、ベリー|穏やかなエステル]。",hop:"[花、土|英国系ホップ香]が低い。"},
+    taste:{malt:"カラメルとトーストの甘み。",yeast:"軽い果実味。",hop:"苦味は中程度。",body:"中程度で滑らか。"}, after:"麦芽の甘みと穏やかな苦味が残る。", alcohol:"感じにくい。",
+    markers:["赤銅色、英国らしい果実感、カラメルと穏やかな土系ホップ"], similar:["bitter","belgian_amber","amber"] },
+
+  { id:"scottish_light", country:"イギリス", region:"スコットランド", style:"スコティッシュ・ライトエール", srm:15, abv:3.0, alc:1,
+    app:"銅色から茶色で透明。泡と炭酸は低い。", aroma:{malt:"[パン、軽いカラメル|穏やかな麦芽香]。",yeast:"果実香は低い。",hop:"ほぼない。"},
+    taste:{malt:"軽いパンとカラメル。",yeast:"クリーン寄り。",hop:"苦味は低い。",body:"非常に軽く低炭酸。"}, after:"短く、麦芽の甘みがわずかに残る。", alcohol:"感じない。",
+    markers:["低アルコール・低炭酸・低ホップの軽いスコティッシュエール"], similar:["mild","scottish_heavy","ordinary_bitter"] },
+
+  { id:"scottish_heavy", country:"イギリス", region:"スコットランド", style:"スコティッシュ・ヘビー", srm:16, abv:3.8, alc:1,
+    app:"透明な銅色から濃い琥珀色。泡は控えめ。", aroma:{malt:"[トースト、カラメル、パン|やや豊かな麦芽香]。",yeast:"果実香は低い。",hop:"低い。"},
+    taste:{malt:"パンとカラメルの甘み。",yeast:"クリーン寄り。",hop:"苦味は低い。",body:"軽〜中で低炭酸。"}, after:"丸い麦芽の余韻。", alcohol:"感じない。",
+    markers:["ライトより麦芽とボディが一段強く、エクスポートより低度数"], similar:["scottish_light","scottish_export","mild"] },
+
+  { id:"mild_porter", country:"イギリス", region:"ロンドン", style:"マイルドポーター", srm:28, abv:4.6, alc:1,
+    app:"濃い茶色でルビーの透け。泡は淡い褐色。", aroma:{malt:"[カラメル、ココア、軽いトースト|甘く柔らかな濃色麦芽香]。",yeast:"低い果実香。",hop:"ほぼない。"},
+    taste:{malt:"柔らかなカラメルとチョコ。",yeast:"軽い果実味。",hop:"苦味は低い。",body:"中程度で丸い。"}, after:"甘く穏やかで、酸味や焦げは少ない。", alcohol:"感じにくい。",
+    markers:["ブラウンポーターより甘く柔らかく、苦味と焙煎が弱い"], similar:["porter","mild","sweet_stout"] },
+
+  { id:"chocolate_porter", country:"イギリス", region:"英国系／現代クラフト", style:"チョコレートポーター", srm:35, abv:5.5, alc:2,
+    app:"濃い茶色から黒。泡は褐色で滑らか。", aroma:{malt:"[ミルクチョコ、ココア、コーヒー|強いチョコレート様香]。",yeast:"低い。",hop:"低い。"},
+    taste:{malt:"チョコとココアが支配的。",yeast:"控えめ。",hop:"苦味は中程度。",body:"中〜フルで滑らか。"}, after:"甘苦いチョコの余韻。", alcohol:"軽い。",
+    markers:["煙や強い焦げより、チョコレートの香味が明瞭"], similar:["porter","sweet_stout","robust_porter"] },
+
+  { id:"imperial_porter", country:"イギリス", region:"英国系／現代クラフト", style:"インペリアルポーター", srm:38, abv:9.0, alc:4,
+    app:"濃い茶色から黒。粘性があり泡は褐色。", aroma:{malt:"[糖蜜、カラメル、ダークチョコ|凝縮した濃色麦芽香]。",yeast:"[プラム、レーズン|暗色果実エステル]。",hop:"低〜中。"},
+    taste:{malt:"濃厚な糖蜜とチョコ。",yeast:"暗色果実。",hop:"苦味は中〜高。",body:"非常にフル。"}, after:"甘苦く長く、樽熟成を思わせることもある。", alcohol:"強い温感。",
+    markers:["ポーターのチョコ・糖蜜を高濃度、高アルコールにした構成"], similar:["imperial_stout","baltic","robust_porter"] },
+
+  { id:"oyster_stout", country:"イギリス", region:"英国・アイルランド沿岸", style:"オイスタースタウト", srm:38, abv:5.0, alc:1,
+    app:"黒色。クリーミーな褐色の泡。", aroma:{malt:"[コーヒー、焦げたパン、海風|焙煎香と軽い塩気]。",yeast:"低い。",hop:"ほぼない。"},
+    taste:{malt:"ドライな焙煎とコーヒー。",yeast:"控えめ。",hop:"中程度の苦味。",body:"中程度でクリーミー。軽い塩味を感じることがある。"}, after:"ドライで、焙煎とわずかな塩気。", alcohol:"感じにくい。",
+    markers:["ドライスタウトに似るが、海を思わせる塩気・ミネラル感"], similar:["dry_stout","sweet_stout","gose"] },
+
+  { id:"imperial_stout", country:"イギリス", region:"ロンドン／ロシア向け輸出", style:"インペリアルスタウト（ロシアン・インペリアルスタウト）", srm:40, abv:10.0, alc:4,
+    app:"漆黒で粘性が高い。濃い褐色の泡は少なめ。", aroma:{malt:"[エスプレッソ、ダークチョコ、焦げ、糖蜜|巨大で複雑な焙煎香]。",yeast:"[レーズン、プラム|暗色果実エステル]。",hop:"土や樹脂の香りが中程度。"},
+    taste:{malt:"濃厚なコーヒー、焦げ、ダークチョコ。",yeast:"暗色果実が複雑。",hop:"苦味は非常に強い。",body:"非常にフルで粘性がある。"}, after:"焙煎、苦味、果実、温感が非常に長い。", alcohol:"強い温感。",
+    markers:["ロシア宮廷向け英国輸出起源、巨大な焙煎・ボディ・温感"], similar:["imp_stout","imperial_porter","foreign_extra_stout"] },
+
+  { id:"american_light_lager", country:"アメリカ", region:"全米", style:"アメリカン・ライトラガー", srm:2, abv:4.0, alc:1,
+    app:"極めて淡い麦わら色。透明で高炭酸、泡は白い。", aroma:{malt:"ごく淡い穀物香。",yeast:"クリーン。",hop:"ほぼない。"}, taste:{malt:"甘みは極めて低い。",yeast:"クリーン。",hop:"苦味は低い。",body:"非常に軽く高炭酸。"}, after:"短く、非常に爽快。", alcohol:"感じない。",
+    markers:["通常のアメリカンラガーよりさらに軽いボディと風味"], similar:["american_lager","mexican_lager","rice_lager"] },
+
+  { id:"american_amber_lager", country:"アメリカ", region:"全米", style:"アメリカン・アンバーラガー", srm:13, abv:5.0, alc:1,
+    app:"透明な琥珀から銅色。泡はオフホワイト。", aroma:{malt:"[トースト、カラメル|中程度の琥珀麦芽香]。",yeast:"クリーン。",hop:"花や柑橘が低〜中。"}, taste:{malt:"カラメルとトースト。",yeast:"クリーン。",hop:"苦味は中程度。",body:"中程度。"}, after:"麦芽と苦味が釣り合う。", alcohol:"感じにくい。",
+    markers:["アメリカンアンバーエールに似るが、発酵香がよりクリーン"], similar:["amber","vienna","cal_common"] },
+
+  { id:"american_dark_lager", country:"アメリカ", region:"全米", style:"アメリカン・ダークラガー", srm:24, abv:5.0, alc:1,
+    app:"透明な濃い茶色。縁に赤み、泡は淡い褐色。", aroma:{malt:"[カラメル、パン、軽いチョコ|穏やかな濃色麦芽香]。",yeast:"クリーン。",hop:"低い。"}, taste:{malt:"柔らかなカラメルと軽い焙煎。",yeast:"クリーン。",hop:"苦味は低い。",body:"軽〜中。"}, after:"丸く短い。", alcohol:"感じない。",
+    markers:["濃色でも軽快で、シュヴァルツビアほどドライでも焙煎的でもない"], similar:["schwarz","czech_dark","american_amber_lager"] },
+
+  { id:"rye_lager", country:"アメリカ", region:"全米", style:"アメリカン・ライラガー", srm:8, abv:5.2, alc:1,
+    app:"金色から琥珀色で透明。泡は白い。", aroma:{malt:"[ライ麦パン、軽い胡椒|穀物由来のスパイシー香]。",yeast:"クリーン。",hop:"花や柑橘が低〜中。"}, taste:{malt:"乾いた穀物と胡椒のような刺激。",yeast:"クリーン。",hop:"苦味は中程度。",body:"中程度でやや滑らか。"}, after:"乾いてスパイシー。", alcohol:"軽い。",
+    markers:["クリーンなラガー発酵に、ライ麦パン様の乾いたスパイス感"], similar:["rye_ale","american_amber_lager","pils"] },
+
+  { id:"rye_ale", country:"アメリカ", region:"全米", style:"アメリカン・ライエール", srm:10, abv:5.8, alc:2,
+    app:"金色から琥珀色。透明から軽く霞む。", aroma:{malt:"[ライ麦パン、胡椒|穀物由来のスパイシー香]。",yeast:"軽い果実香。",hop:"[柑橘、松|アメリカ系ホップ香]。"}, taste:{malt:"ライ麦の乾いた刺激。",yeast:"軽い果実味。",hop:"中〜高の苦味。",body:"中程度で滑らか。"}, after:"スパイシーで苦い余韻。", alcohol:"軽い。",
+    markers:["ライ麦由来の胡椒感に、アメリカ系ホップとエール果実香"], similar:["rye_lager","apa","amber"] },
+
+  { id:"american_ipa", country:"アメリカ", region:"全米", style:"アメリカンIPA", srm:7, abv:6.5, alc:3,
+    app:"金色から琥珀色。透明から軽く霞み、白い泡。", aroma:{malt:"[クラッカー、軽いカラメル|淡い麦芽香]。",yeast:"クリーン。",hop:"[柑橘、松、樹脂、花|強いアメリカ系ホップ香]。"}, taste:{malt:"麦芽はホップを支える。",yeast:"クリーン。",hop:"強い風味と苦味。",body:"中程度。"}, after:"ドライで苦味が長い。", alcohol:"はっきり温かい。",
+    markers:["APAより強く苦く、ダブルIPAより軽い標準的なアメリカンIPA"], similar:["apa","wcipa","dipa"] },
+
+  { id:"american_farmhouse", country:"アメリカ", region:"全米クラフト", style:"アメリカン・ファームハウスエール", srm:6, abv:6.5, alc:3,
+    app:"淡い金色から琥珀色。軽く霞み、高い泡。", aroma:{malt:"[パン、穀物|素朴な麦芽香]。",yeast:"[果実、胡椒、土|複雑な発酵香]。",hop:"柑橘や草が中程度。"}, taste:{malt:"軽い穀物。",yeast:"果実とスパイス。",hop:"苦味は中程度。",body:"中程度で高炭酸。"}, after:"ドライで素朴。", alcohol:"明瞭な温かさ。",
+    markers:["セゾン的な乾燥感と発酵香に、米国ホップの果実感"], similar:["saison","biere_de_garde","apa"] },
+
+  { id:"belgian_strong_amber", country:"ベルギー", region:"ベルギー各地", style:"ベルジャン・ストロング・アンバーエール", srm:15, abv:9.0, alc:4,
+    app:"透明な琥珀から赤銅色。厚いオフホワイトの泡。", aroma:{malt:"[カラメル、トースト、蜂蜜|豊かな琥珀麦芽香]。",yeast:"[洋梨、プラム、胡椒|強い果実・スパイス香]。",hop:"低〜中。"}, taste:{malt:"濃厚なカラメルとパン。",yeast:"果実とスパイス。",hop:"苦味は中程度。",body:"フルだが高炭酸。"}, after:"温かく、果実とカラメルが長い。", alcohol:"強い温感。",
+    markers:["琥珀色、高アルコール、ベルギー酵母の果実・スパイス、高炭酸"], similar:["belgian_amber","dubbel","grand_cru"] },
 ];
 
