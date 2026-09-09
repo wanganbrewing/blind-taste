@@ -186,7 +186,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 1.8.0 · 2026-09-10</p>
+  <p class="version">Version 1.9.0 · 2026-09-10</p>
 </section>
 
 <!-- ===== STUDY ===== -->
@@ -234,6 +234,12 @@ li{margin:3px 0}
 
   <div id="candPane">
     <h2 id="candTitle">候補に残すスタイル <span class="count" id="candCount"></span></h2>
+    <div class="card" style="padding:14px;margin-bottom:14px">
+      <label class="f">国で表示を絞る</label>
+      <div class="row" id="candCountryPick"></div>
+      <div class="row" id="candCountryActions" style="margin-top:10px"></div>
+      <p class="hint" style="margin-bottom:0">表示する国を切り替えても、ほかの国で選んだ候補は残ります。</p>
+    </div>
     <div class="cands" id="cands"></div>
     <p class="hint" id="candHint"></p>
     <div class="row" style="margin-top:14px">
@@ -440,7 +446,7 @@ function newQuestion(){
   const p = pool(); const s = p[Math.floor(Math.random()*p.length)];
   diff = diffMode===0 ? 1+Math.floor(Math.random()*3) : diffMode;
   const ax=["malt","yeast","hop"];
-  q = { s, step:0, cands:new Set(), stepScore:[], hide:{aroma:ax[Math.floor(Math.random()*3)], taste:ax[Math.floor(Math.random()*3)]} };
+  q = { s, step:0, cands:new Set(), candCountry:"all", stepScore:[], hide:{aroma:ax[Math.floor(Math.random()*3)], taste:ax[Math.floor(Math.random()*3)]} };
   drawGlass(s);
   show("quiz"); renderStep();
 }
@@ -467,7 +473,24 @@ function renderStep(){
 function renderCands(){
   const box=$("cands"); box.innerHTML="";
   const p=pool(); const byC={}; p.forEach(x=>{(byC[x.country]=byC[x.country]||[]).push(x)});
-  Object.entries(byC).forEach(([c,arr])=>{
+  const countryPick=$("candCountryPick"); countryPick.innerHTML="";
+  [{id:"all",label:"すべて",styles:p}, ...Object.entries(byC).map(([c,styles])=>({id:c,label:c,styles}))].forEach(item=>{
+    const selected=item.styles.filter(x=>q.cands.has(x.id)).length;
+    const b=document.createElement("button"); b.className="chip";
+    b.textContent=`${item.label} ${selected ? `${selected}/` : ""}${item.styles.length}`;
+    b.setAttribute("aria-pressed", String(q.candCountry===item.id));
+    b.onclick=()=>{ q.candCountry=item.id; renderCands(); };
+    countryPick.appendChild(b);
+  });
+  const activeStyles=q.candCountry==="all" ? p : (byC[q.candCountry]||[]);
+  const activeLabel=q.candCountry==="all" ? "全スタイル" : q.candCountry;
+  const actions=$("candCountryActions"); actions.innerHTML="";
+  [[`${activeLabel}をすべて残す`,true],[`${activeLabel}をすべて外す`,false]].forEach(([label,keep])=>{
+    const b=document.createElement("button"); b.className="btn ghost"; b.style.padding="8px 12px"; b.style.fontSize=".88rem"; b.textContent=label;
+    b.onclick=()=>{ activeStyles.forEach(x=>keep?q.cands.add(x.id):q.cands.delete(x.id)); renderCands(); };
+    actions.appendChild(b);
+  });
+  Object.entries(byC).filter(([c])=>q.candCountry==="all"||q.candCountry===c).forEach(([c,arr])=>{
     const g=document.createElement("div"); g.className="grp"; g.innerHTML=`<h3>${c}</h3>`;
     const r=document.createElement("div"); r.className="row";
     arr.forEach(x=>{
@@ -597,7 +620,7 @@ function renderStudyGroup(g){
   $("studyGroupNote").textContent=`${g.note}（${styles.length}スタイル）`;
   const parts=[["発酵方式","fermentation"],["一般的な原材料","ingredients"],["色・外観","appearance"],["香り","aroma"],["味・口当たり","taste"],["後味","after"],["度数・温感","strength"],["見分け方","markers"]];
   $("studyGroupView").innerHTML=`
-    <div class="group-part"><h2>${g.name}</h2><div class="group-summary">${styles.map(s=>{const f=fermentationInfo(s);return `<div class="group-style"><b>${s.style} ${sourceBadge(s)}</b><small>${s.country} ／ ${s.region}</small><small>色 ${s.srm} SRM　・　ABV 約${s.abv}%</small><small>発酵方式：${f.label}</small><small>${f.note}</small><div class="group-swatch" style="background:${srmHex(s.srm)}"></div>${brandHtml(s)}</div>`;}).join("")}</div><p class="hint">販売状況・価格・販売単位はリンク先で確認してください。「日」はDomens資料の日本語ページだけに掲載される項目です。</p></div>
+    <div class="group-part"><h2>${g.name}</h2><div class="group-summary">${styles.map(s=>{const f=fermentationInfo(s);return `<div class="group-style"><b>${s.style} ${sourceBadge(s)}</b><small>${s.country}</small><small>色 ${s.srm} SRM　・　ABV 約${s.abv}%</small><small>発酵方式：${f.label}</small><small>${f.note}</small><div class="group-swatch" style="background:${srmHex(s.srm)}"></div>${brandHtml(s)}</div>`;}).join("")}</div><p class="hint">販売状況・価格・販売単位はリンク先で確認してください。「日」はDomens資料の日本語ページだけに掲載される項目です。</p></div>
     ${parts.map(([label,key])=>`<div class="group-part"><h2>${label}</h2>${featureCards(styles,key)}</div>`).join("")}`;
   window.scrollTo({top:0,behavior:"auto"});
 }
