@@ -116,6 +116,11 @@ li{margin:3px 0}
 .key-differences .eyebrow{display:inline-block;color:var(--amber);font-size:.78rem;font-weight:700;letter-spacing:.08em;margin-bottom:2px}
 .key-differences .group-feature{border-color:#D9B477;background:rgba(255,255,255,.86)}
 .key-differences .group-feature b{color:#7A4508}
+.mini-profile{display:flex;align-items:center;gap:10px;margin:8px 0 10px}
+.mini-glass{position:relative;display:inline-block;width:32px;height:46px;border:2px solid #8E999E;border-top-width:1px;border-radius:2px 2px 8px 8px;overflow:hidden;background:#fff;flex:0 0 auto}
+.mini-liquid{position:absolute;inset:3px 2px 2px;border-radius:1px 1px 5px 5px}
+.mini-foam{position:absolute;left:2px;right:2px;top:3px;border-radius:5px 5px 3px 3px;border-bottom:1px solid rgba(0,0,0,.08)}
+.mini-caption{font-size:.78rem;color:var(--ink2);font-weight:700}
 .style-summary-list{display:grid;gap:16px}
 .style-summary{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px}
 .style-summary h3{font-family:var(--serif);font-size:1.2rem;margin:0 0 10px;color:var(--ink)}
@@ -209,7 +214,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 2.8.0 · 2026-09-10</p>
+  <p class="version">Version 2.9.0 · 2026-09-10</p>
 </section>
 
 <!-- ===== STUDY ===== -->
@@ -687,9 +692,18 @@ function brandHtml(s){
   const brand=REP_BRANDS[s.id];
   return brand ? `<div class="brand">代表銘柄：<b>${brand}</b><br><a class="buy-link" href="${purchaseUrl(brand)}" target="_blank" rel="noopener noreferrer">1本販売を探す ↗</a></div>` : "";
 }
+function foamProfile(s){
+  const low=/泡は薄|すぐ消え|すぐに膜|少なめ|消えやすい|短め|短く/.test(s.app);
+  const high=/山|盛り上が|厚|濃密|長く残|持ちがよい|持続/.test(s.app);
+  return low?{label:"泡 少なめ",height:7}:high?{label:"泡 豊か",height:17}:{label:"泡 標準",height:12};
+}
+function miniBeerIcon(s){
+  const foam=foamProfile(s), foamColor=s.srm>=18?"#C9B490":"#F7F4EC";
+  return `<div class="mini-profile" aria-label="色 SRM ${s.srm}、${foam.label}"><span class="mini-glass" aria-hidden="true"><span class="mini-liquid" style="background:${srmHex(s.srm)}"></span><span class="mini-foam" style="height:${foam.height}px;background:${foamColor}"></span></span><span class="mini-caption">SRM ${s.srm}<br>${foam.label}</span></div>`;
+}
 function groupStyles(g){ return g.ids.map(id=>S.find(x=>x.id===id)).filter(Boolean); }
 function featureCards(styles,key){
-  return `<div class="group-items">${styles.map(s=>`<div class="group-feature"><span class="country-badge">${s.country}</span><b>${s.style}</b>${key==="markers"?`<ul>${s.markers.map(m=>`<li>${m}</li>`).join("")}</ul>`:`<p>${comparisonValue(s,key)}</p>`}</div>`).join("")}</div>`;
+  return `<div class="group-items">${styles.map(s=>`<div class="group-feature"><span class="country-badge">${s.country}</span><b>${s.style}</b>${key==="markers"?`${miniBeerIcon(s)}<ul>${s.markers.map(m=>`<li>${m}</li>`).join("")}</ul>`:`<p>${comparisonValue(s,key)}</p>`}</div>`).join("")}</div>`;
 }
 function renderStudyGroup(g){
   const styles=groupStyles(g);
