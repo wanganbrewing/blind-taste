@@ -219,7 +219,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 3.2.0 · 2026-09-10</p>
+  <p class="version">Version 3.3.0 · 2026-09-10</p>
 </section>
 
 <!-- ===== STUDY ===== -->
@@ -340,10 +340,10 @@ const S = window.STYLES;
 const $ = id => document.getElementById(id);
 const STAGES = ["見た目","香り","味","後味","アルコール","判定"];
 const DIFF_HINT = {
-  0:"初級・中級・上級から、問題ごとにランダムで出題します。開始後に今回の難易度を表示します。",
-  1:"テイスターが感じた表現に、官能記述子（例：バナナ→イソアミルアセテート）を添えます。香りと味は麦芽・酵母・ホップに分けて示します。",
-  2:"感覚的な表現だけ。記述子は出ません。香り・味の3軸の区別は表示します。",
-  3:"感覚表現のみ。香りと味のそれぞれで、1軸ぶんの情報が欠けます（実戦でホップが取れなかった状況の再現）。麦芽・酵母・ホップの区別も表示しません。"
+  0:"初級・中級・上級を問題ごとにランダム出題。選択肢数も今回の難易度に合わせます。",
+  1:"選択肢は最大12。官能記述子を添え、香りと味を麦芽・酵母・ホップに分けて表示します。",
+  2:"選択肢は最大30。感覚表現のみで、香り・味の3軸ラベルは表示します。",
+  3:"選択肢は出題範囲の全スタイル。香り・味の各1軸を隠し、3軸ラベルも表示しません。"
 };
 const BOTTOM_FERMENTED = new Set(["helles","pils","rauch","doppelbock","schwarz","marzen","czech_pils","czech_dark","polotmave","vienna","baltic","rice_lager","export","munich_dunkel","festbier","maibock","dark_bock","eisbock","kellerbier","american_lager","american_light_lager","american_amber_lager","american_dark_lager","rye_lager","mexican_lager","alsatian_pils","italian_pils"]);
 const SPONTANEOUS = new Set(["straight_lambic","gueuze","faro","fruit_lambic"]);
@@ -562,11 +562,18 @@ function drawGlass(s){
 
 // ---------- quiz flow ----------
 function pool(){ return quizPoolIds ? S.filter(x=>quizPoolIds.has(x.id)) : S.filter(x=>enabled.has(x.country)&&inTestScope(x)); }
+function optionPool(p,s,level){
+  const cap=level===1?12:level===2?30:p.length;
+  if(p.length<=cap) return p;
+  const decoys=p.filter(x=>x.id!==s.id).sort(()=>Math.random()-.5).slice(0,cap-1);
+  const ids=new Set([s.id,...decoys.map(x=>x.id)]);
+  return p.filter(x=>ids.has(x.id));
+}
 function newQuestion(){
   const p = pool(); const s = p[Math.floor(Math.random()*p.length)];
   diff = diffMode===0 ? 1+Math.floor(Math.random()*3) : diffMode;
   const ax=["malt","yeast","hop"];
-  q = { s, step:0, cands:new Set(), stepScore:[], hide:{aroma:ax[Math.floor(Math.random()*3)], taste:ax[Math.floor(Math.random()*3)]} };
+  q = { s, options:optionPool(p,s,diff), step:0, cands:new Set(), stepScore:[], hide:{aroma:ax[Math.floor(Math.random()*3)], taste:ax[Math.floor(Math.random()*3)]} };
   drawGlass(s);
   show("quiz"); renderStep();
 }
@@ -574,8 +581,8 @@ function show(id){ ["home","quiz","result","study","originQuiz"].forEach(x=>$(x)
 
 function renderStep(){
   const names=["","初級","中級","上級"];
-  $("activeDiff").textContent=`今回の難易度：${names[diff]}`;
-  $("activeDiff").classList.toggle("hidden", diffMode!==0);
+  $("activeDiff").textContent=`難易度：${names[diff]}（選択肢 ${q.options.length}）`;
+  $("activeDiff").classList.remove("hidden");
   $("activeGroupTest").textContent=`グループ限定：${quizGroupName}`;
   $("activeGroupTest").classList.toggle("hidden", !quizPoolIds);
   const st=$("stages"); st.innerHTML = STAGES.map((n,i)=>`<div class="${i<q.step?'done':i===q.step?'now':''}">${n}</div>`).join("");
@@ -594,7 +601,7 @@ function renderStep(){
 
 function renderCands(){
   const box=$("cands"); box.innerHTML="";
-  const p=pool(); const byC={}; p.forEach(x=>{(byC[x.country]=byC[x.country]||[]).push(x)});
+  const p=q.options; const byC={}; p.forEach(x=>{(byC[x.country]=byC[x.country]||[]).push(x)});
   Object.entries(byC).forEach(([c,arr])=>{
     const g=document.createElement("div"); g.className="grp";
     const head=document.createElement("h3");
@@ -633,7 +640,7 @@ $("quitBtn").onclick=()=>{ if(confirm("この一杯を中断しますか？")){ 
 // final cascade
 function opt(sel, arr, ph){ sel.innerHTML = `<option value="">${ph}</option>` + arr.map(v=>`<option>${v}</option>`).join(""); }
 function renderFinal(){
-  const p=pool();
+  const p=q.options;
   opt($("selCountry"), [...new Set(p.map(x=>x.country))], "国を選ぶ");
   opt($("selStyle"), [], "まず国を選ぶ");
   $("answerBtn").disabled=true;
