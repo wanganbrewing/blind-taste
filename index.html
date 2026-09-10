@@ -114,6 +114,11 @@ li{margin:3px 0}
 .key-differences{background:linear-gradient(135deg,#FFF8EA,#F3E4CC);border:2px solid var(--amber);border-radius:16px;padding:18px;margin-top:18px;box-shadow:0 8px 24px rgba(184,116,26,.12)}
 .key-differences h2{font-family:var(--serif);font-size:1.35rem;margin:0 0 2px}
 .key-differences .eyebrow{display:inline-block;color:var(--amber);font-size:.78rem;font-weight:700;letter-spacing:.08em;margin-bottom:2px}
+.country-overview{background:linear-gradient(135deg,#1F2B33,#344753);color:#fff;border-radius:16px;padding:18px;margin-top:18px;box-shadow:0 8px 24px rgba(20,32,40,.16)}
+.country-overview h2{font-family:var(--serif);font-size:1.45rem;margin:0 0 5px}
+.country-overview .eyebrow{display:block;color:#F2C879;font-size:.78rem;font-weight:700;letter-spacing:.08em;margin-bottom:3px}
+.country-overview .country-lead{color:#F8EBD2;font-weight:700;margin:0 0 10px}
+.country-overview ul{margin:0;padding-left:1.2em}.country-overview li{margin:7px 0}
 .key-differences .group-feature{border-color:#D9B477;background:rgba(255,255,255,.86)}
 .key-differences .group-feature b{color:#7A4508}
 .mini-profile{display:flex;align-items:center;gap:10px;margin:8px 0 10px}
@@ -214,7 +219,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 3.0.0 · 2026-09-10</p>
+  <p class="version">Version 3.1.0 · 2026-09-10</p>
 </section>
 
 <!-- ===== STUDY ===== -->
@@ -642,12 +647,31 @@ function comparisonValue(s, kind){
   if(kind==="ingredients") return ingredientInfo(s);
   return s.markers.join("／");
 }
+const COUNTRY_STUDY_GUIDES = [
+  {country:"イギリス", lead:"麦芽の奥行きと穏やかな果実香を、低めの炭酸で味わうエール文化。", points:["ビター／ペールエールは、紅茶・土・花を思わせる英国ホップとドライな苦味。","ブラウンエールやスコッチ系は、パン・ナッツ・カラメルの麦芽感が軸。","ポーター／スタウトはチョコから焙煎へ。色だけでなく、甘さ・焦げ・ボディで判定。"]},
+  {country:"アイルランド", lead:"ドライで飲み進めやすい黒ビールが象徴。", points:["代表軸はドライスタウト。黒色、ロースト香、軽快なボディ、切れる後味。","甘いスタウトと迷ったら、乳糖的な甘残りより、焙煎の苦味と乾燥感を見る。"]},
+  {country:"ドイツ", lead:"クリーンなラガーと、酵母香豊かな小麦ビールの二本柱。", points:["ラガーは雑味が少なく、淡色はホップ、濃色はパン様の麦芽、ボックは濃度と度数が軸。","ヴァイスビア（ヴァイツェン）はバナナとクローブ。ヴィットビアの柑橘・コリアンダーと区別。","ケルシュ／アルトは上面発酵でもクリーン。色と麦芽・ホップの強さで見分ける。"]},
+  {country:"ベルギー", lead:"酵母の果実香とスパイス香、高い発泡性、複雑な発酵が主役。", points:["淡色でも酵母由来の洋梨・柑橘・胡椒が出やすく、度数が高くても後味は乾きやすい。","ダブル→トリプル→濃色ストロングは、色・麦芽の濃さ・アルコール感で整理。","ランビック系は野生発酵、フランダース系は赤褐色と熟成した酸味が重要。"]},
+  {country:"チェコ", lead:"丸い麦芽感と、やわらかく長い苦味を両立するラガー文化。", points:["チェコピルスナーは金色、パン様の麦芽、ザーツホップ、丸みのある苦味。","ドイツのピルスナーより麦芽が厚く、苦味の角がやわらかい。","半濃色・濃色ではトーストやカラメルが増えるが、発酵はクリーン。"]},
+  {country:"アメリカ", lead:"柑橘・松・トロピカルなホップと、自由な再解釈が特徴。", points:["ペールエール→IPA→ダブルIPAは、ホップ強度・苦味・度数が段階的に上がる。","西海岸IPAは透明でドライ、NEIPAは濁り・果汁感・やわらかな苦味。","一方、ライトラガーやクリームエールは副原料を使った軽快さが判定軸。"]},
+  {country:"オーストリア", lead:"トーストした麦芽と、すっきりした下面発酵の調和。", points:["代表軸はウィンナーラガー。琥珀〜銅色、パンの耳、穏やかな苦味。","メルツェンより軽くドライで、焦げや強い甘さを出さない。"]},
+  {country:"ポーランド", lead:"小麦・煙・高炭酸を組み合わせた独自の伝統。", points:["代表軸はグロジスキェ。淡色なのに燻製香があり、非常に軽く高発泡。","ラオホビアより麦芽の甘さと色が軽く、爽快さが際立つ。"]},
+  {country:"日本", lead:"米を生かした、軽さ・高炭酸・鋭いキレ。", points:["ライスラガーは極淡色で、麦芽風味とエステルが控えめ。","ピルスナーよりホップ香と苦味が弱く、後味が短くドライ。"]},
+  {country:"オーストラリア", lead:"果実味のある酵母と南半球ホップを、爽快な飲み口にまとめる。", points:["ペール／XPAは柑橘・トロピカルなホップと軽快なボディ。","スパークリングエールは高炭酸、果実香、やや力強い麦芽感が特徴。"]},
+  {country:"フランス", lead:"北部の熟成エールと、アルザスのクリーンなラガー。", points:["ビエール・ド・ギャルドは麦芽主体で、土・熟成果実・丸いアルコール感。","アルザス・ピルスは淡色でクリーン。熟成感の有無が大きな分岐。"]},
+  {country:"イタリア", lead:"伝統スタイルへ香りの輪郭を足す、食中酒的な設計。", points:["イタリアンピルスはドライホップ由来の鮮明な香りを持つ淡色ラガー。","イタリアン・グレープエールは葡萄の果実味・酸味・ワイン様の余韻が軸。"]},
+  {country:"フィンランド", lead:"穀物とジュニパーを感じる、素朴で濃厚な農家ビール。", points:["サハティはホップよりジュニパー、バナナ様発酵香、甘い穀物感。","炭酸が弱いことが多く、一般的な小麦ビールより濃厚で野趣がある。"]},
+  {country:"ノルウェー", lead:"クヴェイク酵母の柑橘香と、地方ごとの素朴な穀物感。", points:["コルンオルは速い高温発酵由来のオレンジ様香気が目印。","ホップ主役のIPAとは違い、酵母・穀物・ジュニパーなどの地方性を見る。"]},
+  {country:"メキシコ", lead:"暑い環境で飲みやすい、淡色・軽快・高炭酸のラガー。", points:["穏やかな穀物・コーン様の甘みと、低〜中程度の苦味。","アメリカンラガーに近いが、わずかな麦芽感と爽快な切れを軸に覚える。"]},
+  {country:"ニュージーランド", lead:"白葡萄・ライム・トロピカルを思わせる南半球ホップ。", points:["NZ IPAはソーヴィニヨン・ブラン様、柑橘、トロピカルな香りが識別点。","アメリカンIPAの松・樹脂より、白葡萄や明るい果実方向を探す。"]}
+];
 const STUDY_GROUPS = [
-  {id:"color_straw", name:"色別：極淡色・麦わら色", note:"SRM 1〜3。非常に淡い色のスタイルを、軽さ・苦味・香りで比較。", srm:[1,3]},
-  {id:"color_gold", name:"色別：金色", note:"SRM 4〜6。金色のスタイルを、麦芽の厚み・ホップ・発酵香で比較。", srm:[4,6]},
-  {id:"color_amber", name:"色別：琥珀色・銅色", note:"SRM 7〜14。琥珀から銅色のスタイルを、カラメル感・果実香・苦味で比較。", srm:[7,14]},
-  {id:"color_brown", name:"色別：褐色", note:"SRM 15〜24。褐色のスタイルを、パン・ナッツ・チョコ・焙煎感で比較。", srm:[15,24]},
-  {id:"color_black", name:"色別：濃褐色・黒色", note:"SRM 25〜40。濃褐色から黒色のスタイルを、焙煎強度・甘さ・ボディで比較。", srm:[25,40]},
+  ...COUNTRY_STUDY_GUIDES.map(x=>({id:`country_${x.country}`,name:`国別：${x.country}`,note:x.lead,country:x.country,overview:x,category:"国別の全体像"})),
+  {id:"color_straw", name:"色別：極淡色・麦わら色", note:"SRM 1〜3。非常に淡い色のスタイルを、軽さ・苦味・香りで比較。", srm:[1,3],category:"色別"},
+  {id:"color_gold", name:"色別：金色", note:"SRM 4〜6。金色のスタイルを、麦芽の厚み・ホップ・発酵香で比較。", srm:[4,6],category:"色別"},
+  {id:"color_amber", name:"色別：琥珀色・銅色", note:"SRM 7〜14。琥珀から銅色のスタイルを、カラメル感・果実香・苦味で比較。", srm:[7,14],category:"色別"},
+  {id:"color_brown", name:"色別：褐色", note:"SRM 15〜24。褐色のスタイルを、パン・ナッツ・チョコ・焙煎感で比較。", srm:[15,24],category:"色別"},
+  {id:"color_black", name:"色別：濃褐色・黒色", note:"SRM 25〜40。濃褐色から黒色のスタイルを、焙煎強度・甘さ・ボディで比較。", srm:[25,40],category:"色別"},
   {id:"pale_lager", name:"淡色ラガー", note:"麦芽の丸さ、ホップの強さ、軽快さの違いを比較。", ids:["helles","pils","czech_pils","export","american_lager","american_light_lager","mexican_lager","rice_lager","alsatian_pils","italian_pils"]},
   {id:"amber_lager", name:"琥珀色ラガー", note:"トースト、カラメル、甘さ、ドライさの境界を比較。", ids:["vienna","marzen","festbier","polotmave","kellerbier","cal_common"]},
   {id:"american_lagers", name:"アメリカンスタイル・ラガー", note:"軽さ、色、ライ麦のスパイス感、副原料の違いを比較。", ids:["american_light_lager","american_lager","american_amber_lager","american_dark_lager","rye_lager"]},
@@ -706,7 +730,11 @@ function miniBeerIcon(s){
   const foam=foamProfile(s), foamColor=s.srm>=18?"#C9B490":"#F7F4EC";
   return `<div class="mini-profile" aria-label="色 SRM ${s.srm}、${foam.label}"><span class="mini-glass" aria-hidden="true"><span class="mini-liquid" style="background:${srmHex(s.srm)}"></span><span class="mini-foam" style="height:${foam.height}px;background:${foamColor}"></span></span><span class="mini-caption">SRM ${s.srm}<br>${foam.label}</span></div>`;
 }
-function groupStyles(g){ return g.srm ? S.filter(s=>s.srm>=g.srm[0]&&s.srm<=g.srm[1]) : g.ids.map(id=>S.find(x=>x.id===id)).filter(Boolean); }
+function groupStyles(g){
+  if(g.country) return S.filter(s=>s.country===g.country);
+  if(g.srm) return S.filter(s=>s.srm>=g.srm[0]&&s.srm<=g.srm[1]);
+  return g.ids.map(id=>S.find(x=>x.id===id)).filter(Boolean);
+}
 function featureCards(styles,key){
   return `<div class="group-items">${styles.map(s=>`<div class="group-feature"><span class="country-badge">${s.country}</span><b>${s.style}</b>${key==="markers"?`${miniBeerIcon(s)}<ul>${s.markers.map(m=>`<li>${m}</li>`).join("")}</ul>`:`<p>${comparisonValue(s,key)}</p>`}</div>`).join("")}</div>`;
 }
@@ -714,14 +742,16 @@ function renderStudyGroup(g){
   const styles=groupStyles(g);
   $("studyGroupNote").textContent=`${g.note}（${styles.length}スタイル）`;
   const parts=[["外観","appearance"],["香り","aroma"],["味・口当たり","taste"],["後味","after"],["度数・温感","strength"],["原材料","ingredients"],["発酵方式","fermentation"]];
+  const overview=g.overview?`<div class="country-overview"><span class="eyebrow">国別の大きな特徴</span><h2>${g.overview.country}</h2><p class="country-lead">${g.overview.lead}</p><ul>${g.overview.points.map(p=>`<li>${p}</li>`).join("")}</ul></div>`:"";
   $("studyGroupView").innerHTML=`
+    ${overview}
     <div class="key-differences"><span class="eyebrow">試験で迷ったら最初にここを見る</span><h2>見分け方：違いのポイント</h2><p class="note">各スタイルを判定する決め手を、暗記用にまとめています。</p>${featureCards(styles,"markers")}</div>
     <div class="group-part"><h2>${g.name}：スタイル別まとめ</h2><div class="style-summary-list">${styles.map(s=>`<article class="style-summary"><span class="country-badge">${s.country}</span><h3>${s.style} ${sourceBadge(s)}</h3><p class="style-meta">SRM ${s.srm}　・　IBU ${ibuInfo(s)}　・　ABV 約${s.abv}%</p><div class="group-swatch" style="background:${srmHex(s.srm)}"></div>${parts.map(([label,key])=>`<div class="style-fact"><b>${label}</b><p>${comparisonValue(s,key)}</p></div>`).join("")}${brandHtml(s)}</article>`).join("")}</div><p class="hint">SRM・IBU・ABVはスタイルの一般的な目安です。販売状況・価格・販売単位はリンク先で確認してください。「日」はD資料の日本語ページだけに掲載される項目です。</p></div>`;
   window.scrollTo({top:0,behavior:"auto"});
 }
 function setupStudyGroups(selected){
   const sel=$("studyGroupSelect"); sel.innerHTML="";
-  STUDY_GROUPS.forEach(g=>{ const o=document.createElement("option"); o.value=g.id; o.textContent=g.name; sel.appendChild(o); });
+  ["国別の全体像","色別","似たスタイル比較"].forEach(cat=>{ const box=document.createElement("optgroup"); box.label=cat; STUDY_GROUPS.filter(g=>(g.category||"似たスタイル比較")===cat).forEach(g=>{ const o=document.createElement("option"); o.value=g.id; o.textContent=g.name; box.appendChild(o); }); sel.appendChild(box); });
   sel.value=selected||STUDY_GROUPS[0].id;
   renderStudyGroup(STUDY_GROUPS.find(g=>g.id===sel.value));
 }
