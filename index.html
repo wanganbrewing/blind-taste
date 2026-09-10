@@ -214,7 +214,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 2.9.0 · 2026-09-10</p>
+  <p class="version">Version 3.0.0 · 2026-09-10</p>
 </section>
 
 <!-- ===== STUDY ===== -->
@@ -643,6 +643,11 @@ function comparisonValue(s, kind){
   return s.markers.join("／");
 }
 const STUDY_GROUPS = [
+  {id:"color_straw", name:"色別：極淡色・麦わら色", note:"SRM 1〜3。非常に淡い色のスタイルを、軽さ・苦味・香りで比較。", srm:[1,3]},
+  {id:"color_gold", name:"色別：金色", note:"SRM 4〜6。金色のスタイルを、麦芽の厚み・ホップ・発酵香で比較。", srm:[4,6]},
+  {id:"color_amber", name:"色別：琥珀色・銅色", note:"SRM 7〜14。琥珀から銅色のスタイルを、カラメル感・果実香・苦味で比較。", srm:[7,14]},
+  {id:"color_brown", name:"色別：褐色", note:"SRM 15〜24。褐色のスタイルを、パン・ナッツ・チョコ・焙煎感で比較。", srm:[15,24]},
+  {id:"color_black", name:"色別：濃褐色・黒色", note:"SRM 25〜40。濃褐色から黒色のスタイルを、焙煎強度・甘さ・ボディで比較。", srm:[25,40]},
   {id:"pale_lager", name:"淡色ラガー", note:"麦芽の丸さ、ホップの強さ、軽快さの違いを比較。", ids:["helles","pils","czech_pils","export","american_lager","american_light_lager","mexican_lager","rice_lager","alsatian_pils","italian_pils"]},
   {id:"amber_lager", name:"琥珀色ラガー", note:"トースト、カラメル、甘さ、ドライさの境界を比較。", ids:["vienna","marzen","festbier","polotmave","kellerbier","cal_common"]},
   {id:"american_lagers", name:"アメリカンスタイル・ラガー", note:"軽さ、色、ライ麦のスパイス感、副原料の違いを比較。", ids:["american_light_lager","american_lager","american_amber_lager","american_dark_lager","rye_lager"]},
@@ -701,7 +706,7 @@ function miniBeerIcon(s){
   const foam=foamProfile(s), foamColor=s.srm>=18?"#C9B490":"#F7F4EC";
   return `<div class="mini-profile" aria-label="色 SRM ${s.srm}、${foam.label}"><span class="mini-glass" aria-hidden="true"><span class="mini-liquid" style="background:${srmHex(s.srm)}"></span><span class="mini-foam" style="height:${foam.height}px;background:${foamColor}"></span></span><span class="mini-caption">SRM ${s.srm}<br>${foam.label}</span></div>`;
 }
-function groupStyles(g){ return g.ids.map(id=>S.find(x=>x.id===id)).filter(Boolean); }
+function groupStyles(g){ return g.srm ? S.filter(s=>s.srm>=g.srm[0]&&s.srm<=g.srm[1]) : g.ids.map(id=>S.find(x=>x.id===id)).filter(Boolean); }
 function featureCards(styles,key){
   return `<div class="group-items">${styles.map(s=>`<div class="group-feature"><span class="country-badge">${s.country}</span><b>${s.style}</b>${key==="markers"?`${miniBeerIcon(s)}<ul>${s.markers.map(m=>`<li>${m}</li>`).join("")}</ul>`:`<p>${comparisonValue(s,key)}</p>`}</div>`).join("")}</div>`;
 }
@@ -726,7 +731,7 @@ function openStudy(){
 $("studyGroupSelect").onchange=()=>renderStudyGroup(STUDY_GROUPS.find(g=>g.id===$("studyGroupSelect").value));
 $("studyTestBtn").onclick=()=>{
   const g=STUDY_GROUPS.find(x=>x.id===$("studyGroupSelect").value);
-  quizPoolIds=new Set(g.ids); quizGroupName=g.name; newQuestion();
+  quizPoolIds=new Set(groupStyles(g).map(s=>s.id)); quizGroupName=g.name; newQuestion();
 };
 $("studyRandomBtn").onclick=()=>{
   const current=$("studyGroupSelect").value;
