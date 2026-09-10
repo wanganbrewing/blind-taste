@@ -219,7 +219,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 3.1.0 · 2026-09-10</p>
+  <p class="version">Version 3.2.0 · 2026-09-10</p>
 </section>
 
 <!-- ===== STUDY ===== -->
@@ -369,6 +369,28 @@ const IBU_RANGES = {
   english_red:"20–35",scottish_light:"10–20",scottish_heavy:"10–20",mild_porter:"15–30",chocolate_porter:"20–40",imperial_porter:"35–60",oyster_stout:"25–45",imperial_stout:"50–90",american_light_lager:"5–12",american_amber_lager:"18–30",american_dark_lager:"15–25",rye_lager:"20–35",rye_ale:"30–60",american_ipa:"40–70",american_farmhouse:"25–45",belgian_strong_amber:"20–35"
 };
 function ibuInfo(s){ return IBU_RANGES[s.id]||"—"; }
+const SRM_RANGES = {
+  bitter:"8–16",eipa:"6–14",porter:"20–30",mild:"14–25",barleywine:"8–22",wee_heavy:"14–25",oat_stout:"22–40",dry_stout:"25–40",
+  helles:"3–5",pils:"2–5",weissbier:"2–6",kolsch:"3–5",alt:"11–17",rauch:"12–22",doppelbock:"6–25",schwarz:"17–30",berliner:"2–3",gose:"3–4",marzen:"8–17",weizenbock:"6–25",
+  witbier:"2–4",dubbel:"10–17",tripel:"4–7",saison:"5–14",flanders_red:"10–16",oud_bruin:"15–22",gueuze:"3–7",golden_strong:"3–6",quad:"12–22",
+  czech_pils:"3–6",czech_dark:"19–35",polotmave:"10–16",apa:"5–10",wcipa:"5–10",neipa:"3–7",imp_stout:"30–40",cal_common:"10–14",amber:"10–17",dipa:"6–14",cream_ale:"2.5–5",
+  vienna:"9–15",baltic:"17–30",rice_lager:"2–4",sparkling:"4–7",export:"4–6",munich_dunkel:"14–28",festbier:"4–7",maibock:"6–11",dark_bock:"14–30",eisbock:"18–40",kellerbier:"5–17",
+  ordinary_bitter:"8–12",esb:"8–18",english_pale:"6–14",golden_ale:"2–6",english_brown:"12–22",old_ale:"10–22",scottish_export:"9–17",robust_porter:"22–35",smoked_porter:"22–35",sweet_stout:"30–40",foreign_extra_stout:"30–40",tropical_stout:"30–40",belgian_amber:"8–16",
+  straight_lambic:"3–7",faro:"3–12",fruit_lambic:"3–18",grand_cru:"4–14",american_lager:"2–4",black_ipa:"25–40",american_brown:"18–35",american_barleywine:"10–19",american_wheat:"3–6",biere_de_garde:"6–19",alsatian_pils:"2–5",italian_pils:"2–5",italian_grape:"5–16+",sahti:"10–20",kornol:"8–25",mexican_lager:"2–6",australian_pale:"4–9",australian_xpa:"3–7",nz_ipa:"6–14",
+  english_red:"10–18",scottish_light:"9–17",scottish_heavy:"9–17",mild_porter:"18–30",chocolate_porter:"25–40",imperial_porter:"25–40",oyster_stout:"30–40",imperial_stout:"30–40",american_light_lager:"2–3",american_amber_lager:"10–17",american_dark_lager:"14–30",rye_lager:"6–14",rye_ale:"6–18",american_ipa:"6–14",american_farmhouse:"4–14",belgian_strong_amber:"8–18"
+};
+const ABV_RANGES = {
+  bitter:"3.8–4.7",eipa:"5–7.5",porter:"4–6",mild:"3–3.8",barleywine:"8–12",wee_heavy:"6.5–10",oat_stout:"4.2–5.9",dry_stout:"4–4.5",
+  helles:"4.7–5.4",pils:"4.4–5.2",weissbier:"4.3–5.6",kolsch:"4.4–5.2",alt:"4.3–5.5",rauch:"4.8–6",doppelbock:"7–10",schwarz:"4.4–5.4",berliner:"2.8–3.8",gose:"4.2–4.8",marzen:"5.6–6.3",weizenbock:"6.5–9",
+  witbier:"4.5–5.5",dubbel:"6–7.6",tripel:"7.5–9.5",saison:"3.5–9.5",flanders_red:"4.6–6.5",oud_bruin:"4–8",gueuze:"5–8",golden_strong:"7.5–10.5",quad:"8–12",
+  czech_pils:"4.2–5.8",czech_dark:"4.4–5.8",polotmave:"4.4–5.8",apa:"4.5–6.2",wcipa:"6–7.5",neipa:"6–9",imp_stout:"8–12",cal_common:"4.5–5.5",amber:"4.5–6.2",dipa:"7.5–10",cream_ale:"4.2–5.6",
+  vienna:"4.7–5.5",baltic:"6.5–9.5",rice_lager:"4.5–5.5",sparkling:"4.5–6",export:"4.8–6",munich_dunkel:"4.5–5.6",festbier:"5.8–6.3",maibock:"6.3–7.4",dark_bock:"6.3–7.2",eisbock:"9–14",kellerbier:"4.8–5.8",
+  ordinary_bitter:"3–3.8",esb:"4.6–6.2",english_pale:"4.8–6.2",golden_ale:"3.8–5",english_brown:"4.2–5.4",old_ale:"5.5–9",scottish_export:"4.5–6",robust_porter:"4.8–6.5",smoked_porter:"5–7",sweet_stout:"4–6",foreign_extra_stout:"6.3–8",tropical_stout:"5.5–8",belgian_amber:"4.8–6.5",
+  straight_lambic:"5–6.5",faro:"4.5–5.5",fruit_lambic:"5–7",grand_cru:"8–12",american_lager:"4.2–5.3",black_ipa:"5.5–9",american_brown:"4.3–6.2",american_barleywine:"8–12",american_wheat:"4–5.5",biere_de_garde:"6–8.5",alsatian_pils:"4.5–5.5",italian_pils:"4.5–5.5",italian_grape:"5–8+",sahti:"7–11",kornol:"6–8",mexican_lager:"4–6",australian_pale:"4.2–5.2",australian_xpa:"4.5–6",nz_ipa:"5.5–7.5",
+  english_red:"4–5.5",scottish_light:"2.5–3.3",scottish_heavy:"3.3–3.9",mild_porter:"4–5.5",chocolate_porter:"4.5–6.5",imperial_porter:"7.5–12",oyster_stout:"4–6",imperial_stout:"8–12",american_light_lager:"2.8–4.2",american_amber_lager:"4.5–6",american_dark_lager:"4.5–6",rye_lager:"4.5–6",rye_ale:"4.5–7",american_ipa:"5.5–7.5",american_farmhouse:"5–8.5",belgian_strong_amber:"7–11"
+};
+function srmInfo(s){ return SRM_RANGES[s.id]||String(s.srm); }
+function abvInfo(s){ return ABV_RANGES[s.id]||String(s.abv); }
 function fermentationInfo(s){
   if(SPONTANEOUS.has(s.id)) return {label:"自然発酵", note:"野生酵母・微生物による発酵"};
   if(s.id==="cal_common") return {label:"下面発酵", note:"ラガー酵母を比較的高温で発酵"};
@@ -643,7 +665,7 @@ function comparisonValue(s, kind){
   if(kind==="aroma") return studyPlain(`${s.aroma.malt} ${s.aroma.yeast} ${s.aroma.hop}`);
   if(kind==="taste") return studyPlain(`${s.taste.malt} ${s.taste.yeast} ${s.taste.hop} ${s.taste.body}`);
   if(kind==="after") return studyPlain(s.after);
-  if(kind==="strength") return `約${s.abv}%　${studyPlain(s.alcohol)}`;
+  if(kind==="strength") return `${abvInfo(s)}%　${studyPlain(s.alcohol)}`;
   if(kind==="ingredients") return ingredientInfo(s);
   return s.markers.join("／");
 }
@@ -728,7 +750,7 @@ function foamProfile(s){
 }
 function miniBeerIcon(s){
   const foam=foamProfile(s), foamColor=s.srm>=18?"#C9B490":"#F7F4EC";
-  return `<div class="mini-profile" aria-label="色 SRM ${s.srm}、${foam.label}"><span class="mini-glass" aria-hidden="true"><span class="mini-liquid" style="background:${srmHex(s.srm)}"></span><span class="mini-foam" style="height:${foam.height}px;background:${foamColor}"></span></span><span class="mini-caption">SRM ${s.srm}<br>${foam.label}</span></div>`;
+  return `<div class="mini-profile" aria-label="SRM ${srmInfo(s)}、IBU ${ibuInfo(s)}、ABV ${abvInfo(s)}%、${foam.label}"><span class="mini-glass" aria-hidden="true"><span class="mini-liquid" style="background:${srmHex(s.srm)}"></span><span class="mini-foam" style="height:${foam.height}px;background:${foamColor}"></span></span><span class="mini-caption">SRM ${srmInfo(s)}　・　IBU ${ibuInfo(s)}<br>ABV ${abvInfo(s)}%　・　${foam.label}</span></div>`;
 }
 function groupStyles(g){
   if(g.country) return S.filter(s=>s.country===g.country);
@@ -746,7 +768,7 @@ function renderStudyGroup(g){
   $("studyGroupView").innerHTML=`
     ${overview}
     <div class="key-differences"><span class="eyebrow">試験で迷ったら最初にここを見る</span><h2>見分け方：違いのポイント</h2><p class="note">各スタイルを判定する決め手を、暗記用にまとめています。</p>${featureCards(styles,"markers")}</div>
-    <div class="group-part"><h2>${g.name}：スタイル別まとめ</h2><div class="style-summary-list">${styles.map(s=>`<article class="style-summary"><span class="country-badge">${s.country}</span><h3>${s.style} ${sourceBadge(s)}</h3><p class="style-meta">SRM ${s.srm}　・　IBU ${ibuInfo(s)}　・　ABV 約${s.abv}%</p><div class="group-swatch" style="background:${srmHex(s.srm)}"></div>${parts.map(([label,key])=>`<div class="style-fact"><b>${label}</b><p>${comparisonValue(s,key)}</p></div>`).join("")}${brandHtml(s)}</article>`).join("")}</div><p class="hint">SRM・IBU・ABVはスタイルの一般的な目安です。販売状況・価格・販売単位はリンク先で確認してください。「日」はD資料の日本語ページだけに掲載される項目です。</p></div>`;
+    <div class="group-part"><h2>${g.name}：スタイル別まとめ</h2><div class="style-summary-list">${styles.map(s=>`<article class="style-summary"><span class="country-badge">${s.country}</span><h3>${s.style} ${sourceBadge(s)}</h3><p class="style-meta">SRM ${srmInfo(s)}　・　IBU ${ibuInfo(s)}　・　ABV ${abvInfo(s)}%</p><div class="group-swatch" style="background:${srmHex(s.srm)}"></div>${parts.map(([label,key])=>`<div class="style-fact"><b>${label}</b><p>${comparisonValue(s,key)}</p></div>`).join("")}${brandHtml(s)}</article>`).join("")}</div><p class="hint">SRM・IBU・ABVは提供教材のスタイルガイド値を優先した一般的な範囲です。派生スタイルは複数ガイドの範囲を統合しています。販売状況・価格・販売単位はリンク先で確認してください。「日」はD資料の日本語ページだけに掲載される項目です。</p></div>`;
   window.scrollTo({top:0,behavior:"auto"});
 }
 function setupStudyGroups(selected){
@@ -820,7 +842,7 @@ function renderResult(fin, finPts, total, g){
   $("verdict").className = "verdict " + (fin.style?"ok":"ng");
   $("ansLine").innerHTML = `${s.style} ${sourceBadge(s)}<small>${s.country} ／ ${s.region}</small>` + (fin.style?"":`<small>あなたの答え：${g.c} ／ ${g.st}</small>`);
   const f=fermentationInfo(s);
-  $("ansFacts").innerHTML = `<span class="tag">SRM ${s.srm}</span><span class="tag">IBU ${ibuInfo(s)}</span><span class="tag">ABV 約${s.abv}%</span><span class="tag">${f.label}</span><p class="note">SRM・IBU・ABVはスタイルの一般的な目安です。</p><p class="note">一般的な原材料：${ingredientInfo(s)}</p>${brandHtml(s)}`;
+  $("ansFacts").innerHTML = `<span class="tag">SRM ${srmInfo(s)}</span><span class="tag">IBU ${ibuInfo(s)}</span><span class="tag">ABV ${abvInfo(s)}%</span><span class="tag">${f.label}</span><p class="note">SRM・IBU・ABVは提供教材のスタイルガイド値を優先した一般的な範囲です。</p><p class="note">一般的な原材料：${ingredientInfo(s)}</p>${brandHtml(s)}`;
   const rows = q.stepScore.map((x,i)=>{
     const lostAt = !x.kept;
     return `<tr><td>${STAGES[i]}<br><span class="note">${lostAt?"正解を候補から外した":"候補 "+x.n+"件に残した"}</span></td><td>${x.pts}</td></tr>`;
