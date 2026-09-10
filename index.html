@@ -126,6 +126,11 @@ li{margin:3px 0}
 .mini-liquid{position:absolute;inset:3px 2px 2px;border-radius:1px 1px 5px 5px}
 .mini-foam{position:absolute;left:2px;right:2px;top:3px;border-radius:5px 5px 3px 3px;border-bottom:1px solid rgba(0,0,0,.08)}
 .mini-caption{font-size:.78rem;color:var(--ink2);font-weight:700}
+.answer-identity{display:flex;align-items:center;gap:16px;margin:8px 0 14px}
+.answer-identity .answer{margin:0;flex:1}
+.answer-beer-icon{position:relative;width:54px;height:76px;border:2px solid #8E999E;border-top-width:1px;border-radius:3px 3px 11px 11px;overflow:hidden;background:#fff;flex:0 0 auto;box-shadow:inset 6px 0 rgba(255,255,255,.18)}
+.answer-beer-icon .beer-liquid{position:absolute;inset:4px 3px 3px;border-radius:2px 2px 8px 8px}
+.answer-beer-icon .beer-foam{position:absolute;left:3px;right:3px;top:4px;border-radius:9px 9px 5px 5px;border-bottom:1px solid rgba(0,0,0,.08)}
 .style-summary-list{display:grid;gap:16px}
 .style-summary{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px}
 .style-summary h3{font-family:var(--serif);font-size:1.2rem;margin:0 0 10px;color:var(--ink)}
@@ -219,7 +224,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 3.3.0 · 2026-09-10</p>
+  <p class="version">Version 3.4.0 · 2026-09-10</p>
 </section>
 
 <!-- ===== STUDY ===== -->
@@ -311,7 +316,7 @@ li{margin:3px 0}
 <section id="result" class="hidden">
   <div class="card">
     <p class="verdict" id="verdict"></p>
-    <p class="answer" id="ansLine"></p>
+    <div class="answer-identity"><div id="answerBeer"></div><p class="answer" id="ansLine"></p></div>
     <div id="ansFacts"></div>
     <table id="scoreTbl"></table>
   </div>
@@ -759,6 +764,10 @@ function miniBeerIcon(s){
   const foam=foamProfile(s), foamColor=s.srm>=18?"#C9B490":"#F7F4EC";
   return `<div class="mini-profile" aria-label="SRM ${srmInfo(s)}、IBU ${ibuInfo(s)}、ABV ${abvInfo(s)}%、${foam.label}"><span class="mini-glass" aria-hidden="true"><span class="mini-liquid" style="background:${srmHex(s.srm)}"></span><span class="mini-foam" style="height:${foam.height}px;background:${foamColor}"></span></span><span class="mini-caption">SRM ${srmInfo(s)}　・　IBU ${ibuInfo(s)}<br>ABV ${abvInfo(s)}%　・　${foam.label}</span></div>`;
 }
+function answerBeerIcon(s){
+  const foam=foamProfile(s), foamColor=s.srm>=18?"#C9B490":"#F7F4EC";
+  return `<div class="answer-beer-icon" role="img" aria-label="${s.style}の色と泡：SRM ${srmInfo(s)}、${foam.label}"><span class="beer-liquid" style="background:${srmHex(s.srm)}"></span><span class="beer-foam" style="height:${Math.round(foam.height*1.6)}px;background:${foamColor}"></span></div>`;
+}
 function groupStyles(g){
   if(g.country) return S.filter(s=>s.country===g.country);
   if(g.srm) return S.filter(s=>s.srm>=g.srm[0]&&s.srm<=g.srm[1]);
@@ -847,6 +856,7 @@ function renderResult(fin, finPts, total, g){
   const s=q.s;
   $("verdict").textContent = fin.style ? "正解" : (fin.country ? "国は正解、スタイルは違う" : "はずれ");
   $("verdict").className = "verdict " + (fin.style?"ok":"ng");
+  $("answerBeer").innerHTML = answerBeerIcon(s);
   $("ansLine").innerHTML = `${s.style} ${sourceBadge(s)}<small>${s.country} ／ ${s.region}</small>` + (fin.style?"":`<small>あなたの答え：${g.c} ／ ${g.st}</small>`);
   const f=fermentationInfo(s);
   $("ansFacts").innerHTML = `<span class="tag">SRM ${srmInfo(s)}</span><span class="tag">IBU ${ibuInfo(s)}</span><span class="tag">ABV ${abvInfo(s)}%</span><span class="tag">${f.label}</span><p class="note">SRM・IBU・ABVは提供教材のスタイルガイド値を優先した一般的な範囲です。</p><p class="note">一般的な原材料：${ingredientInfo(s)}</p>${brandHtml(s)}`;
