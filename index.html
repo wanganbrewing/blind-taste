@@ -25,7 +25,7 @@ h1{font-family:var(--serif);font-weight:600;font-size:2.2rem;letter-spacing:.06e
 .brand-lockup h1 span{color:var(--amber)}
 .brand-jp{margin:6px 0 3px;font-family:var(--serif);font-weight:600;letter-spacing:.18em;color:var(--ink2)}
 .brand-lockup .sub{margin:0;font-size:.88rem}
-.home-hero{position:relative;aspect-ratio:16/7;margin:0 0 20px;border-radius:16px;overflow:hidden;border:1px solid rgba(184,116,26,.35);background:#f5efe3 url("assets/tasting-guides-v1.png?v=3.7.0") center 33%/cover no-repeat;box-shadow:0 12px 32px rgba(28,34,38,.16)}
+.home-hero{position:relative;aspect-ratio:16/7;margin:0 0 20px;border-radius:16px;overflow:hidden;border:1px solid rgba(184,116,26,.35);background:#f5efe3 url("assets/tasting-guides-v1.png?v=3.8.0") center 33%/cover no-repeat;box-shadow:0 12px 32px rgba(28,34,38,.16)}
 .home-hero::after{content:"";position:absolute;inset:45% 0 0;background:linear-gradient(transparent,rgba(13,18,21,.72))}
 .home-hero-caption{position:absolute;z-index:1;left:12px;right:12px;bottom:10px;display:flex;justify-content:space-between;gap:10px;color:#fff;font-size:.72rem;font-weight:800;letter-spacing:.04em;text-shadow:0 1px 4px rgba(0,0,0,.9)}
 h2{font-size:1.05rem;font-weight:700;margin:26px 0 10px}
@@ -65,7 +65,7 @@ h2{font-size:1.05rem;font-weight:700;margin:26px 0 10px}
 .narr details summary::before{content:"▸ ";}
 .narr details[open] summary::before{content:"▾ ";}
 .exam-opening{margin:0 0 20px;padding:18px 16px 16px;background:linear-gradient(145deg,#f7f3e9,#fff 60%,#eee8dc);border:1px solid #bcb4a6;border-radius:14px;box-shadow:inset 0 0 0 4px rgba(255,255,255,.55)}
-.exam-cast{display:block;width:100%;aspect-ratio:3/2;background:#f5efe3 url("assets/tasting-guides-v1.png?v=3.7.0") center 38%/cover no-repeat;margin:0 0 14px;border-radius:10px;border:1px solid rgba(76,73,67,.2)}
+.exam-cast{display:block;width:100%;aspect-ratio:3/2;background-color:#f5efe3;background-position:center;background-size:cover;background-repeat:no-repeat;margin:0 0 14px;border-radius:10px;border:1px solid rgba(76,73,67,.2)}
 .exam-opening .opening-label{display:block;margin:0 0 10px;font-family:var(--ui);font-size:.68rem;font-weight:800;letter-spacing:.18em;color:var(--mute)}
 .exam-opening .speech{width:fit-content;max-width:88%;margin:7px 0;padding:9px 15px;background:#fff;border:1.5px solid #4c4943;border-radius:999px;font-family:var(--serif);font-weight:650;line-height:1.65;box-shadow:2px 2px 0 rgba(76,73,67,.1)}
 .exam-opening .speech.right{margin-left:auto}
@@ -241,7 +241,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 3.7.0 · 2026-09-11</p>
+  <p class="version">Version 3.8.0 · 2026-09-11</p>
 </section>
 
 <!-- ===== STUDY ===== -->
@@ -568,15 +568,36 @@ function stepHtml(i, s){
   }
 }
 const LEAD = ["グラスを光にかざす。","鼻を近づける。","一口。","飲み込んで、少し待つ。","もう一口、今度は喉に意識を向けて。"];
-const EXAM_OPENINGS = [
-  ["……待ってください。","この一杯、色だけで既に物語が始まっています。"],
-  ["静かに……。","グラスの中で、まだ名乗らない風景が揺れています。"],
-  ["なるほど……。","光にかざした瞬間、最初の手がかりが姿を現しました。"],
-  ["これは……。","焦らずに。まずは、この色が語る声を聴きましょう。"],
-  ["目を逸らさないで。","泡の向こうに、このビールの生まれた土地が見えてきます。"]
+const GUIDE_PORTRAITS = {
+  ritsu:[
+    {name:"久世 律",role:"理論派",img:"assets/guide-ritsu-observe-v1.png?v=3.8.0",bubbleRight:true},
+    {name:"久世 律",role:"理論派",img:"assets/guide-ritsu-think-v1.png?v=3.8.0",bubbleRight:false}
+  ],
+  akari:[
+    {name:"香月 灯",role:"感性派",img:"assets/guide-akari-aroma-v1.png?v=3.8.0",bubbleRight:false},
+    {name:"香月 灯",role:"感性派",img:"assets/guide-akari-discover-v1.png?v=3.8.0",bubbleRight:true}
+  ]
+};
+const GUIDE_LINES = [
+  {ritsu:"……まずは色と泡です。光は嘘をつきません。",akari:"この色から、最初の景色を探してみて。"},
+  {ritsu:"香りを分解する。麦芽、酵母、ホップ——順番に。",akari:"近づけた瞬間、どんな風景がひらいた？"},
+  {ritsu:"甘味と苦味、酸味、ボディ。印象を構造に変えます。",akari:"舌の上で、香りの物語が形を変えた。"},
+  {ritsu:"消え方を見てください。余韻にも証拠は残ります。",akari:"去ったあとに残る声こそ、この一杯の本音。"},
+  {ritsu:"温感と厚みを切り分ければ、度数帯が見える。",akari:"喉の奥に灯る熱。その強さを覚えて。"},
+  {ritsu:"材料は揃いました。国とスタイルを確定してください。",akari:"もう見えているはず。この一杯の名前を呼んで。"}
 ];
-function examOpeningHtml(lines){
-  return `<div class="exam-opening" aria-label="試験開始のテイスティングコメント"><div class="exam-cast" role="img" aria-label="理論派テイスターの久世律と、感性派テイスターの香月灯"></div><span class="opening-label">TASTING SCENE</span><div class="speech"><small>久世 律｜理論派</small>${lines[0]}</div><div class="speech right"><small>香月 灯｜感性派</small>${lines[1]}</div></div>`;
+function makeGuideSequence(){
+  const first=Math.random()<.5?"ritsu":"akari", other=first==="ritsu"?"akari":"ritsu";
+  const used={ritsu:0,akari:0}, offset={ritsu:Math.floor(Math.random()*2),akari:Math.floor(Math.random()*2)};
+  return GUIDE_LINES.map((lines,i)=>{
+    const who=i%2===0?first:other, list=GUIDE_PORTRAITS[who];
+    const portrait=list[((used[who]++)+offset[who])%list.length];
+    return {portrait,line:lines[who]};
+  });
+}
+function guideMomentHtml(moment,stage){
+  const p=moment.portrait;
+  return `<div class="exam-opening" aria-label="${stage}のテイスティングコメント"><div class="exam-cast" role="img" aria-label="${p.role}テイスターの${p.name}" style="background-image:url('${p.img}')"></div><span class="opening-label">TASTING SCENE · ${stage}</span><div class="speech ${p.bubbleRight?'right':''}"><small>${p.name}｜${p.role}</small>${moment.line}</div></div>`;
 }
 
 // ---------- glass ----------
@@ -605,7 +626,7 @@ function newQuestion(){
   const p = pool(); const s = p[Math.floor(Math.random()*p.length)];
   diff = diffMode===0 ? 1+Math.floor(Math.random()*3) : diffMode;
   const ax=["malt","yeast","hop"];
-  q = { s, options:optionPool(p,s,diff), step:0, cands:new Set(), stepScore:[], opening:EXAM_OPENINGS[Math.floor(Math.random()*EXAM_OPENINGS.length)], hide:{aroma:ax[Math.floor(Math.random()*3)], taste:ax[Math.floor(Math.random()*3)]} };
+  q = { s, options:optionPool(p,s,diff), step:0, cands:new Set(), stepScore:[], guides:makeGuideSequence(), hide:{aroma:ax[Math.floor(Math.random()*3)], taste:ax[Math.floor(Math.random()*3)]} };
   drawGlass(s);
   show("quiz"); renderStep();
 }
@@ -619,8 +640,7 @@ function renderStep(){
   $("activeGroupTest").classList.toggle("hidden", !quizPoolIds);
   const st=$("stages"); st.innerHTML = STAGES.map((n,i)=>`<div class="${i<q.step?'done':i===q.step?'now':''}">${n}</div>`).join("");
   // narration: previous steps collapsed while narrowing; all hints expanded for the final answer
-  let html="";
-  if(q.step===0) html += examOpeningHtml(q.opening);
+  let html=guideMomentHtml(q.guides[q.step],STAGES[q.step]);
   if(q.step>0 && q.step<5){
     html += `<details><summary>これまでのメモ</summary><div class="prev">${[...Array(q.step).keys()].map(i=>stepHtml(i,q.s)).join("")}</div></details>`;
   }
