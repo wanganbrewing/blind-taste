@@ -261,7 +261,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 4.6.3 · 2026-09-11</p>
+  <p class="version">Version 4.6.4 · 2026-09-11</p>
 </section>
 
 <!-- ===== STUDY ===== -->
@@ -567,7 +567,7 @@ async function trackPageView(){
   try{ if(sessionStorage.getItem(PAGE_VIEW_SENT)==="1") return; sessionStorage.setItem(PAGE_VIEW_SENT,"1"); }
   catch(e){ if(window.__beerSensePageViewSent) return; window.__beerSensePageViewSent=true; }
   const p=new URLSearchParams(location.search);
-  const payload={language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),entry_path:location.pathname.slice(0,100),app_version:"4.6.3"};
+  const payload={language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),entry_path:location.pathname.slice(0,100),app_version:"4.6.4"};
   try{
     const res=await fetch(`${SUPABASE_URL}/rest/v1/page_views`,{method:"POST",headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(payload),keepalive:true});
     if(!res.ok) throw new Error(String(res.status));
@@ -589,7 +589,7 @@ $("surveySubmit").disabled=true;
 $("surveyForm").onsubmit=async e=>{
   e.preventDefault(); const fd=new FormData(e.currentTarget), p=new URLSearchParams(location.search);
   if(isOwnerDevice()){ rememberSurvey(); return; }
-  const payload={profile_type:fd.get("profile_type"),purpose:fd.get("purpose"),experience:fd.get("experience"),language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),app_version:"4.6.3"};
+  const payload={profile_type:fd.get("profile_type"),purpose:fd.get("purpose"),experience:fd.get("experience"),language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),app_version:"4.6.4"};
   $("surveySubmit").disabled=true; $("surveyStatus").textContent=L("送信しています…","Sending…");
   try{
     const res=await fetch(`${SUPABASE_URL}/rest/v1/survey_responses`,{method:"POST",headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(payload)});
@@ -1041,10 +1041,31 @@ const REP_BRANDS = {
   american_light_lager:"ミラーライト", american_amber_lager:"ブルックリンラガー", american_dark_lager:"シェイナー・ボック", rye_lager:"サミュエルアダムス・ライラガー",
   rye_ale:"ベアリパブリック・ホップロッドライ", american_ipa:"ラグニタスIPA", american_farmhouse:"ブルーバード・セゾンルー", belgian_strong_amber:"ブッシュ・アンバー"
 };
+const DIRECT_PURCHASE_URLS = {
+  oat_stout:"https://item.rakuten.co.jp/cbeer/09070724/",
+  dry_stout:"https://item.rakuten.co.jp/kuranosuke/15129-24/",
+  weissbier:"https://item.rakuten.co.jp/yunyuusyu/75345/",
+  rauch:"https://item.rakuten.co.jp/cbeer/15082809/",
+  weizenbock:"https://item.rakuten.co.jp/cbeer/15043229/",
+  witbier:"https://item.rakuten.co.jp/kiya/27000029/",
+  dubbel:"https://item.rakuten.co.jp/beer-the-world/302282/",
+  tripel:"https://item.rakuten.co.jp/kiya/13000726/",
+  saison:"https://item.rakuten.co.jp/kiya/13001115/",
+  flanders_red:"https://item.rakuten.co.jp/kiya/13000768/",
+  golden_strong:"https://item.rakuten.co.jp/kiya/13000492/",
+  quad:"https://item.rakuten.co.jp/ricaoh/460631/",
+  czech_pils:"https://item.rakuten.co.jp/sakaz-r/10000714/",
+  apa:"https://item.rakuten.co.jp/kurasuwine/42054-1/",
+  fruit_lambic:"https://item.rakuten.co.jp/newyork001/461225/"
+};
 function purchaseUrl(brand){ return `https://search.rakuten.co.jp/search/mall/${encodeURIComponent(brand+" ビール 1本")}/`; }
 function brandHtml(s){
   const brand=REP_BRANDS[s.id];
-  return brand ? `<div class="brand">${L("代表銘柄","Example beer")}: <b>${brand}</b><br><a class="buy-link" href="${purchaseUrl(brand)}" target="_blank" rel="noopener noreferrer">${L("1本から買える商品を探す","Find single-bottle listings")} ↗</a></div>` : "";
+  if(!brand) return "";
+  const direct=DIRECT_PURCHASE_URLS[s.id];
+  const label=direct?L("この銘柄を1本で買う","Buy this beer individually"):L("単品販売を検索する","Search single-bottle listings");
+  const note=direct?`<span class="note">${L("単品の商品ページ","Single-item product page")}</span><br>`:"";
+  return `<div class="brand">${L("代表銘柄","Example beer")}: <b>${brand}</b><br>${note}<a class="buy-link" href="${direct||purchaseUrl(brand)}" target="_blank" rel="noopener noreferrer">${label} ↗</a><br><span class="note">${L("価格・在庫は販売店でご確認ください。","Check the retailer for current price and stock.")}</span></div>`;
 }
 function foamProfile(s){
   const low=/泡は薄|すぐ消え|すぐに膜|少なめ|消えやすい|短め|短く/.test(s.app);
