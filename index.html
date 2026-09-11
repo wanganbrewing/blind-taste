@@ -25,7 +25,7 @@ h1{font-family:var(--serif);font-weight:600;font-size:2.2rem;letter-spacing:.06e
 .brand-lockup h1 span{color:var(--amber)}
 .brand-jp{margin:6px 0 3px;font-family:var(--serif);font-weight:600;letter-spacing:.18em;color:var(--ink2)}
 .brand-lockup .sub{margin:0;font-size:.88rem}
-.home-hero{position:relative;aspect-ratio:16/7;margin:0 0 20px;border-radius:16px;overflow:hidden;border:1px solid rgba(184,116,26,.35);background:#f5efe3 url("assets/tasting-guides-v1.jpg?v=4.0.0") center 33%/cover no-repeat;box-shadow:0 12px 32px rgba(28,34,38,.16)}
+.home-hero{position:relative;aspect-ratio:16/7;margin:0 0 20px;border-radius:16px;overflow:hidden;border:1px solid rgba(184,116,26,.35);background:#f5efe3 url("assets/tasting-guides-v2.jpg?v=4.6.0") center 33%/cover no-repeat;box-shadow:0 12px 32px rgba(28,34,38,.16)}
 .home-hero::after{content:"";position:absolute;inset:45% 0 0;background:linear-gradient(transparent,rgba(13,18,21,.72))}
 .home-hero-caption{position:absolute;z-index:1;left:12px;right:12px;bottom:10px;display:flex;justify-content:space-between;gap:10px;color:#fff;font-size:.72rem;font-weight:800;letter-spacing:.04em;text-shadow:0 1px 4px rgba(0,0,0,.9)}
 h2{font-size:1.05rem;font-weight:700;margin:26px 0 10px}
@@ -259,7 +259,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 4.5.1 · 2026-09-11</p>
+  <p class="version">Version 4.6.0 · 2026-09-11</p>
 </section>
 
 <!-- ===== STUDY ===== -->
@@ -564,7 +564,7 @@ async function trackPageView(){
   try{ if(sessionStorage.getItem(PAGE_VIEW_SENT)==="1") return; sessionStorage.setItem(PAGE_VIEW_SENT,"1"); }
   catch(e){ if(window.__beerSensePageViewSent) return; window.__beerSensePageViewSent=true; }
   const p=new URLSearchParams(location.search);
-  const payload={language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),entry_path:location.pathname.slice(0,100),app_version:"4.5.1"};
+  const payload={language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),entry_path:location.pathname.slice(0,100),app_version:"4.6.0"};
   try{
     const res=await fetch(`${SUPABASE_URL}/rest/v1/page_views`,{method:"POST",headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(payload),keepalive:true});
     if(!res.ok) throw new Error(String(res.status));
@@ -586,7 +586,7 @@ $("surveySubmit").disabled=true;
 $("surveyForm").onsubmit=async e=>{
   e.preventDefault(); const fd=new FormData(e.currentTarget), p=new URLSearchParams(location.search);
   if(isOwnerDevice()){ rememberSurvey(); return; }
-  const payload={profile_type:fd.get("profile_type"),purpose:fd.get("purpose"),experience:fd.get("experience"),language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),app_version:"4.5.1"};
+  const payload={profile_type:fd.get("profile_type"),purpose:fd.get("purpose"),experience:fd.get("experience"),language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),app_version:"4.6.0"};
   $("surveySubmit").disabled=true; $("surveyStatus").textContent=L("送信しています…","Sending…");
   try{
     const res=await fetch(`${SUPABASE_URL}/rest/v1/survey_responses`,{method:"POST",headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(payload)});
@@ -743,8 +743,8 @@ const GUIDE_PORTRAITS = {
     {name:"久世 律",role:"理論派",img:"assets/guide-ritsu-think-v1.jpg?v=4.0.0",bubbleRight:false}
   ],
   akari:[
-    {name:"香月 灯",role:"感性派",img:"assets/guide-akari-aroma-v1.jpg?v=4.0.0",bubbleRight:false},
-    {name:"香月 灯",role:"感性派",img:"assets/guide-akari-discover-v1.jpg?v=4.0.0",bubbleRight:true}
+    {name:"香月 灯",role:"感性派",img:"assets/guide-akari-aroma-v2.jpg?v=4.6.0",bubbleRight:false},
+    {name:"香月 灯",role:"感性派",img:"assets/guide-akari-discover-v2.jpg?v=4.6.0",bubbleRight:true}
   ]
 };
 const GUIDE_LINES = [
@@ -784,9 +784,9 @@ const RESULT_GUIDES={
     wrong:{name:"久世 律",role:"理論派",img:"assets/result-ritsu-wrong-v1.jpg?v=4.4.0",bubbleRight:false,ja:"惜しい。答えより、どの手がかりを見落としたかを確認しましょう。",en:"Not quite. More important than the answer is the clue you overlooked."}
   },
   akari:{
-    correct:{name:"香月 灯",role:"感性派",img:"assets/result-akari-correct-v1.jpg?v=4.4.0",bubbleRight:true,ja:"正解！ この一杯が描いた景色を、ちゃんとつかまえたね。",en:"Correct! You caught the landscape this beer was painting."},
-    country:{name:"香月 灯",role:"感性派",img:"assets/result-akari-country-v1.jpg?v=4.4.0",bubbleRight:true,ja:"国は当たり！ スタイルまでは、ほんの少し。もう一度、違いの輪郭を見てみよう。",en:"You got the country! The style was only a step away. Look once more at the shape of the difference."},
-    wrong:{name:"香月 灯",role:"感性派",img:"assets/result-akari-wrong-v1.jpg?v=4.4.0",bubbleRight:false,ja:"あと少し。目を閉じて、香りと余韻をもう一度たどってみて。",en:"So close. Close your eyes and trace the aroma and finish once more."}
+    correct:{name:"香月 灯",role:"感性派",img:"assets/result-akari-correct-v2.jpg?v=4.6.0",bubbleRight:true,ja:"正解！ この一杯が描いた景色を、ちゃんとつかまえたね。",en:"Correct! You caught the landscape this beer was painting."},
+    country:{name:"香月 灯",role:"感性派",img:"assets/result-akari-country-v2.jpg?v=4.6.0",bubbleRight:true,ja:"国は当たり！ スタイルまでは、ほんの少し。もう一度、違いの輪郭を見てみよう。",en:"You got the country! The style was only a step away. Look once more at the shape of the difference."},
+    wrong:{name:"香月 灯",role:"感性派",img:"assets/result-akari-wrong-v2.jpg?v=4.6.0",bubbleRight:false,ja:"あと少し。目を閉じて、香りと余韻をもう一度たどってみて。",en:"So close. Close your eyes and trace the aroma and finish once more."}
   }
 };
 let resultGuideTurn=Math.random()<.5?"ritsu":"akari";
@@ -1183,4 +1183,3 @@ showSurveyOnce();
 </script>
 </body>
 </html>
-
