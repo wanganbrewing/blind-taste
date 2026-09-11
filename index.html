@@ -203,6 +203,15 @@ li{margin:3px 0}
 .screen-back{margin:0 0 14px;padding:.58rem .9rem}
 @media(max-width:560px){.lang-switch{top:6px;right:6px}.survey-options{grid-template-columns:1fr}.survey-modal{padding:18px}}
 .rank-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px}.rank-card{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff}.rank-card.earned{border-color:var(--amber);background:#fff8e9}.rank-card b{display:block;color:var(--amber)}.rank-progress{height:7px;background:#e8e2db;border-radius:99px;overflow:hidden;margin:8px 0}.rank-progress span{display:block;height:100%;background:linear-gradient(90deg,var(--amber),#e2b557)}.rank-reset{border:0;background:transparent;color:var(--mute);padding:2px 0;text-decoration:underline;font-size:.75rem}@media(max-width:560px){.rank-grid{grid-template-columns:1fr}}
+.story-entry{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 20px;padding:14px 16px;border:1px solid rgba(184,116,26,.4);border-radius:14px;background:linear-gradient(135deg,#fff8ea,#fff)}
+.story-entry p{margin:0;font-family:var(--serif);color:var(--ink2)}.story-entry b{display:block;color:var(--ink);font-size:1.02rem}
+.story-head{text-align:center;margin:8px 0 22px}.story-head h1{margin-bottom:3px}.story-head p{margin:0;color:var(--mute)}
+.story-scroll{background:#12100e;border-radius:16px;overflow:hidden;box-shadow:0 18px 50px rgba(20,16,12,.25)}
+.story-page{margin:0}.story-page img{display:block;width:100%;height:auto;background:#18130f}
+.story-lines{padding:18px 18px 22px;background:linear-gradient(160deg,#fbf6eb,#fff);border-top:1px solid #d4b77f}
+.story-lines p{margin:.35em 0 1em;font-family:var(--serif);line-height:1.85;color:var(--ink)}.story-lines p:last-child{margin-bottom:0}.story-lines b{display:block;margin-bottom:.12em;color:var(--amber);font-family:var(--ui);font-size:.78rem;letter-spacing:.08em}.story-lines .story-narr{color:var(--ink2);font-style:italic}
+.story-end{text-align:center;padding:28px 18px 32px;background:linear-gradient(145deg,#171a1c,#293036);color:#fff}.story-end .story-logo{font-size:2.4rem;font-weight:900;letter-spacing:.08em}.story-end .story-logo span{color:#d99a42}.story-end p{margin:4px 0 20px;color:#e3ded5;font-family:var(--serif)}
+@media(max-width:560px){.story-entry{align-items:flex-start;flex-direction:column}.story-entry .btn{width:100%}.story-lines{padding:15px 14px 19px}}
 </style>
 </head>
 <body>
@@ -213,6 +222,8 @@ li{margin:3px 0}
 <section id="home">
   <header class="brand-lockup"><span class="brand-kicker">BLIND TASTING / STYLE EXAM</span><h1><span>BEER</span> SENSE</h1><p class="brand-jp">ビールスタイル鑑定</p><p class="sub">香りと味から、その一杯の正体を読み解く</p></header>
   <div class="home-hero" role="img" aria-label="ビールを観察する久世律と、香りを確かめる香月灯"><div class="home-hero-caption"><span>久世 律｜理論派</span><span>香月 灯｜感性派</span></div></div>
+
+  <div class="story-entry"><p><b id="storyEntryTitle">二人の出会いを読む</b><span id="storyEntrySub">『BEER SENSE ― はじまりの一杯 ―』</span></p><button class="btn ghost" id="storyOpenBtn">漫画を読む</button></div>
 
   <div class="card">
     <h2 style="margin-top:0">モード</h2>
@@ -262,7 +273,14 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 4.7.2 · 2026-09-11</p>
+  <p class="version">Version 4.8.0 · 2026-09-12</p>
+</section>
+
+<!-- ===== ORIGIN STORY ===== -->
+<section id="story" class="hidden">
+  <button class="btn ghost screen-back" id="storyBackTop">← 戻る</button>
+  <header class="story-head"><h1>BEER SENSE</h1><p id="storyTitle">― はじまりの一杯 ―</p></header>
+  <div class="story-scroll" id="storyPages"></div>
 </section>
 
 <!-- ===== STUDY ===== -->
@@ -568,7 +586,7 @@ async function trackPageView(){
   try{ if(sessionStorage.getItem(PAGE_VIEW_SENT)==="1") return; sessionStorage.setItem(PAGE_VIEW_SENT,"1"); }
   catch(e){ if(window.__beerSensePageViewSent) return; window.__beerSensePageViewSent=true; }
   const p=new URLSearchParams(location.search);
-  const payload={language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),entry_path:location.pathname.slice(0,100),app_version:"4.7.2"};
+  const payload={language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),entry_path:location.pathname.slice(0,100),app_version:"4.8.0"};
   try{
     const res=await fetch(`${SUPABASE_URL}/rest/v1/page_views`,{method:"POST",headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(payload),keepalive:true});
     if(!res.ok) throw new Error(String(res.status));
@@ -590,7 +608,7 @@ $("surveySubmit").disabled=true;
 $("surveyForm").onsubmit=async e=>{
   e.preventDefault(); const fd=new FormData(e.currentTarget), p=new URLSearchParams(location.search);
   if(isOwnerDevice()){ rememberSurvey(); return; }
-  const payload={profile_type:fd.get("profile_type"),purpose:fd.get("purpose"),experience:fd.get("experience"),language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),app_version:"4.7.2"};
+  const payload={profile_type:fd.get("profile_type"),purpose:fd.get("purpose"),experience:fd.get("experience"),language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),app_version:"4.8.0"};
   $("surveySubmit").disabled=true; $("surveyStatus").textContent=L("送信しています…","Sending…");
   try{
     const res=await fetch(`${SUPABASE_URL}/rest/v1/survey_responses`,{method:"POST",headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(payload)});
@@ -620,6 +638,9 @@ function inTestScope(s){ return testScope==="d" ? !D_EXCLUDE.has(s.id) : testSco
 
 // ---------- home ----------
 function renderHome(){
+  $("storyEntryTitle").textContent=L("二人の出会いを読む","Read Their First Meeting");
+  $("storyEntrySub").textContent=L("『BEER SENSE ― はじまりの一杯 ―』","BEER SENSE — The First Glass");
+  $("storyOpenBtn").textContent=L("漫画を読む","Read Manga");
   $("modeSeg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.v===appMode)));
   $("testOptions").classList.toggle("hidden", appMode!=="test");
   $("scoringInfo").classList.toggle("hidden", appMode!=="test");
@@ -857,7 +878,7 @@ function newQuestion(){
   drawGlass(s);
   show("quiz"); renderStep();
 }
-function show(id){ ["home","quiz","result","study","originQuiz"].forEach(x=>$(x).classList.toggle("hidden", x!==id)); window.scrollTo({top:0}); }
+function show(id){ ["home","story","quiz","result","study","originQuiz"].forEach(x=>$(x).classList.toggle("hidden", x!==id)); window.scrollTo({top:0}); }
 
 function renderStep(){
   $("quizBackTop").textContent=q.step===0?L("← ホームへ戻る","← Back to Home"):L("← 前のヒントへ戻る","← Previous Hint");
@@ -1239,6 +1260,19 @@ function renderResult(fin, finPts, total, g){
 $("againBtn").onclick=newQuestion;
 $("homeBtn").onclick=()=>{ show("home"); renderHome(); };
 $("resultBackTop").onclick=()=>{ show("home"); renderHome(); };
+const STORY_PAGES=[
+  {img:"assets/story-origin-01.png?v=4.8.0",ja:[["","閉店間際の小さなクラフトビールバー。カウンターの端で、二人は同じ黄金色のビールに向き合っていた。"],["久世 律","SRMは、およそ三。白い泡はきめ細かく、持続性も高い……"],["香月 灯","春の果樹園みたい。白い花と、まだ青い果実の香り……"],["","互いの言葉が耳に入り、二人は初めて顔を見合わせる。"],["律","果樹園？　それではスタイルを特定できない。"],["灯","数字だけ見ていたら、このビールが何を語っているか分からないわ。"],["律","ビールは語らない。判断材料があるだけだ。"],["灯","なら、その判断材料だけで当ててみる？"]],en:[["","Near closing time at a small craft beer bar, two strangers face the same golden beer."],["Ritsu Kuze","About three SRM. Fine white foam, with strong retention..."],["Akari Kazuki","Like a spring orchard. White flowers and fruit that is still green..."],["","They hear each other and meet eyes for the first time."],["Ritsu","An orchard? That will not identify the style."],["Akari","If you only look at numbers, you will never hear what the beer is saying."],["Ritsu","Beer does not speak. It only provides evidence."],["Akari","Then why not identify it using only that evidence?"]]},
+  {img:"assets/story-origin-02.png?v=4.8.0",ja:[["マスター","ちょうどいい。最後の一杯を、二人で当ててみませんか。"],["律","淡色。透明度は高い。泡持ちも良好。小麦系の濁りはない。"],["灯","光の中に、細い雨が降っているみたい。泡は柔らかいけれど、消えようとしない。"],["律","……表現は独特だが、観察自体は正確だな。"],["灯","洋梨、白い花……それから、少しだけ胡椒。"],["律","高い発酵由来のエステル。スパイシーなフェノール香。ホップ香もある。"],["灯","同じものを感じているのに、全然違う言葉になるのね。"],["律","君の言葉は曖昧だ。しかし……記憶には残る。"]],en:[["Master","Perfect timing. Why not identify the last glass together?"],["Ritsu","Pale, highly transparent, with good foam retention. No wheat haze."],["Akari","Like fine rain inside the light. The foam is soft, but refuses to disappear."],["Ritsu","...An unusual description, but the observation is accurate."],["Akari","Pear, white flowers...and just a little pepper."],["Ritsu","Strong fermentation esters, spicy phenols, and hop aroma."],["Akari","We sense the same things, yet use completely different words."],["Ritsu","Your words are imprecise. But...they stay in the memory."]]},
+  {img:"assets/story-origin-03.png?v=4.8.0",ja:[["","二人が一口飲む。"],["灯","最初は蜂蜜みたいに優しい。でも、すぐに風が吹いて、甘さを全部さらっていく。"],["律","高アルコールだが、ボディは軽い。アタックに甘味、フィニッシュは強くドライ。"],["灯","見た目より、ずっと強いビール。"],["律","それが決め手だ。"],["律・灯","ベルジャン・ゴールデン・ストロング・エール。"]],en:[["","They each take a sip."],["Akari","Gentle as honey at first. Then a wind rises and carries all the sweetness away."],["Ritsu","High alcohol, yet light-bodied. Sweet on entry, intensely dry at the finish."],["Akari","Far stronger than it looks."],["Ritsu","That is the deciding clue."],["Ritsu & Akari","Belgian Golden Strong Ale."]]},
+  {img:"assets/story-origin-04.png?v=4.8.0",ja:[["マスター","正解です。"],["灯","数字だけでは、あの果樹園にはたどり着けなかったでしょう？"],["律","君も、果樹園だけではスタイル名にたどり着けなかった。"],["灯","つまり？"],["律","僕の知識と、君の感覚。両方が必要だったということだ。"],["マスター","では、もう一杯だけ。"],["灯","今度は私が先に見抜く。"],["律","感覚だけで僕に勝つつもりか？"],["灯","あなたこそ、数字に見えないものを見落とさないで。"],["律","色、泡、香り、味、余韻――すべてが手がかりになる。"],["灯","一杯の中には、まだ名前のない景色がある。"],["二人","さあ、このビールの正体を見つけよう。"]],en:[["Master","Correct."],["Akari","Numbers alone would never have taken you to that orchard, would they?"],["Ritsu","And an orchard alone would not have given you the style name."],["Akari","Meaning?"],["Ritsu","My knowledge and your senses. We needed both."],["Master","Then, just one more glass."],["Akari","This time I will see through it first."],["Ritsu","You plan to beat me with intuition alone?"],["Akari","And you must not overlook what numbers cannot show."],["Ritsu","Color, foam, aroma, flavor, finish—everything is a clue."],["Akari","Inside every glass is a landscape that has not yet been named."],["Together","Now, let us discover the identity of this beer."]]}];
+function renderStory(){
+  $("storyBackTop").textContent=L("← ホームへ戻る","← Back to Home");
+  $("storyTitle").textContent=L("― はじまりの一杯 ―","— The First Glass —");
+  $("storyPages").innerHTML=STORY_PAGES.map((p,i)=>`<figure class="story-page"><img src="${p.img}" alt="${L(`久世律と香月灯の出会い・場面${i+1}`,`Ritsu and Akari meet, scene ${i+1}`)}" loading="${i?"lazy":"eager"}"><figcaption class="story-lines">${(lang==="en"?p.en:p.ja).map(([speaker,line])=>`<p class="${speaker?"":"story-narr"}">${speaker?`<b>${speaker}</b>`:""}${line}</p>`).join("")}</figcaption></figure>`).join("")+`<div class="story-end"><div class="story-logo"><span>BEER</span> SENSE</div><p>${L("香りと味から、その一杯の正体を読み解く。","Read the identity of a beer through aroma and flavor.")}</p><button class="btn amber" id="storyStartBtn">${L("試験を始める","Start Exam")}</button></div>`;
+  $("storyStartBtn").onclick=()=>{appMode="test";quizPoolIds=null;quizGroupName="";newQuestion();};
+}
+$("storyOpenBtn").onclick=()=>{renderStory();show("story");};
+$("storyBackTop").onclick=()=>{show("home");renderHome();};
 $("startBtn").onclick=()=>{
   if(appMode==="test"){ quizPoolIds=null; quizGroupName=""; newQuestion(); }
   else if(appMode==="study") openStudy();
