@@ -258,7 +258,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 4.3.0 · 2026-09-11</p>
+  <p class="version">Version 4.4.0 · 2026-09-11</p>
 </section>
 
 <!-- ===== STUDY ===== -->
@@ -558,7 +558,7 @@ $("surveyForm").onchange=()=>{
 $("surveySubmit").disabled=true;
 $("surveyForm").onsubmit=async e=>{
   e.preventDefault(); const fd=new FormData(e.currentTarget), p=new URLSearchParams(location.search);
-  const payload={profile_type:fd.get("profile_type"),purpose:fd.get("purpose"),experience:fd.get("experience"),language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),app_version:"4.3.0"};
+  const payload={profile_type:fd.get("profile_type"),purpose:fd.get("purpose"),experience:fd.get("experience"),language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),app_version:"4.4.0"};
   $("surveySubmit").disabled=true; $("surveyStatus").textContent=L("送信しています…","Sending…");
   try{
     const res=await fetch(`${SUPABASE_URL}/rest/v1/survey_responses`,{method:"POST",headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(payload)});
@@ -751,21 +751,24 @@ function guideMomentHtml(moment,stage){
 }
 const RESULT_GUIDES={
   ritsu:{
-    correct:{name:"久世 律",role:"理論派",img:"assets/guide-ritsu-observe-v1.jpg?v=4.0.0",bubbleRight:true,ja:"正解です。感覚を証拠に変え、最後まで論理を崩しませんでしたね。",en:"Correct. You turned sensation into evidence and kept your reasoning intact."},
-    wrong:{name:"久世 律",role:"理論派",img:"assets/guide-ritsu-think-v1.jpg?v=4.0.0",bubbleRight:false,ja:"惜しい。答えより、どの手がかりを見落としたかを確認しましょう。",en:"Not quite. More important than the answer is the clue you overlooked."}
+    correct:{name:"久世 律",role:"理論派",img:"assets/result-ritsu-correct-v1.jpg?v=4.4.0",bubbleRight:true,ja:"正解です。感覚を証拠に変え、最後まで論理を崩しませんでしたね。",en:"Correct. You turned sensation into evidence and kept your reasoning intact."},
+    country:{name:"久世 律",role:"理論派",img:"assets/result-ritsu-country-v1.jpg?v=4.4.0",bubbleRight:true,ja:"国は正解です。あと一歩——スタイルを分ける決定的な差を確認しましょう。",en:"The country is correct. One more step—find the decisive clue that separates the styles."},
+    wrong:{name:"久世 律",role:"理論派",img:"assets/result-ritsu-wrong-v1.jpg?v=4.4.0",bubbleRight:false,ja:"惜しい。答えより、どの手がかりを見落としたかを確認しましょう。",en:"Not quite. More important than the answer is the clue you overlooked."}
   },
   akari:{
-    correct:{name:"香月 灯",role:"感性派",img:"assets/guide-akari-discover-v1.jpg?v=4.0.0",bubbleRight:true,ja:"正解！ この一杯が描いた景色を、ちゃんとつかまえたね。",en:"Correct! You caught the landscape this beer was painting."},
-    wrong:{name:"香月 灯",role:"感性派",img:"assets/guide-akari-aroma-v1.jpg?v=4.0.0",bubbleRight:false,ja:"あと少し。目を閉じて、香りと余韻をもう一度たどってみて。",en:"So close. Close your eyes and trace the aroma and finish once more."}
+    correct:{name:"香月 灯",role:"感性派",img:"assets/result-akari-correct-v1.jpg?v=4.4.0",bubbleRight:true,ja:"正解！ この一杯が描いた景色を、ちゃんとつかまえたね。",en:"Correct! You caught the landscape this beer was painting."},
+    country:{name:"香月 灯",role:"感性派",img:"assets/result-akari-country-v1.jpg?v=4.4.0",bubbleRight:true,ja:"国は当たり！ スタイルまでは、ほんの少し。もう一度、違いの輪郭を見てみよう。",en:"You got the country! The style was only a step away. Look once more at the shape of the difference."},
+    wrong:{name:"香月 灯",role:"感性派",img:"assets/result-akari-wrong-v1.jpg?v=4.4.0",bubbleRight:false,ja:"あと少し。目を閉じて、香りと余韻をもう一度たどってみて。",en:"So close. Close your eyes and trace the aroma and finish once more."}
   }
 };
 let resultGuideTurn=Math.random()<.5?"ritsu":"akari";
-function resultGuideHtml(correct){
-  const p=RESULT_GUIDES[resultGuideTurn][correct?"correct":"wrong"];
+function resultGuideHtml(resultState){
+  const p=RESULT_GUIDES[resultGuideTurn][resultState];
   resultGuideTurn=resultGuideTurn==="ritsu"?"akari":"ritsu";
   const name=lang==="en"?(p.name==="久世 律"?"Ritsu Kuze":"Akari Katsuki"):p.name;
   const role=lang==="en"?(p.role==="理論派"?"Analytical":"Intuitive"):p.role;
-  return `<div class="exam-opening" aria-label="${L("試験結果","Exam result")}"><div class="exam-cast" role="img" aria-label="${name} ${L("の結果リアクション","result reaction")}" style="background-image:url('${p.img}')"></div><span class="opening-label">RESULT SCENE · ${correct?L("正解","CORRECT"):L("振り返り","REVIEW")}</span><div class="speech ${p.bubbleRight?'right':''}"><small>${name}｜${role}</small>${lang==="en"?p.en:p.ja}</div></div>`;
+  const label=resultState==="correct"?L("正解","CORRECT"):resultState==="country"?L("国は正解","COUNTRY CORRECT"):L("振り返り","REVIEW");
+  return `<div class="exam-opening" aria-label="${L("試験結果","Exam result")}"><div class="exam-cast" role="img" aria-label="${name} ${L("の結果リアクション","result reaction")}" style="background-image:url('${p.img}')"></div><span class="opening-label">RESULT SCENE · ${label}</span><div class="speech ${p.bubbleRight?'right':''}"><small>${name}｜${role}</small>${lang==="en"?p.en:p.ja}</div></div>`;
 }
 
 // ---------- glass ----------
@@ -1106,7 +1109,7 @@ $("originHomeBtn").onclick=()=>{ show("home"); renderHome(); };
 
 function renderResult(fin, finPts, total, g){
   const s=q.s;
-  $("resultGuide").innerHTML=resultGuideHtml(fin.style);
+  $("resultGuide").innerHTML=resultGuideHtml(fin.style?"correct":fin.country?"country":"wrong");
   $("verdict").textContent = fin.style ? L("正解","Correct") : (fin.country ? L("国は正解、スタイルは違う","Correct country, wrong style") : L("はずれ","Not quite"));
   $("verdict").className = "verdict " + (fin.style?"ok":"ng");
   $("answerBeer").innerHTML = answerBeerIcon(s);
