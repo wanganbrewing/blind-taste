@@ -56,9 +56,11 @@ h2{font-size:1.05rem;font-weight:700;margin:26px 0 10px}
 .narr details summary::before{content:"▸ ";}
 .narr details[open] summary::before{content:"▾ ";}
 .exam-opening{margin:0 0 20px;padding:18px 16px 16px;background:linear-gradient(145deg,#f7f3e9,#fff 60%,#eee8dc);border:1px solid #bcb4a6;border-radius:14px;box-shadow:inset 0 0 0 4px rgba(255,255,255,.55)}
+.exam-cast{display:block;width:100%;aspect-ratio:3/2;object-fit:cover;object-position:center 38%;margin:0 0 14px;border-radius:10px;border:1px solid rgba(76,73,67,.2)}
 .exam-opening .opening-label{display:block;margin:0 0 10px;font-family:var(--ui);font-size:.68rem;font-weight:800;letter-spacing:.18em;color:var(--mute)}
 .exam-opening .speech{width:fit-content;max-width:88%;margin:7px 0;padding:9px 15px;background:#fff;border:1.5px solid #4c4943;border-radius:999px;font-family:var(--serif);font-weight:650;line-height:1.65;box-shadow:2px 2px 0 rgba(76,73,67,.1)}
 .exam-opening .speech.right{margin-left:auto}
+.exam-opening .speech small{display:block;margin-bottom:1px;font-family:var(--ui);font-size:.66rem;font-weight:800;letter-spacing:.06em;color:var(--amber)}
 
 /* candidate groups */
 .grp{margin:12px 0}
@@ -228,7 +230,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 3.5.0 · 2026-09-11</p>
+  <p class="version">Version 3.6.0 · 2026-09-11</p>
 </section>
 
 <!-- ===== STUDY ===== -->
@@ -563,7 +565,7 @@ const EXAM_OPENINGS = [
   ["目を逸らさないで。","泡の向こうに、このビールの生まれた土地が見えてきます。"]
 ];
 function examOpeningHtml(lines){
-  return `<div class="exam-opening" aria-label="試験開始のテイスティングコメント"><span class="opening-label">TASTING SCENE</span><div class="speech">${lines[0]}</div><div class="speech right">${lines[1]}</div></div>`;
+  return `<div class="exam-opening" aria-label="試験開始のテイスティングコメント"><img class="exam-cast" src="assets/tasting-guides-v1.png" alt="理論派テイスターの久世律と、感性派テイスターの香月灯"><span class="opening-label">TASTING SCENE</span><div class="speech"><small>久世 律｜理論派</small>${lines[0]}</div><div class="speech right"><small>香月 灯｜感性派</small>${lines[1]}</div></div>`;
 }
 
 // ---------- glass ----------
