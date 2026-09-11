@@ -198,6 +198,7 @@ li{margin:3px 0}
 .survey-options label{display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:10px;padding:9px 10px;background:#fff;font-size:.9rem}
 .survey-options input{accent-color:var(--amber)}
 .survey-status{min-height:1.5em;color:var(--ng);font-size:.88rem}
+.screen-back{margin:0 0 14px;padding:.58rem .9rem}
 @media(max-width:560px){.lang-switch{top:6px;right:6px}.survey-options{grid-template-columns:1fr}.survey-modal{padding:18px}}
 </style>
 </head>
@@ -215,7 +216,7 @@ li{margin:3px 0}
     <div class="seg" id="modeSeg" role="group" aria-label="モード">
       <button data-v="test" aria-pressed="true">試験</button>
       <button data-v="study" aria-pressed="false">試験対策</button>
-      <button data-v="origin" aria-pressed="false">香味の由来</button>
+      <button data-v="origin" aria-pressed="false">アロマ・フレーバー由来</button>
     </div>
 
     <div id="testOptions">
@@ -258,11 +259,12 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 4.5.0 · 2026-09-11</p>
+  <p class="version">Version 4.5.1 · 2026-09-11</p>
 </section>
 
 <!-- ===== STUDY ===== -->
 <section id="study" class="hidden">
+  <button class="btn ghost screen-back" id="studyBackTop">← 戻る</button>
   <h1>試験対策学習</h1>
   <p class="sub">似たスタイルの判定ポイントを見比べ、試験で迷わないように覚える</p>
 
@@ -283,7 +285,8 @@ li{margin:3px 0}
 
 <!-- ===== FLAVOR ORIGIN QUIZ ===== -->
 <section id="originQuiz" class="hidden">
-  <h1>香味の由来当て</h1>
+  <button class="btn ghost screen-back" id="originBackTop">← 戻る</button>
+  <h1>アロマ・フレーバー由来当て</h1>
   <p class="sub">コメントから、麦芽・酵母・ホップのどれに由来する香り／味かを考える</p>
   <div class="card">
     <p><span class="tag" id="originSense"></span></p>
@@ -300,6 +303,7 @@ li{margin:3px 0}
 
 <!-- ===== QUIZ ===== -->
 <section id="quiz" class="hidden">
+  <button class="btn ghost screen-back" id="quizBackTop">← 戻る</button>
   <p class="active-diff hidden" id="activeDiff"></p>
   <p class="active-diff hidden" id="activeGroupTest"></p>
   <div class="stages" id="stages"></div>
@@ -353,6 +357,7 @@ li{margin:3px 0}
 
 <!-- ===== RESULT ===== -->
 <section id="result" class="hidden">
+  <button class="btn ghost screen-back" id="resultBackTop">← 戻る</button>
   <div id="resultGuide"></div>
   <div class="card">
     <p class="verdict" id="verdict"></p>
@@ -559,7 +564,7 @@ async function trackPageView(){
   try{ if(sessionStorage.getItem(PAGE_VIEW_SENT)==="1") return; sessionStorage.setItem(PAGE_VIEW_SENT,"1"); }
   catch(e){ if(window.__beerSensePageViewSent) return; window.__beerSensePageViewSent=true; }
   const p=new URLSearchParams(location.search);
-  const payload={language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),entry_path:location.pathname.slice(0,100),app_version:"4.5.0"};
+  const payload={language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),entry_path:location.pathname.slice(0,100),app_version:"4.5.1"};
   try{
     const res=await fetch(`${SUPABASE_URL}/rest/v1/page_views`,{method:"POST",headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(payload),keepalive:true});
     if(!res.ok) throw new Error(String(res.status));
@@ -581,7 +586,7 @@ $("surveySubmit").disabled=true;
 $("surveyForm").onsubmit=async e=>{
   e.preventDefault(); const fd=new FormData(e.currentTarget), p=new URLSearchParams(location.search);
   if(isOwnerDevice()){ rememberSurvey(); return; }
-  const payload={profile_type:fd.get("profile_type"),purpose:fd.get("purpose"),experience:fd.get("experience"),language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),app_version:"4.5.0"};
+  const payload={profile_type:fd.get("profile_type"),purpose:fd.get("purpose"),experience:fd.get("experience"),language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),app_version:"4.5.1"};
   $("surveySubmit").disabled=true; $("surveyStatus").textContent=L("送信しています…","Sending…");
   try{
     const res=await fetch(`${SUPABASE_URL}/rest/v1/survey_responses`,{method:"POST",headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(payload)});
@@ -829,6 +834,7 @@ function newQuestion(){
 function show(id){ ["home","quiz","result","study","originQuiz"].forEach(x=>$(x).classList.toggle("hidden", x!==id)); window.scrollTo({top:0}); }
 
 function renderStep(){
+  $("quizBackTop").textContent=q.step===0?L("← ホームへ戻る","← Back to Home"):L("← 前のヒントへ戻る","← Previous Hint");
   const names=lang==="en"?["","Beginner","Intermediate","Advanced"]:["","初級","中級","上級"];
   $("activeDiff").textContent=L(`難易度：${names[diff]}（選択肢 ${q.options.length}）`,`Difficulty: ${names[diff]} (${q.options.length} choices)`);
   $("activeDiff").classList.remove("hidden");
@@ -894,6 +900,7 @@ function goBack(){
 }
 $("backBtn").onclick=goBack;
 $("finalBackBtn").onclick=goBack;
+$("quizBackTop").onclick=goBack;
 $("quitBtn").onclick=()=>{ if(confirm(L("この一杯を中断しますか？","Quit this beer?"))){ show("home"); renderHome(); } };
 
 // final cascade
@@ -1083,6 +1090,7 @@ $("studyRandomBtn").onclick=()=>{
   $("studyGroupSelect").value=g.id; renderStudyGroup(g);
 };
 $("studyHomeBtn").onclick=()=>{ show("home"); renderHome(); };
+$("studyBackTop").onclick=()=>{ show("home"); renderHome(); };
 
 // ---------- flavor origin quiz ----------
 const ORIGIN_GUIDE={
@@ -1129,6 +1137,7 @@ function answerOrigin(answer){
 }
 $("originNextBtn").onclick=newOriginQuestion;
 $("originHomeBtn").onclick=()=>{ show("home"); renderHome(); };
+$("originBackTop").onclick=()=>{ show("home"); renderHome(); };
 
 function renderResult(fin, finPts, total, g){
   const s=q.s;
@@ -1158,6 +1167,7 @@ function renderResult(fin, finPts, total, g){
 }
 $("againBtn").onclick=newQuestion;
 $("homeBtn").onclick=()=>{ show("home"); renderHome(); };
+$("resultBackTop").onclick=()=>{ show("home"); renderHome(); };
 $("startBtn").onclick=()=>{
   if(appMode==="test"){ quizPoolIds=null; quizGroupName=""; newQuestion(); }
   else if(appMode==="study") openStudy();
