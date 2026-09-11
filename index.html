@@ -202,6 +202,7 @@ li{margin:3px 0}
 .survey-status{min-height:1.5em;color:var(--ng);font-size:.88rem}
 .screen-back{margin:0 0 14px;padding:.58rem .9rem}
 @media(max-width:560px){.lang-switch{top:6px;right:6px}.survey-options{grid-template-columns:1fr}.survey-modal{padding:18px}}
+.rank-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px}.rank-card{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff}.rank-card.earned{border-color:var(--amber);background:#fff8e9}.rank-card b{display:block;color:var(--amber)}.rank-progress{height:7px;background:#e8e2db;border-radius:99px;overflow:hidden;margin:8px 0}.rank-progress span{display:block;height:100%;background:linear-gradient(90deg,var(--amber),#e2b557)}.rank-reset{border:0;background:transparent;color:var(--mute);padding:2px 0;text-decoration:underline;font-size:.75rem}@media(max-width:560px){.rank-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -224,10 +225,10 @@ li{margin:3px 0}
     <div id="testOptions">
       <h2>難易度</h2>
       <div class="seg" id="diffSeg" role="group" aria-label="難易度">
-        <button data-v="1" aria-pressed="true">初級</button>
-        <button data-v="2" aria-pressed="false">中級</button>
-        <button data-v="3" aria-pressed="false">上級</button>
-        <button data-v="0" aria-pressed="false">全部</button>
+        <button data-v="1" aria-pressed="true">TASTER</button>
+        <button data-v="2" aria-pressed="false">EXPERT</button>
+        <button data-v="3" aria-pressed="false">MASTER</button>
+        <button data-v="0" aria-pressed="false">ALL</button>
       </div>
       <p class="hint" id="diffHint"></p>
 
@@ -261,7 +262,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 4.6.4 · 2026-09-11</p>
+  <p class="version">Version 4.7.0 · 2026-09-11</p>
 </section>
 
 <!-- ===== STUDY ===== -->
@@ -448,16 +449,16 @@ function translateStatic(){
 function changeLanguage(next){ localStorage.setItem("beerSenseLang",next); const u=new URL(location.href); u.searchParams.set("lang",next); location.href=u.toString(); }
 $("langJa").onclick=()=>changeLanguage("ja"); $("langEn").onclick=()=>changeLanguage("en");
 const DIFF_HINT = {
-  0:"初級・中級・上級を問題ごとにランダム出題。選択肢数も今回の難易度に合わせます。",
-  1:"選択肢は最大12。官能記述子を添え、香りと味を麦芽・酵母・ホップに分けて表示します。",
-  2:"選択肢は最大30。感覚表現のみで、香り・味の3軸ラベルは表示します。",
-  3:"選択肢は出題範囲の全スタイル。香り・味の各1軸を隠し、3軸ラベルも表示しません。"
+  0:"TASTER・EXPERT・MASTERを問題ごとにランダム出題。正解は実際に出題されたランクへ加算します。",
+  1:"TASTER：選択肢は最大12。官能記述子と、麦芽・酵母・ホップの分類を表示します。",
+  2:"EXPERT：選択肢は最大20。感覚表現のみで、香り・味の3軸ラベルは表示します。",
+  3:"MASTER：出題範囲の全スタイル。香り・味の各1軸を隠し、3軸ラベルも表示しません。"
 };
 const DIFF_HINT_EN={
-  0:"A random mix of Beginner, Intermediate, and Advanced questions.",
-  1:"Up to 12 choices, with sensory descriptors and malt, yeast, and hop labels.",
-  2:"Up to 30 choices, using sensory descriptions with three aroma and flavor axes.",
-  3:"Every style in the selected set. One aroma and flavor axis is hidden, with no axis labels."
+  0:"A random mix of TASTER, EXPERT, and MASTER questions. A correct answer counts toward the active rank.",
+  1:"TASTER: up to 12 choices, with sensory descriptors and malt, yeast, and hop labels.",
+  2:"EXPERT: up to 20 choices, using sensory descriptions with three aroma and flavor axes.",
+  3:"MASTER: every style in the selected set. One aroma and flavor axis is hidden, with no axis labels."
 };
 const BOTTOM_FERMENTED = new Set(["helles","pils","rauch","doppelbock","schwarz","marzen","czech_pils","czech_dark","polotmave","vienna","baltic","rice_lager","export","munich_dunkel","festbier","maibock","dark_bock","eisbock","kellerbier","american_lager","american_light_lager","american_amber_lager","american_dark_lager","rye_lager","mexican_lager","alsatian_pils","italian_pils"]);
 const SPONTANEOUS = new Set(["straight_lambic","gueuze","faro","fruit_lambic"]);
@@ -567,7 +568,7 @@ async function trackPageView(){
   try{ if(sessionStorage.getItem(PAGE_VIEW_SENT)==="1") return; sessionStorage.setItem(PAGE_VIEW_SENT,"1"); }
   catch(e){ if(window.__beerSensePageViewSent) return; window.__beerSensePageViewSent=true; }
   const p=new URLSearchParams(location.search);
-  const payload={language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),entry_path:location.pathname.slice(0,100),app_version:"4.6.4"};
+  const payload={language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),entry_path:location.pathname.slice(0,100),app_version:"4.7.0"};
   try{
     const res=await fetch(`${SUPABASE_URL}/rest/v1/page_views`,{method:"POST",headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(payload),keepalive:true});
     if(!res.ok) throw new Error(String(res.status));
@@ -589,7 +590,7 @@ $("surveySubmit").disabled=true;
 $("surveyForm").onsubmit=async e=>{
   e.preventDefault(); const fd=new FormData(e.currentTarget), p=new URLSearchParams(location.search);
   if(isOwnerDevice()){ rememberSurvey(); return; }
-  const payload={profile_type:fd.get("profile_type"),purpose:fd.get("purpose"),experience:fd.get("experience"),language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),app_version:"4.6.4"};
+  const payload={profile_type:fd.get("profile_type"),purpose:fd.get("purpose"),experience:fd.get("experience"),language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),app_version:"4.7.0"};
   $("surveySubmit").disabled=true; $("surveyStatus").textContent=L("送信しています…","Sending…");
   try{
     const res=await fetch(`${SUPABASE_URL}/rest/v1/survey_responses`,{method:"POST",headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(payload)});
@@ -610,6 +611,11 @@ let originQ = null;
 let originStats = {n:0,ok:0};
 let quizPoolIds = null;
 let quizGroupName = "";
+const BEER_RANKS = {
+  1:{name:"TASTER",goal:10},
+  2:{name:"EXPERT",goal:20},
+  3:{name:"MASTER",goal:30}
+};
 function inTestScope(s){ return testScope==="d" ? !D_EXCLUDE.has(s.id) : testScope==="frequent50" ? FREQUENT_50.has(s.id) : true; }
 
 // ---------- home ----------
@@ -646,18 +652,35 @@ $("scopeSeg").onclick = e=>{ const b=e.target.closest("button"); if(!b) return; 
 function renderStats(){
   const st = store.get(); const box=$("statsBox");
   const rows = Object.entries(st.styles||{});
-  if(!rows.length){ box.innerHTML=""; return; }
-  const tot = rows.reduce((a,[,v])=>a+v.n,0), ok = rows.reduce((a,[,v])=>a+v.ok,0);
+  const rankCorrect={1:0,2:0,3:0,...(st.rankCorrect||{})};
+  const rankHtml=`<h2>BEER RANK</h2><div class="card">
+    <p class="note">${L("試験モードの累計スタイル正解数を、この端末に保存します。アプリ内認定であり、公的資格ではありません。","Correct style identifications are saved on this device. This is an in-app learning award, not an official qualification.")}</p>
+    <div class="rank-grid">${Object.entries(BEER_RANKS).map(([id,r])=>{
+      const n=Number(rankCorrect[id])||0, earned=n>=r.goal, pct=Math.min(100,Math.round(n/r.goal*100));
+      return `<div class="rank-card ${earned?"earned":""}"><b>${r.name}</b><span>${n} / ${r.goal} ${L("正解","correct")}</span><div class="rank-progress"><span style="width:${pct}%"></span></div><small>${earned?L("認定済み","Award earned"):L(`あと${r.goal-n}問`,` ${r.goal-n} more`)}</small><button class="rank-reset" data-reset-rank="${id}">${L("このランクだけリセット","Reset this rank")}</button></div>`;
+    }).join("")}</div>
+  </div>`;
+  let resultsHtml="";
+  if(rows.length){
+    const tot = rows.reduce((a,[,v])=>a+v.n,0), ok = rows.reduce((a,[,v])=>a+v.ok,0);
   const weak = rows.map(([id,v])=>({id,rate:v.ok/v.n,n:v.n})).filter(x=>x.n>=2).sort((a,b)=>a.rate-b.rate).slice(0,5);
   const name = id=>{ const s=S.find(x=>x.id===id); return s? styleLabel(s) : id; };
-  box.innerHTML = `<h2>${L("これまでの記録","Your Results")}</h2><div class="card">
+    resultsHtml = `<h2>${L("これまでの記録","Your Results")}</h2><div class="card">
     <div class="stat"><span>${L("出題数","Questions")}</span><span>${tot}</span></div>
     <div class="stat"><span>${L("スタイル正解率","Style Accuracy")}</span><span>${Math.round(100*ok/tot)}%</span></div>
     <div class="stat"><span>${L("平均得点率","Average Score")}</span><span>${Math.round(100*(st.pts||0)/(st.max||tot*110))}%</span></div>
     ${weak.length?`<div style="margin-top:12px" class="note">${L("苦手なスタイル","Needs Practice")}: ${weak.map(w=>`${name(w.id)} (${Math.round(w.rate*100)}%)`).join(", ")}</div>`:""}
     <button class="btn ghost" style="margin-top:14px;padding:8px 14px;font-size:.9rem" id="resetStats">${L("記録を消す","Clear Results")}</button>
   </div>`;
-  $("resetStats").onclick=()=>{ if(confirm(L("記録をすべて消しますか？","Clear all results?"))){ store.set({}); renderStats(); } };
+  }
+  box.innerHTML=rankHtml+resultsHtml;
+  box.querySelectorAll("[data-reset-rank]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.resetRank;
+    if(confirm(L(`${BEER_RANKS[id].name}の累計正解数だけをリセットしますか？`,`Reset only the ${BEER_RANKS[id].name} correct-answer count?`))){
+      const d=store.get(); d.rankCorrect={1:0,2:0,3:0,...(d.rankCorrect||{})}; d.rankCorrect[id]=0; store.set(d); renderStats();
+    }
+  });
+  if($("resetStats")) $("resetStats").onclick=()=>{ if(confirm(L("記録をすべて消しますか？","Clear all results?"))){ store.set({}); renderStats(); } };
 }
 
 // ---------- narration helpers ----------
@@ -819,7 +842,7 @@ function drawGlass(s){
 // ---------- quiz flow ----------
 function pool(){ return quizPoolIds ? S.filter(x=>quizPoolIds.has(x.id)) : S.filter(x=>enabled.has(x.country)&&inTestScope(x)); }
 function optionPool(p,s,level){
-  const cap=level===1?12:level===2?30:p.length;
+  const cap=level===1?12:level===2?20:p.length;
   if(p.length<=cap) return p;
   const decoys=p.filter(x=>x.id!==s.id).sort(()=>Math.random()-.5).slice(0,cap-1);
   const ids=new Set([s.id,...decoys.map(x=>x.id)]);
@@ -838,8 +861,8 @@ function show(id){ ["home","quiz","result","study","originQuiz"].forEach(x=>$(x)
 
 function renderStep(){
   $("quizBackTop").textContent=q.step===0?L("← ホームへ戻る","← Back to Home"):L("← 前のヒントへ戻る","← Previous Hint");
-  const names=lang==="en"?["","Beginner","Intermediate","Advanced"]:["","初級","中級","上級"];
-  $("activeDiff").textContent=L(`難易度：${names[diff]}（選択肢 ${q.options.length}）`,`Difficulty: ${names[diff]} (${q.options.length} choices)`);
+  const names=["","TASTER","EXPERT","MASTER"];
+  $("activeDiff").textContent=L(`ランク：${names[diff]}（選択肢 ${q.options.length}）`,`Rank: ${names[diff]} (${q.options.length} choices)`);
   $("activeDiff").classList.remove("hidden");
   $("activeGroupTest").textContent=L(`グループ限定：${quizGroupName}`,`Group: ${quizGroupName}`);
   $("activeGroupTest").classList.toggle("hidden", !quizPoolIds);
@@ -939,7 +962,10 @@ $("answerBtn").onclick=()=>{
   const finPts = (fin.country?10:0)+(fin.style?30:0);
   const total = q.stepScore.reduce((a,x)=>a+x.pts,0)+finPts;
   // persist
-  const d=store.get(); d.styles=d.styles||{}; const oldN=Object.values(d.styles).reduce((a,x)=>a+x.n,0); d.max=d.max||oldN*110; const e=d.styles[s.id]||{n:0,ok:0}; e.n++; if(fin.style) e.ok++; d.styles[s.id]=e; d.pts=(d.pts||0)+total; d.max+=100; store.set(d);
+  const d=store.get(); d.styles=d.styles||{}; const oldN=Object.values(d.styles).reduce((a,x)=>a+x.n,0); d.max=d.max||oldN*110; const e=d.styles[s.id]||{n:0,ok:0}; e.n++; if(fin.style) e.ok++; d.styles[s.id]=e; d.pts=(d.pts||0)+total; d.max+=100;
+  d.rankCorrect={1:0,2:0,3:0,...(d.rankCorrect||{})};
+  if(fin.style && !quizPoolIds) d.rankCorrect[diff]=(Number(d.rankCorrect[diff])||0)+1;
+  store.set(d);
   renderResult(fin, finPts, total, {c,st});
 };
 
@@ -1189,7 +1215,8 @@ function renderResult(fin, finPts, total, g){
   }).join("");
   $("scoreTbl").innerHTML = rows +
     `<tr><td>${L("国","Country")} ${fin.country?"○":"×"}　${L("スタイル","Style")} ${fin.style?"○":"×"}</td><td>${finPts}</td></tr>` +
-    `<tr class="total"><td>${L("合計","Total")}</td><td>${total} / 100</td></tr>`;
+    `<tr class="total"><td>${L("合計","Total")}</td><td>${total} / 100</td></tr>` +
+    (!quizPoolIds && fin.style ? (()=>{ const r=BEER_RANKS[diff], n=Number((store.get().rankCorrect||{})[diff])||0; return `<tr><td>${r.name} ${L("累計正解","cumulative correct")}</td><td>${n} / ${r.goal}${n>=r.goal?` · ${L("認定済み","Award earned")}`:""}</td></tr>`; })() : "");
   const firstLoss = q.stepScore.findIndex(x=>!x.kept);
   $("markers").innerHTML = `<ul>${(lang==="en"?[comparisonValue(s,"markers")]:s.markers).map(m=>`<li>${m}</li>`).join("")}</ul>` +
     (firstLoss>=0 ? `<p class="note" style="margin-bottom:0">${L(`「${STAGES[firstLoss]}」の段階で正解を候補から外しています。`,`The correct style was removed at the ${STAGES[firstLoss]} stage.`)}</p>` : "");
