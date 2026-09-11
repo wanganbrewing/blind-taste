@@ -185,10 +185,25 @@ li{margin:3px 0}
 @media (prefers-reduced-motion:no-preference){
   .glass .liq{transition:fill .5s}
 }
+.lang-switch{position:fixed;z-index:40;top:10px;right:10px;display:flex;padding:3px;border:1px solid rgba(184,116,26,.45);border-radius:999px;background:rgba(255,255,255,.92);box-shadow:0 4px 14px rgba(20,28,32,.12);backdrop-filter:blur(8px)}
+.lang-switch button{border:0;border-radius:999px;background:transparent;color:var(--ink2);padding:5px 10px;font-size:.75rem;font-weight:800}
+.lang-switch button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.survey-overlay{position:fixed;z-index:100;inset:0;display:grid;place-items:center;padding:18px;background:rgba(12,18,21,.68);backdrop-filter:blur(6px)}
+.survey-overlay.hidden{display:none}
+.survey-modal{width:min(560px,100%);max-height:92vh;overflow:auto;background:var(--paper);border-radius:18px;padding:22px;box-shadow:0 22px 70px rgba(0,0,0,.3)}
+.survey-modal h2{margin:0 0 4px}
+.survey-privacy{padding:10px 12px;border-left:3px solid var(--amber);background:var(--amber-soft);font-size:.9rem}
+.survey-q{border:0;padding:0;margin:18px 0}.survey-q legend{font-weight:800;margin-bottom:8px}
+.survey-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.survey-options label{display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:10px;padding:9px 10px;background:#fff;font-size:.9rem}
+.survey-options input{accent-color:var(--amber)}
+.survey-status{min-height:1.5em;color:var(--ng);font-size:.88rem}
+@media(max-width:560px){.lang-switch{top:6px;right:6px}.survey-options{grid-template-columns:1fr}.survey-modal{padding:18px}}
 </style>
 </head>
 <body>
 <div class="wrap">
+<div class="lang-switch" role="group" aria-label="Language"><button type="button" id="langJa" aria-pressed="true">日本語</button><button type="button" id="langEn" aria-pressed="false">English</button></div>
 
 <!-- ===== HOME ===== -->
 <section id="home">
@@ -243,7 +258,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 4.1.0 · 2026-09-11</p>
+  <p class="version">Version 4.2.0 · 2026-09-11</p>
 </section>
 
 <!-- ===== STUDY ===== -->
@@ -360,19 +375,77 @@ li{margin:3px 0}
   </div>
 </section>
 
+<div class="survey-overlay hidden" id="surveyOverlay" role="dialog" aria-modal="true" aria-labelledby="surveyTitle">
+  <form class="survey-modal" id="surveyForm">
+    <h2 id="surveyTitle">かんたんアンケート</h2>
+    <p class="sub" id="surveyIntro">サービス改善の参考にするため、あなたとビールとの関わりを教えてください。</p>
+    <p class="survey-privacy" id="surveyPrivacy"><b>回答者を特定する情報は収集しません。</b><br>氏名・メールアドレスなどの個人情報も取得しません。回答は統計としてのみ利用し、管理人だけが確認できます。</p>
+    <fieldset class="survey-q"><legend id="surveyProfileLabel">あなたに近いもの</legend><div class="survey-options" id="surveyProfile">
+      <label><input type="radio" name="profile_type" value="beer_fan">クラフトビール好き</label>
+      <label><input type="radio" name="profile_type" value="brewer">ブルワー・醸造関係</label>
+      <label><input type="radio" name="profile_type" value="restaurant">飲食店</label>
+      <label><input type="radio" name="profile_type" value="retail">酒販・流通関係</label>
+      <label><input type="radio" name="profile_type" value="student">資格を勉強中</label>
+      <label><input type="radio" name="profile_type" value="other">その他</label>
+    </div></fieldset>
+    <fieldset class="survey-q"><legend id="surveyPurposeLabel">利用目的</legend><div class="survey-options" id="surveyPurpose">
+      <label><input type="radio" name="purpose" value="fun">楽しく学びたい</label>
+      <label><input type="radio" name="purpose" value="exam">試験対策</label>
+      <label><input type="radio" name="purpose" value="tasting">テイスティング練習</label>
+      <label><input type="radio" name="purpose" value="work">仕事に活用</label>
+      <label><input type="radio" name="purpose" value="curiosity">興味を持った</label>
+    </div></fieldset>
+    <fieldset class="survey-q"><legend id="surveyExperienceLabel">ビールの知識</legend><div class="survey-options" id="surveyExperience">
+      <label><input type="radio" name="experience" value="beginner">初心者</label>
+      <label><input type="radio" name="experience" value="intermediate">中級者</label>
+      <label><input type="radio" name="experience" value="advanced">詳しい</label>
+    </div></fieldset>
+    <p class="survey-status" id="surveyStatus" aria-live="polite"></p>
+    <div class="row"><button class="btn amber" type="submit" id="surveySubmit">回答して始める</button><button class="btn ghost" type="button" id="surveySkip">回答せず始める</button></div>
+  </form>
+</div>
+
 </div>
 
 <script src="data/styles.js"></script>
+<script src="data/i18n.js"></script>
 <script>
 (function(){
 const S = window.STYLES;
 const $ = id => document.getElementById(id);
-const STAGES = ["見た目","香り","味","後味","アルコール","判定"];
+const I18N=window.BEER_I18N;
+let lang=(new URLSearchParams(location.search).get("lang")||localStorage.getItem("beerSenseLang")||"ja")==="en"?"en":"ja";
+const L=(ja,en)=>lang==="en"?en:ja;
+const styleLabel=s=>lang==="en"?(I18N.styles[s.id]||s.id.replaceAll("_"," ")):s.style;
+const countryLabel=c=>lang==="en"?(I18N.countries[c]||c):c;
+const STAGES = lang==="en"?["Appearance","Aroma","Flavor","Finish","Alcohol","Identify"]:["見た目","香り","味","後味","アルコール","判定"];
+function translateStatic(){
+  document.documentElement.lang=lang;
+  $("langJa").setAttribute("aria-pressed",String(lang==="ja"));
+  $("langEn").setAttribute("aria-pressed",String(lang==="en"));
+  if(lang!=="en") return;
+  const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+  const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(n=>{ const raw=n.nodeValue, key=raw.trim(), tr=I18N.text[key]; if(tr) n.nodeValue=raw.replace(key,tr); });
+  document.querySelector(".home-hero-caption").innerHTML="<span>Ritsu Kuze｜Analytical</span><span>Akari Katsuki｜Intuitive</span>";
+  $("scoringInfo").innerHTML='<h2>Scoring</h2><div class="card note"><p style="margin-top:0">Clues open in order: Appearance → Aroma → Flavor → Finish → Alcohol. Remove styles that do not fit, then identify one country and style.</p><p>Each clue scores points if the correct style remains. Fewer remaining candidates earn more points. Country identification is worth 10 points and style identification 30 points, for a total of 100.</p><p style="margin-bottom:0">The goal is to train precise elimination, not just guessing.</p></div>';
+  $("candPane").querySelector(".hint").textContent="All candidates start selected. Tap a country to remove or restore all of its styles.";
+  $("surveyIntro").textContent="Help us improve by telling us about your connection with beer.";
+  $("surveyPrivacy").innerHTML="<b>We do not collect information that identifies respondents.</b><br>We do not collect names, email addresses, or other personal information. Responses are used only in aggregate and can be viewed only by the administrator.";
+}
+function changeLanguage(next){ localStorage.setItem("beerSenseLang",next); const u=new URL(location.href); u.searchParams.set("lang",next); location.href=u.toString(); }
+$("langJa").onclick=()=>changeLanguage("ja"); $("langEn").onclick=()=>changeLanguage("en");
 const DIFF_HINT = {
   0:"初級・中級・上級を問題ごとにランダム出題。選択肢数も今回の難易度に合わせます。",
   1:"選択肢は最大12。官能記述子を添え、香りと味を麦芽・酵母・ホップに分けて表示します。",
   2:"選択肢は最大30。感覚表現のみで、香り・味の3軸ラベルは表示します。",
   3:"選択肢は出題範囲の全スタイル。香り・味の各1軸を隠し、3軸ラベルも表示しません。"
+};
+const DIFF_HINT_EN={
+  0:"A random mix of Beginner, Intermediate, and Advanced questions.",
+  1:"Up to 12 choices, with sensory descriptors and malt, yeast, and hop labels.",
+  2:"Up to 30 choices, using sensory descriptions with three aroma and flavor axes.",
+  3:"Every style in the selected set. One aroma and flavor axis is hidden, with no axis labels."
 };
 const BOTTOM_FERMENTED = new Set(["helles","pils","rauch","doppelbock","schwarz","marzen","czech_pils","czech_dark","polotmave","vienna","baltic","rice_lager","export","munich_dunkel","festbier","maibock","dark_bock","eisbock","kellerbier","american_lager","american_light_lager","american_amber_lager","american_dark_lager","rye_lager","mexican_lager","alsatian_pils","italian_pils"]);
 const SPONTANEOUS = new Set(["straight_lambic","gueuze","faro","fruit_lambic"]);
@@ -421,14 +494,22 @@ const ABV_RANGES = {
 function srmInfo(s){ return SRM_RANGES[s.id]||String(s.srm); }
 function abvInfo(s){ return ABV_RANGES[s.id]||String(s.abv); }
 function fermentationInfo(s){
-  if(SPONTANEOUS.has(s.id)) return {label:"自然発酵", note:"野生酵母・微生物による発酵"};
-  if(s.id==="cal_common") return {label:"下面発酵", note:"ラガー酵母を比較的高温で発酵"};
-  if(s.id==="cream_ale") return {label:"上面発酵", note:"下面発酵酵母を併用する場合あり"};
-  if(["flanders_red","oud_bruin"].includes(s.id)) return {label:"上面発酵＋混合発酵", note:"乳酸菌などによる熟成を伴う"};
-  if(["berliner","gose"].includes(s.id)) return {label:"上面発酵＋乳酸発酵", note:"酸味を生む発酵を併用"};
-  return BOTTOM_FERMENTED.has(s.id) ? {label:"下面発酵",note:"低温でクリーンな発酵"} : {label:"上面発酵",note:"エール酵母による発酵"};
+  if(SPONTANEOUS.has(s.id)) return {label:L("自然発酵","Spontaneous fermentation"), note:L("野生酵母・微生物による発酵","Wild yeast and microorganisms")};
+  if(s.id==="cal_common") return {label:L("下面発酵","Bottom fermentation"), note:L("ラガー酵母を比較的高温で発酵","Lager yeast fermented relatively warm")};
+  if(s.id==="cream_ale") return {label:L("上面発酵","Top fermentation"), note:L("下面発酵酵母を併用する場合あり","May also use lager yeast")};
+  if(["flanders_red","oud_bruin"].includes(s.id)) return {label:L("上面発酵＋混合発酵","Top + mixed fermentation"), note:L("乳酸菌などによる熟成を伴う","Matured with lactic bacteria and other cultures")};
+  if(["berliner","gose"].includes(s.id)) return {label:L("上面発酵＋乳酸発酵","Top + lactic fermentation"), note:L("酸味を生む発酵を併用","Includes acid-producing fermentation")};
+  return BOTTOM_FERMENTED.has(s.id) ? {label:L("下面発酵","Bottom fermentation"),note:L("低温でクリーンな発酵","Cool, clean fermentation")} : {label:L("上面発酵","Top fermentation"),note:L("エール酵母による発酵","Fermented with ale yeast")};
 }
 function ingredientInfo(s){
+  if(lang==="en"){
+    if(["weissbier","weizenbock","american_wheat","berliner","gose","witbier"].includes(s.id)) return "Barley malt, wheat, hops, yeast, and water"+(s.id==="witbier"?"; often orange peel and coriander":s.id==="gose"?"; salt, coriander, and lactic bacteria":"");
+    if(["oat_stout","sahti","kornol"].includes(s.id)) return "Barley malt, other grains, hops or herbs, yeast, and water";
+    if(["straight_lambic","gueuze","faro","fruit_lambic","flanders_red","oud_bruin"].includes(s.id)) return "Malted barley, wheat, aged hops, wild cultures, and water";
+    if(["rice_lager","american_lager","american_light_lager","mexican_lager","cream_ale"].includes(s.id)) return "Barley malt, rice or corn, hops, yeast, and water";
+    if(s.id==="italian_grape") return "Barley malt, grapes or grape must, hops, yeast, and water";
+    return "Barley malt, hops, yeast, and water";
+  }
   const exact={
     weissbier:"大麦麦芽・小麦麦芽・ホップ・酵母・水", weizenbock:"大麦麦芽・小麦麦芽・ホップ・酵母・水", american_wheat:"大麦麦芽・小麦麦芽・ホップ・酵母・水",
     witbier:"大麦麦芽・未発芽小麦・ホップ・酵母・水・オレンジピール・コリアンダー", gose:"大麦麦芽・小麦麦芽・ホップ・酵母・水・塩・コリアンダー・乳酸菌",
@@ -455,6 +536,33 @@ const store = {
   set(o){ try{ localStorage.setItem("kikibeer", JSON.stringify(o)); }catch(e){} }
 };
 
+// ---------- anonymous first-visit survey ----------
+const SUPABASE_URL="https://utjonxifozzjkfadnpmc.supabase.co";
+const SUPABASE_KEY="sb_publishable_Vu-Ey5Q5YnwY-ZAbbSktgg_QNcWoAaL";
+const SURVEY_DONE="beerSenseSurveyV1";
+function closeSurvey(){ $("surveyOverlay").classList.add("hidden"); document.body.style.overflow=""; }
+function rememberSurvey(){ try{localStorage.setItem(SURVEY_DONE,"1");}catch(e){} closeSurvey(); }
+function showSurveyOnce(){
+  let done=false; try{done=localStorage.getItem(SURVEY_DONE)==="1";}catch(e){}
+  if(!done){ $("surveyOverlay").classList.remove("hidden"); document.body.style.overflow="hidden"; }
+}
+$("surveySkip").onclick=rememberSurvey;
+$("surveyForm").onchange=()=>{
+  const fd=new FormData($("surveyForm"));
+  $("surveySubmit").disabled=!(fd.get("profile_type")&&fd.get("purpose")&&fd.get("experience"));
+};
+$("surveySubmit").disabled=true;
+$("surveyForm").onsubmit=async e=>{
+  e.preventDefault(); const fd=new FormData(e.currentTarget), p=new URLSearchParams(location.search);
+  const payload={profile_type:fd.get("profile_type"),purpose:fd.get("purpose"),experience:fd.get("experience"),language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),app_version:"4.2.0"};
+  $("surveySubmit").disabled=true; $("surveyStatus").textContent=L("送信しています…","Sending…");
+  try{
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/survey_responses`,{method:"POST",headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(payload)});
+    if(!res.ok) throw new Error(String(res.status));
+    rememberSurvey();
+  }catch(err){ $("surveyStatus").textContent=L("送信できませんでした。もう一度試すか、回答せずに始めてください。","Could not send. Please try again or continue without answering."); $("surveySubmit").disabled=false; }
+};
+
 // ---------- state ----------
 let diffMode = 1;
 let diff = 1;
@@ -476,24 +584,25 @@ function renderHome(){
   $("scoringInfo").classList.toggle("hidden", appMode!=="test");
   $("statsBox").classList.toggle("hidden", appMode!=="test");
   $("countryOptions").classList.toggle("hidden", appMode!=="test");
-  $("countryTitle").textContent = appMode==="test" ? "出題する国" : "学習する国";
-  $("countryHint").textContent = appMode==="test" ? "選んだ国のスタイルだけが出題・選択肢に入ります。" : "選んだ国のスタイルだけを学習できます。";
-  $("startBtn").textContent = appMode==="test" ? "試験を始める" : appMode==="study" ? "試験対策を始める" : "由来当てを始める";
-  $("diffHint").textContent = DIFF_HINT[diffMode];
+  $("countryTitle").textContent = appMode==="test" ? L("出題する国","Countries") : L("学習する国","Study Countries");
+  $("countryHint").textContent = appMode==="test" ? L("選んだ国のスタイルだけが出題・選択肢に入ります。","Only styles from selected countries appear in the exam.") : L("選んだ国のスタイルだけを学習できます。","Study only styles from selected countries.");
+  $("startBtn").textContent = appMode==="test" ? L("試験を始める","Start Exam") : appMode==="study" ? L("試験対策を始める","Start Study") : L("由来当てを始める","Start Flavor Quiz");
+  $("diffHint").textContent = lang==="en"?DIFF_HINT_EN[diffMode]:DIFF_HINT[diffMode];
   $("diffSeg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String(+b.dataset.v===diffMode)));
   $("scopeSeg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.v===testScope)));
   const scoped=S.filter(inTestScope);
-  $("scopeHint").textContent=testScope==="all"?`収録中の全${S.length}スタイルから出題します。`:testScope==="d"?`D教材掲載の${scoped.length}スタイルから出題します。`:`試験対策で優先したい主要${scoped.length}スタイルから出題します。`;
+  $("scopeHint").textContent=testScope==="all"?L(`収録中の全${S.length}スタイルから出題します。`,`Questions use all ${S.length} styles.`):testScope==="d"?L(`D教材掲載の${scoped.length}スタイルから出題します。`,`Questions use ${scoped.length} styles from the D textbook.`):L(`試験対策で優先したい主要${scoped.length}スタイルから出題します。`,`Questions use the top ${scoped.length} exam styles.`);
   const cp = $("countryPick"); cp.innerHTML="";
   const visibleCountries=[...new Set(scoped.map(x=>x.country))];
   visibleCountries.forEach(c=>{
     const n = scoped.filter(x=>x.country===c).length;
     const b = document.createElement("button");
-    b.className="chip"; b.textContent=`${c} ${n}`; b.setAttribute("aria-pressed", String(enabled.has(c)));
+    b.className="chip"; b.textContent=`${countryLabel(c)} ${n}`; b.setAttribute("aria-pressed", String(enabled.has(c)));
     b.onclick=()=>{ enabled.has(c)?enabled.delete(c):enabled.add(c); if(!enabled.size) enabled.add(c); renderHome(); };
     cp.appendChild(b);
   });
   renderStats();
+  if(lang==="en") translateStatic();
 }
 $("modeSeg").onclick = e=>{ const b=e.target.closest("button"); if(!b) return; appMode=b.dataset.v; renderHome(); };
 $("diffSeg").onclick = e=>{ const b=e.target.closest("button"); if(!b) return; diffMode=+b.dataset.v; renderHome(); };
@@ -505,15 +614,15 @@ function renderStats(){
   if(!rows.length){ box.innerHTML=""; return; }
   const tot = rows.reduce((a,[,v])=>a+v.n,0), ok = rows.reduce((a,[,v])=>a+v.ok,0);
   const weak = rows.map(([id,v])=>({id,rate:v.ok/v.n,n:v.n})).filter(x=>x.n>=2).sort((a,b)=>a.rate-b.rate).slice(0,5);
-  const name = id=>{ const s=S.find(x=>x.id===id); return s? s.style : id; };
-  box.innerHTML = `<h2>これまでの記録</h2><div class="card">
-    <div class="stat"><span>出題数</span><span>${tot}</span></div>
-    <div class="stat"><span>スタイル正解率</span><span>${Math.round(100*ok/tot)}%</span></div>
-    <div class="stat"><span>平均得点率</span><span>${Math.round(100*(st.pts||0)/(st.max||tot*110))}%</span></div>
-    ${weak.length?`<div style="margin-top:12px" class="note">苦手なスタイル：${weak.map(w=>`${name(w.id)}（${Math.round(w.rate*100)}%）`).join("、")}</div>`:""}
-    <button class="btn ghost" style="margin-top:14px;padding:8px 14px;font-size:.9rem" id="resetStats">記録を消す</button>
+  const name = id=>{ const s=S.find(x=>x.id===id); return s? styleLabel(s) : id; };
+  box.innerHTML = `<h2>${L("これまでの記録","Your Results")}</h2><div class="card">
+    <div class="stat"><span>${L("出題数","Questions")}</span><span>${tot}</span></div>
+    <div class="stat"><span>${L("スタイル正解率","Style Accuracy")}</span><span>${Math.round(100*ok/tot)}%</span></div>
+    <div class="stat"><span>${L("平均得点率","Average Score")}</span><span>${Math.round(100*(st.pts||0)/(st.max||tot*110))}%</span></div>
+    ${weak.length?`<div style="margin-top:12px" class="note">${L("苦手なスタイル","Needs Practice")}: ${weak.map(w=>`${name(w.id)} (${Math.round(w.rate*100)}%)`).join(", ")}</div>`:""}
+    <button class="btn ghost" style="margin-top:14px;padding:8px 14px;font-size:.9rem" id="resetStats">${L("記録を消す","Clear Results")}</button>
   </div>`;
-  $("resetStats").onclick=()=>{ if(confirm("記録をすべて消しますか？")){ store.set({}); renderStats(); } };
+  $("resetStats").onclick=()=>{ if(confirm(L("記録をすべて消しますか？","Clear all results?"))){ store.set({}); renderStats(); } };
 }
 
 // ---------- narration helpers ----------
@@ -536,6 +645,26 @@ function axesHtml(kind, obj){
   }).join("");
 }
 function plainHint(t){ return t.replace(/\[([^|\]]+)\|([^\]]+)\]/g,"$1").replace(/\[([^|\]]+)\]/g,"$1"); }
+function englishTraits(s){
+  const all=plainHint(`${s.app} ${s.aroma.malt} ${s.aroma.yeast} ${s.aroma.hop} ${s.taste.malt} ${s.taste.yeast} ${s.taste.hop} ${s.taste.body} ${s.after}`);
+  const aroma=[];
+  if(/燻|煙|スモーク/.test(all)) aroma.push("smoke");
+  if(/焙煎|コーヒー|チョコ|カカオ/.test(all)) aroma.push("roast, coffee, or chocolate");
+  if(/バナナ|洋梨|果実|トロピカル|柑橘|レモン|オレンジ|グレープフルーツ/.test(all)) aroma.push("fruit and citrus");
+  if(/クローブ|胡椒|スパイス|コリアンダー/.test(all)) aroma.push("spice");
+  if(/花|草|ハーブ|松|樹脂|ホップ/.test(all)) aroma.push("floral, herbal, or resinous hops");
+  if(/パン|ビスケット|カラメル|ナッツ|穀物/.test(all)) aroma.push("bread, biscuit, caramel, or nuts");
+  if(/酸|野生|革|馬小屋/.test(all)) aroma.push("tart or rustic fermentation");
+  return {all,aroma:aroma.length?aroma.join(", "):"subtle malt and fermentation character"};
+}
+function englishStep(i,s){
+  const t=englishTraits(s), hazy=/濁|霞/.test(s.app), dark=s.srm>=18, amber=s.srm>=9;
+  if(i===0) return `<p class="scene">${dark?"Deep shadows gather at the rim of the glass.":amber?"Amber light shifts as the glass turns.":"A bright first impression invites a closer look."}</p><p>${hazy?"Hazy":"Clear"}, ${dark?"dark brown to black":amber?"amber to copper":"pale gold to gold"}; SRM ${srmInfo(s)}. ${foamRetentionLabel(s)}</p>`;
+  if(i===1) return `<p class="scene">The aroma begins to reveal the beer's origin.</p><p><span class="lbl">Aroma</span>${t.aroma}.</p>`;
+  if(i===2) return `<p class="scene">Flavor turns the aroma into structure.</p><p><span class="lbl">Flavor</span>${s.srm>=18?"Dark malt depth":s.srm>=9?"Toasty malt depth":"A clean, pale malt base"}, with ${s.ibu>=45?"firm":"low to moderate"} bitterness and a ${s.abv>=8?"full":"balanced"} body.</p>`;
+  if(i===3) return `<p class="scene">The finish leaves the final clue.</p><p>${/ドライ|切れ|すっと消|短い/.test(t.all)?"Dry and clean":"Rounded and lingering"}, with ${s.ibu>=45?"a pronounced bitter close":"a restrained bitter close"}.</p>`;
+  return `<p class="scene">Warmth and weight reveal the strength.</p><p>${s.abv>=8?"Pronounced warming alcohol and a full impression.":s.abv<=4.5?"Light alcohol presence and easy drinkability.":"Moderate, integrated alcohol warmth."} ABV ${abvInfo(s)}%.</p>`;
+}
 function sensoryScene(i,s){
   const all=plainHint(`${s.app} ${s.aroma.malt} ${s.aroma.yeast} ${s.aroma.hop} ${s.taste.malt} ${s.taste.yeast} ${s.taste.hop} ${s.taste.body} ${s.after}`);
   if(i===0){
@@ -565,6 +694,7 @@ function sensoryScene(i,s){
   return s.abv>=8 ? "胸の奥に小さな暖炉がともる。熱は声を荒らげず、ゆっくりと身体の内側へ広がっていく。" : s.abv<=4.5 ? "羽が触れるほどの軽い温度。それでも存在は消えず、涼しい風のように輪郭を残す。" : "穏やかな温度が喉を通り、全体を一つに結ぶ。強さではなく、調和として感じる温かさだ。";
 }
 function stepHtml(i, s){
+  if(lang==="en") return englishStep(i,s);
   const scene=`<p class="scene">${sensoryScene(i,s)}</p>`;
   switch(i){
     case 0: return scene+`<p>${fmt(s.app)}</p>`;
@@ -574,7 +704,7 @@ function stepHtml(i, s){
     case 4: return scene+`<p>${fmt(s.alcohol)}</p>`;
   }
 }
-const LEAD = ["グラスを光にかざす。","鼻を近づける。","一口。","飲み込んで、少し待つ。","もう一口、今度は喉に意識を向けて。"];
+const LEAD = lang==="en"?["Hold the glass to the light.","Bring the glass to your nose.","Take a sip.","Swallow, then wait.","Take another sip and notice the warmth."]:["グラスを光にかざす。","鼻を近づける。","一口。","飲み込んで、少し待つ。","もう一口、今度は喉に意識を向けて。"];
 const GUIDE_PORTRAITS = {
   ritsu:[
     {name:"久世 律",role:"理論派",img:"assets/guide-ritsu-observe-v1.jpg?v=4.0.0",bubbleRight:true},
@@ -593,10 +723,18 @@ const GUIDE_LINES = [
   {ritsu:"温感と厚みを切り分ければ、度数帯が見える。",akari:"喉の奥に灯る熱。その強さを覚えて。"},
   {ritsu:"材料は揃いました。国とスタイルを確定してください。",akari:"もう見えているはず。この一杯の名前を呼んで。"}
 ];
+const GUIDE_LINES_EN=[
+  {ritsu:"Start with color and foam. Light does not lie.",akari:"Find the first landscape hidden in this color."},
+  {ritsu:"Separate the aroma: malt, yeast, then hops.",akari:"What scene opened the moment you moved closer?"},
+  {ritsu:"Sweetness, bitterness, acidity, body—turn sensation into structure.",akari:"On the tongue, the story of the aroma changes shape."},
+  {ritsu:"Watch how it fades. Evidence remains in the finish.",akari:"What remains after it leaves is the beer's true voice."},
+  {ritsu:"Separate warmth from weight and the strength becomes clear.",akari:"Remember the warmth that glows at the back of your throat."},
+  {ritsu:"The evidence is complete. Identify the country and style.",akari:"You can see it now. Say the name of this beer."}
+];
 function makeGuideSequence(){
   const first=Math.random()<.5?"ritsu":"akari", other=first==="ritsu"?"akari":"ritsu";
   const used={ritsu:0,akari:0}, offset={ritsu:Math.floor(Math.random()*2),akari:Math.floor(Math.random()*2)};
-  return GUIDE_LINES.map((lines,i)=>{
+  return (lang==="en"?GUIDE_LINES_EN:GUIDE_LINES).map((lines,i)=>{
     const who=i%2===0?first:other, list=GUIDE_PORTRAITS[who];
     const portrait=list[((used[who]++)+offset[who])%list.length];
     return {portrait,line:lines[who]};
@@ -604,7 +742,8 @@ function makeGuideSequence(){
 }
 function guideMomentHtml(moment,stage){
   const p=moment.portrait;
-  return `<div class="exam-opening" aria-label="${stage}のテイスティングコメント"><div class="exam-cast" role="img" aria-label="${p.role}テイスターの${p.name}" style="background-image:url('${p.img}')"></div><span class="opening-label">TASTING SCENE · ${stage}</span><div class="speech ${p.bubbleRight?'right':''}"><small>${p.name}｜${p.role}</small>${moment.line}</div></div>`;
+  const name=lang==="en"?(p.name==="久世 律"?"Ritsu Kuze":"Akari Katsuki"):p.name, role=lang==="en"?(p.role==="理論派"?"Analytical":"Intuitive"):p.role;
+  return `<div class="exam-opening" aria-label="${stage} tasting note"><div class="exam-cast" role="img" aria-label="${role} taster ${name}" style="background-image:url('${p.img}')"></div><span class="opening-label">TASTING SCENE · ${stage}</span><div class="speech ${p.bubbleRight?'right':''}"><small>${name}｜${role}</small>${moment.line}</div></div>`;
 }
 
 // ---------- glass ----------
@@ -642,19 +781,19 @@ function newQuestion(){
 function show(id){ ["home","quiz","result","study","originQuiz"].forEach(x=>$(x).classList.toggle("hidden", x!==id)); window.scrollTo({top:0}); }
 
 function renderStep(){
-  const names=["","初級","中級","上級"];
-  $("activeDiff").textContent=`難易度：${names[diff]}（選択肢 ${q.options.length}）`;
+  const names=lang==="en"?["","Beginner","Intermediate","Advanced"]:["","初級","中級","上級"];
+  $("activeDiff").textContent=L(`難易度：${names[diff]}（選択肢 ${q.options.length}）`,`Difficulty: ${names[diff]} (${q.options.length} choices)`);
   $("activeDiff").classList.remove("hidden");
-  $("activeGroupTest").textContent=`グループ限定：${quizGroupName}`;
+  $("activeGroupTest").textContent=L(`グループ限定：${quizGroupName}`,`Group: ${quizGroupName}`);
   $("activeGroupTest").classList.toggle("hidden", !quizPoolIds);
   const st=$("stages"); st.innerHTML = STAGES.map((n,i)=>`<div class="${i<q.step?'done':i===q.step?'now':''}">${n}</div>`).join("");
   // narration: previous steps collapsed while narrowing; all hints expanded for the final answer
   let html=guideMomentHtml(q.guides[q.step],STAGES[q.step]);
   if(q.step>0 && q.step<5){
-    html += `<details><summary>これまでのメモ</summary><div class="prev">${[...Array(q.step).keys()].map(i=>stepHtml(i,q.s)).join("")}</div></details>`;
+    html += `<details><summary>${L("これまでのメモ","Previous Notes")}</summary><div class="prev">${[...Array(q.step).keys()].map(i=>stepHtml(i,q.s)).join("")}</div></details>`;
   }
   if(q.step<5) html += `<p style="color:var(--mute);font-size:.95rem">${LEAD[q.step]}</p>` + stepHtml(q.step,q.s);
-  else { html += `<div class="prev">${[...Array(5).keys()].map(i=>`<p style="color:var(--mute);font-size:.85rem;margin-bottom:.2em">${STAGES[i]}</p>`+stepHtml(i,q.s)).join("")}</div><p><b>さて。国とスタイルは？</b></p>`; }
+  else { html += `<div class="prev">${[...Array(5).keys()].map(i=>`<p style="color:var(--mute);font-size:.85rem;margin-bottom:.2em">${STAGES[i]}</p>`+stepHtml(i,q.s)).join("")}</div><p><b>${L("さて。国とスタイルは？","Now identify the country and style.")}</b></p>`; }
   $("narr").innerHTML = html;
 
   if(q.step<5){ $("candPane").classList.remove("hidden"); $("finalPane").classList.add("hidden"); renderCands(); }
@@ -669,14 +808,14 @@ function renderCands(){
     const head=document.createElement("h3");
     const countryBtn=document.createElement("button"); countryBtn.className="chip";
     const selected=arr.filter(x=>q.cands.has(x.id)).length;
-    countryBtn.textContent=`${c} ${selected ? `${selected}/` : ""}${arr.length}`;
+    countryBtn.textContent=`${countryLabel(c)} ${selected ? `${selected}/` : ""}${arr.length}`;
     countryBtn.setAttribute("aria-pressed",String(selected===arr.length));
     if(selected>0&&selected<arr.length) countryBtn.classList.add("was");
     countryBtn.onclick=()=>{ const keep=selected<arr.length; arr.forEach(x=>keep?q.cands.add(x.id):q.cands.delete(x.id)); renderCands(); };
     head.appendChild(countryBtn); g.appendChild(head);
     const r=document.createElement("div"); r.className="row";
     arr.forEach(x=>{
-      const b=document.createElement("button"); b.className="chip"; b.textContent=x.style;
+      const b=document.createElement("button"); b.className="chip"; b.textContent=styleLabel(x);
       b.setAttribute("aria-pressed", String(q.cands.has(x.id)));
       if(q.prevCands && q.prevCands.has(x.id) && !q.cands.has(x.id)) b.classList.add("was");
       b.onclick=()=>{ q.cands.has(x.id)?q.cands.delete(x.id):q.cands.add(x.id); renderCands(); };
@@ -685,10 +824,10 @@ function renderCands(){
     g.appendChild(r); box.appendChild(g);
   });
   const n=q.cands.size; $("candCount").textContent = n?`（${n}）`:"";
-  $("candHint").textContent = q.step===0 ? "見た目と合わないスタイルを外してください。迷うものは残して次のヒントへ。" : "新しい情報と合わないものを、前回の候補から外してください（点線は前回まで残っていた候補）。";
+  $("candHint").textContent = q.step===0 ? L("見た目と合わないスタイルを外してください。迷うものは残して次のヒントへ。","Remove styles that do not match the appearance. Keep uncertain choices.") : L("新しい情報と合わないものを、前回の候補から外してください（点線は前回まで残っていた候補）。","Remove styles that do not match the new clue.");
   $("nextBtn").disabled = n===0;
-  $("nextBtn").textContent = q.step===4 ? "判定へ" : "次のヒントへ";
-  $("backBtn").textContent = q.step===0 ? "ホームへ戻る" : "前のヒントへ戻る";
+  $("nextBtn").textContent = q.step===4 ? L("判定へ","Identify") : L("次のヒントへ","Next Hint");
+  $("backBtn").textContent = q.step===0 ? L("ホームへ戻る","Back to Home") : L("前のヒントへ戻る","Previous Hint");
 }
 function stepPts(n){ return Math.max(3, 12-2*(n-1)); }
 $("nextBtn").onclick=()=>{
@@ -707,18 +846,19 @@ function goBack(){
 }
 $("backBtn").onclick=goBack;
 $("finalBackBtn").onclick=goBack;
-$("quitBtn").onclick=()=>{ if(confirm("この一杯を中断しますか？")){ show("home"); renderHome(); } };
+$("quitBtn").onclick=()=>{ if(confirm(L("この一杯を中断しますか？","Quit this beer?"))){ show("home"); renderHome(); } };
 
 // final cascade
 function opt(sel, arr, ph){ sel.innerHTML = `<option value="">${ph}</option>` + arr.map(v=>`<option>${v}</option>`).join(""); }
 function renderFinal(){
   const p=q.options;
-  opt($("selCountry"), [...new Set(p.map(x=>x.country))], "国を選ぶ");
-  opt($("selStyle"), [], "まず国を選ぶ");
+  const cs=[...new Set(p.map(x=>x.country))];
+  $("selCountry").innerHTML=`<option value="">${L("国を選ぶ","Select a country")}</option>`+cs.map(c=>`<option value="${c}">${countryLabel(c)}</option>`).join("");
+  opt($("selStyle"), [], L("まず国を選ぶ","Select a country first"));
   $("answerBtn").disabled=true;
   $("selCountry").onchange=()=>{
     const c=$("selCountry").value;
-    opt($("selStyle"), p.filter(x=>x.country===c).map(x=>x.style), "スタイルを選ぶ");
+    $("selStyle").innerHTML=`<option value="">${L("スタイルを選ぶ","Select a style")}</option>`+p.filter(x=>x.country===c).map(x=>`<option value="${x.style}">${styleLabel(x)}</option>`).join("");
     $("answerBtn").disabled=true;
   };
   $("selStyle").onchange=()=>{ $("answerBtn").disabled = !$("selStyle").value; };
@@ -739,6 +879,17 @@ function studyPlain(t){
   return t.replace(/\[([^|\]]+)\|([^\]]+)\]/g, "$1").replace(/\[([^|\]]+)\]/g, "$1");
 }
 function comparisonValue(s, kind){
+  if(lang==="en"){
+    const t=englishTraits(s), f=fermentationInfo(s);
+    if(kind==="fermentation") return `${f.label} — ${f.note}`;
+    if(kind==="appearance") return `${/濁|霞/.test(s.app)?"Hazy":"Clear"}; SRM ${srmInfo(s)}; ${foamRetentionLabel(s)}.`;
+    if(kind==="aroma") return `${t.aroma}.`;
+    if(kind==="taste") return `${s.srm>=18?"Dark malt depth":s.srm>=9?"Toasty malt":"Pale malt"}, ${s.ibu>=45?"firm":"restrained"} bitterness, ${s.abv>=8?"full":"balanced"} body.`;
+    if(kind==="after") return `${/ドライ|切れ|すっと消|短い/.test(t.all)?"Dry, clean finish":"Rounded, lingering finish"}.`;
+    if(kind==="strength") return `${abvInfo(s)}% ABV — ${s.abv>=8?"warming and full":s.abv<=4.5?"light and easy-drinking":"moderate warmth"}.`;
+    if(kind==="ingredients") return ingredientInfo(s);
+    return `SRM ${srmInfo(s)}, IBU ${ibuInfo(s)}, ABV ${abvInfo(s)}%; ${t.aroma}.`;
+  }
   if(kind==="fermentation"){ const f=fermentationInfo(s); return `${f.label}　${f.note}`; }
   if(kind==="appearance") return studyPlain(s.app);
   if(kind==="aroma") return studyPlain(`${s.aroma.malt} ${s.aroma.yeast} ${s.aroma.hop}`);
@@ -790,6 +941,10 @@ const STUDY_GROUPS = [
   {id:"clean_ale", name:"クリーンで紛らわしいエール", note:"ラガーに近い発酵の清潔さと、穀物・ホップ・果実香の差を比較。", ids:["kolsch","alt","cream_ale","cal_common","golden_ale"]},
   {id:"smoke_rustic", name:"煙・素朴さ・特殊香", note:"煙、木、針葉樹、土、野性的な香りの由来を比較。", ids:["rauch","smoked_porter","sahti","kornol","gose"]}
 ];
+const STUDY_GROUP_NAMES_EN={color_straw:"By Color: Very Pale / Straw",color_gold:"By Color: Gold",color_amber:"By Color: Amber / Copper",color_brown:"By Color: Brown",color_black:"By Color: Dark Brown / Black",pale_lager:"Pale Lagers",amber_lager:"Amber Lagers",american_lagers:"American-style Lagers",dark_bock:"Dark Lagers / Bocks",wheat:"Wheat and White Beers",british_bitter:"British Bitter / Pale Ale",british_malty:"Malty British Ales",porter:"Porters",stout:"Stouts",belgian_strong:"Belgian Strong Ales",wild_sour:"Belgian Wild and Sour Beers",farmhouse:"Farmhouse and Regional Ales",american_hop:"American Hoppy Ales",southern_hop:"Australian and New Zealand Hoppy Ales",clean_ale:"Clean, Lager-like Ales",smoke_rustic:"Smoke, Rustic, and Unusual Aromas"};
+function studyGroupLabel(g){ if(lang!=="en") return g.name; if(g.country) return `Country: ${countryLabel(g.country)}`; return STUDY_GROUP_NAMES_EN[g.id]||g.id; }
+function studyGroupNote(g,n){ if(lang!=="en") return `${g.note}（${n}スタイル）`; return `Compare ${n} styles by appearance, aroma, flavor, finish, strength, ingredients, and fermentation.`; }
+
 const REP_BRANDS = {
   bitter:"フラーズ・ロンドンプライド", eipa:"ワージントン・ホワイトシールド", porter:"フラーズ・ロンドンポーター", mild:"バンクス・マイルド",
   barleywine:"トーマス・ハーディ・エール", wee_heavy:"トラクエア・ハウスエール", oat_stout:"サミュエルスミス・オートミールスタウト", dry_stout:"ギネス・ドラフト",
@@ -820,17 +975,17 @@ const REP_BRANDS = {
 function purchaseUrl(brand){ return `https://search.rakuten.co.jp/search/mall/${encodeURIComponent(brand+" ビール 1本")}/`; }
 function brandHtml(s){
   const brand=REP_BRANDS[s.id];
-  return brand ? `<div class="brand">代表銘柄：<b>${brand}</b><br><a class="buy-link" href="${purchaseUrl(brand)}" target="_blank" rel="noopener noreferrer">1本販売を探す ↗</a></div>` : "";
+  return brand ? `<div class="brand">${L("代表銘柄","Example beer")}: <b>${brand}</b><br><a class="buy-link" href="${purchaseUrl(brand)}" target="_blank" rel="noopener noreferrer">${L("1本販売を探す","Find a single bottle")} ↗</a></div>` : "";
 }
 function foamProfile(s){
   const low=/泡は薄|すぐ消え|すぐに膜|少なめ|消えやすい|短め|短く/.test(s.app);
   const high=/山|盛り上が|厚|濃密|長く残|持ちがよい|持続/.test(s.app);
-  return low?{label:"泡 少なめ",height:7}:high?{label:"泡 豊か",height:17}:{label:"泡 標準",height:12};
+  return low?{label:L("泡 少なめ","Low foam"),height:7}:high?{label:L("泡 豊か","Rich foam"),height:17}:{label:L("泡 標準","Standard foam"),height:12};
 }
 function foamRetentionLabel(s){
-  if(/すぐ消え|消えやすい|短め|短く|すぐに膜/.test(s.app)) return "泡持ち：短め";
-  if(/長く残|持ちがよい|持続|崩れにくい/.test(s.app)) return "泡持ち：長め";
-  return "泡持ち：標準";
+  if(/すぐ消え|消えやすい|短め|短く|すぐに膜/.test(s.app)) return L("泡持ち：短め","Foam retention: short");
+  if(/長く残|持ちがよい|持続|崩れにくい/.test(s.app)) return L("泡持ち：長め","Foam retention: long");
+  return L("泡持ち：標準","Foam retention: standard");
 }
 function miniBeerIcon(s){
   const foam=foamProfile(s), foamColor=s.srm>=18?"#C9B490":"#F7F4EC";
@@ -838,7 +993,7 @@ function miniBeerIcon(s){
 }
 function answerBeerIcon(s){
   const foam=foamProfile(s), foamColor=s.srm>=18?"#C9B490":"#F7F4EC";
-  return `<div class="answer-beer-icon" role="img" aria-label="${s.style}の色と泡：SRM ${srmInfo(s)}、${foam.label}"><span class="beer-liquid" style="background:${srmHex(s.srm)}"></span><span class="beer-foam" style="height:${Math.round(foam.height*1.6)}px;background:${foamColor}"></span></div>`;
+  return `<div class="answer-beer-icon" role="img" aria-label="${styleLabel(s)} color and foam: SRM ${srmInfo(s)}, ${foam.label}"><span class="beer-liquid" style="background:${srmHex(s.srm)}"></span><span class="beer-foam" style="height:${Math.round(foam.height*1.6)}px;background:${foamColor}"></span></div>`;
 }
 function groupStyles(g){
   if(g.country) return S.filter(s=>s.country===g.country);
@@ -846,22 +1001,22 @@ function groupStyles(g){
   return g.ids.map(id=>S.find(x=>x.id===id)).filter(Boolean);
 }
 function featureCards(styles,key){
-  return `<div class="group-items">${styles.map(s=>`<div class="group-feature"><span class="country-badge">${s.country}</span><b>${s.style}</b>${key==="markers"?`${miniBeerIcon(s)}<ul>${s.markers.map(m=>`<li>${m}</li>`).join("")}</ul>`:`<p>${comparisonValue(s,key)}</p>`}</div>`).join("")}</div>`;
+  return `<div class="group-items">${styles.map(s=>`<div class="group-feature"><span class="country-badge">${countryLabel(s.country)}</span><b>${styleLabel(s)}</b>${key==="markers"?`${miniBeerIcon(s)}<ul>${(lang==="en"?[comparisonValue(s,"markers")]:s.markers).map(m=>`<li>${m}</li>`).join("")}</ul>`:`<p>${comparisonValue(s,key)}</p>`}</div>`).join("")}</div>`;
 }
 function renderStudyGroup(g){
   const styles=groupStyles(g);
-  $("studyGroupNote").textContent=`${g.note}（${styles.length}スタイル）`;
-  const parts=[["外観","appearance"],["香り","aroma"],["味・口当たり","taste"],["後味","after"],["度数・温感","strength"],["原材料","ingredients"],["発酵方式","fermentation"]];
-  const overview=g.overview?`<div class="country-overview"><span class="eyebrow">国別の大きな特徴</span><h2>${g.overview.country}</h2><p class="country-lead">${g.overview.lead}</p><ul>${g.overview.points.map(p=>`<li>${p}</li>`).join("")}</ul></div>`:"";
+  $("studyGroupNote").textContent=studyGroupNote(g,styles.length);
+  const parts=lang==="en"?[["Appearance","appearance"],["Aroma","aroma"],["Flavor & Body","taste"],["Finish","after"],["Strength & Warmth","strength"],["Ingredients","ingredients"],["Fermentation","fermentation"]]:[["外観","appearance"],["香り","aroma"],["味・口当たり","taste"],["後味","after"],["度数・温感","strength"],["原材料","ingredients"],["発酵方式","fermentation"]];
+  const overview=g.overview?(lang==="en"?`<div class="country-overview"><span class="eyebrow">COUNTRY OVERVIEW</span><h2>${countryLabel(g.overview.country)}</h2><p class="country-lead">Compare the country's major styles through fermentation, malt, hops, aroma, and finish.</p><ul><li>Start with fermentation and color.</li><li>Then compare malt depth, hop expression, and yeast character.</li><li>Use SRM, IBU, and ABV to separate close styles.</li></ul></div>`:`<div class="country-overview"><span class="eyebrow">国別の大きな特徴</span><h2>${g.overview.country}</h2><p class="country-lead">${g.overview.lead}</p><ul>${g.overview.points.map(p=>`<li>${p}</li>`).join("")}</ul></div>`):"";
   $("studyGroupView").innerHTML=`
     ${overview}
-    <div class="key-differences"><span class="eyebrow">試験で迷ったら最初にここを見る</span><h2>見分け方：違いのポイント</h2><p class="note">各スタイルを判定する決め手を、暗記用にまとめています。</p>${featureCards(styles,"markers")}</div>
-    <div class="group-part"><h2>${g.name}：スタイル別まとめ</h2><div class="style-summary-list">${styles.map(s=>`<article class="style-summary"><span class="country-badge">${s.country}</span><h3>${s.style} ${sourceBadge(s)}</h3><p class="style-meta">SRM ${srmInfo(s)}　・　IBU ${ibuInfo(s)}　・　ABV ${abvInfo(s)}%</p><div class="group-swatch" style="background:${srmHex(s.srm)}"></div>${parts.map(([label,key])=>`<div class="style-fact"><b>${label}</b><p>${comparisonValue(s,key)}</p></div>`).join("")}${brandHtml(s)}</article>`).join("")}</div><p class="hint">SRM・IBU・ABVは提供教材のスタイルガイド値を優先した一般的な範囲です。派生スタイルは複数ガイドの範囲を統合しています。販売状況・価格・販売単位はリンク先で確認してください。「日」はD資料の日本語ページだけに掲載される項目です。</p></div>`;
+    <div class="key-differences"><span class="eyebrow">${L("試験で迷ったら最初にここを見る","START HERE WHEN STYLES LOOK SIMILAR")}</span><h2>${L("見分け方：違いのポイント","How to Tell Them Apart")}</h2><p class="note">${L("各スタイルを判定する決め手を、暗記用にまとめています。","Key identification clues for each style.")}</p>${featureCards(styles,"markers")}</div>
+    <div class="group-part"><h2>${studyGroupLabel(g)} — ${L("スタイル別まとめ","Style Summary")}</h2><div class="style-summary-list">${styles.map(s=>`<article class="style-summary"><span class="country-badge">${countryLabel(s.country)}</span><h3>${styleLabel(s)} ${sourceBadge(s)}</h3><p class="style-meta">SRM ${srmInfo(s)}　・　IBU ${ibuInfo(s)}　・　ABV ${abvInfo(s)}%</p><div class="group-swatch" style="background:${srmHex(s.srm)}"></div>${parts.map(([label,key])=>`<div class="style-fact"><b>${label}</b><p>${comparisonValue(s,key)}</p></div>`).join("")}${brandHtml(s)}</article>`).join("")}</div><p class="hint">${L("SRM・IBU・ABVは提供教材のスタイルガイド値を優先した一般的な範囲です。","SRM, IBU, and ABV show typical style-guide ranges.")}</p></div>`;
   window.scrollTo({top:0,behavior:"auto"});
 }
 function setupStudyGroups(selected){
   const sel=$("studyGroupSelect"); sel.innerHTML="";
-  ["国別の全体像","色別","似たスタイル比較"].forEach(cat=>{ const box=document.createElement("optgroup"); box.label=cat; STUDY_GROUPS.filter(g=>(g.category||"似たスタイル比較")===cat).forEach(g=>{ const o=document.createElement("option"); o.value=g.id; o.textContent=g.name; box.appendChild(o); }); sel.appendChild(box); });
+  ["国別の全体像","色別","似たスタイル比較"].forEach(cat=>{ const box=document.createElement("optgroup"); box.label=lang==="en"?({"国別の全体像":"Countries","色別":"By Color","似たスタイル比較":"Similar Styles"}[cat]):cat; STUDY_GROUPS.filter(g=>(g.category||"似たスタイル比較")===cat).forEach(g=>{ const o=document.createElement("option"); o.value=g.id; o.textContent=studyGroupLabel(g); box.appendChild(o); }); sel.appendChild(box); });
   sel.value=selected||STUDY_GROUPS[0].id;
   renderStudyGroup(STUDY_GROUPS.find(g=>g.id===sel.value));
 }
@@ -887,6 +1042,8 @@ const ORIGIN_GUIDE={
   yeast:"バナナ、洋梨などの果実香や、クローブ、胡椒のような香りは、主に酵母の発酵で生まれます。",
   hop:"柑橘、花、草、ハーブ、松、樹脂、トロピカルフルーツなどの香りや苦味は、主にホップから生まれます。"
 };
+const ORIGIN_GUIDE_EN={malt:"Grain, bread, biscuit, caramel, nuts, coffee, and chocolate mainly come from malt choice and roasting.",yeast:"Fruit notes such as banana and pear, and spices such as clove and pepper, often come from fermentation.",hop:"Citrus, flowers, grass, herbs, pine, resin, tropical fruit, and bitterness mainly come from hops."};
+const ORIGIN_PROMPT_EN={malt:"Bread, biscuit, caramel, nuts, coffee, or chocolate.",yeast:"Banana, pear, clove, pepper, or other fermentation character.",hop:"Citrus, flowers, herbs, pine, resin, tropical fruit, or bitterness."};
 function originPool(){
   const out=[];
   S.forEach(s=>["aroma","taste"].forEach(sense=>["malt","yeast","hop"].forEach(axis=>{
@@ -897,16 +1054,16 @@ function originPool(){
 }
 function newOriginQuestion(){
   const p=originPool(); originQ=p[Math.floor(Math.random()*p.length)];
-  $("originSense").textContent=`${originQ.sense==="aroma"?"香り":"味"}のコメント`;
-  $("originPrompt").textContent=`「${originQ.text}」`;
+  $("originSense").textContent=lang==="en"?(originQ.sense==="aroma"?"Aroma clue":"Flavor clue"):`${originQ.sense==="aroma"?"香り":"味"}のコメント`;
+  $("originPrompt").textContent=`“${lang==="en"?ORIGIN_PROMPT_EN[originQ.axis]:originQ.text}”`;
   const choices=$("originChoices"); choices.innerHTML="";
   ["malt","yeast","hop"].forEach(axis=>{
-    const b=document.createElement("button"); b.className="chip"; b.textContent=AX[axis];
+    const b=document.createElement("button"); b.className="chip"; b.textContent=lang==="en"?({malt:"Malt",yeast:"Yeast",hop:"Hops"}[axis]):AX[axis];
     b.onclick=()=>answerOrigin(axis); choices.appendChild(b);
   });
   $("originResult").classList.add("hidden"); $("originResult").innerHTML="";
   $("originNextBtn").classList.add("hidden");
-  $("originScore").textContent=originStats.n?`今回の成績：${originStats.ok} / ${originStats.n}`:"";
+  $("originScore").textContent=originStats.n?L(`今回の成績：${originStats.ok} / ${originStats.n}`,`Score: ${originStats.ok} / ${originStats.n}`):"";
   show("originQuiz");
 }
 function answerOrigin(answer){
@@ -916,33 +1073,34 @@ function answerOrigin(answer){
     if(axis===originQ.axis) b.classList.add("hit"); else if(axis===answer) b.classList.add("miss");
   });
   const obj=originQ.s[originQ.sense];
-  $("originResult").innerHTML=`<p class="verdict ${correct?"ok":"ng"}">${correct?"正解":"惜しい"} — ${AX[originQ.axis]}由来</p><p>${ORIGIN_GUIDE[originQ.axis]}</p><p class="note">出題スタイル：${originQ.s.style}（${originQ.s.country}）</p><div>${["malt","yeast","hop"].map(axis=>`<div class="origin-axis"><b>${AX[axis]}</b><span>${plainHint(obj[axis])}</span></div>`).join("")}</div>`;
+  const axisName=lang==="en"?({malt:"Malt",yeast:"Yeast",hop:"Hops"}[originQ.axis]):AX[originQ.axis];
+  $("originResult").innerHTML=`<p class="verdict ${correct?"ok":"ng"}">${correct?L("正解","Correct"):L("惜しい","Not quite")} — ${axisName}</p><p>${lang==="en"?ORIGIN_GUIDE_EN[originQ.axis]:ORIGIN_GUIDE[originQ.axis]}</p><p class="note">${L("出題スタイル","Style")}: ${styleLabel(originQ.s)} (${countryLabel(originQ.s.country)})</p>`;
   $("originResult").classList.remove("hidden");
   $("originNextBtn").classList.remove("hidden");
-  $("originScore").textContent=`今回の成績：${originStats.ok} / ${originStats.n}`;
+  $("originScore").textContent=L(`今回の成績：${originStats.ok} / ${originStats.n}`,`Score: ${originStats.ok} / ${originStats.n}`);
 }
 $("originNextBtn").onclick=newOriginQuestion;
 $("originHomeBtn").onclick=()=>{ show("home"); renderHome(); };
 
 function renderResult(fin, finPts, total, g){
   const s=q.s;
-  $("verdict").textContent = fin.style ? "正解" : (fin.country ? "国は正解、スタイルは違う" : "はずれ");
+  $("verdict").textContent = fin.style ? L("正解","Correct") : (fin.country ? L("国は正解、スタイルは違う","Correct country, wrong style") : L("はずれ","Not quite"));
   $("verdict").className = "verdict " + (fin.style?"ok":"ng");
   $("answerBeer").innerHTML = answerBeerIcon(s);
-  $("ansLine").innerHTML = `${s.style} ${sourceBadge(s)}<small>${s.country} ／ ${s.region}</small>` + (fin.style?"":`<small>あなたの答え：${g.c} ／ ${g.st}</small>`);
+  $("ansLine").innerHTML = `${styleLabel(s)} ${sourceBadge(s)}<small>${countryLabel(s.country)}${lang==="ja"?` ／ ${s.region}`:""}</small>` + (fin.style?"":`<small>${L("あなたの答え","Your answer")}: ${countryLabel(g.c)} / ${g.st||"—"}</small>`);
   const f=fermentationInfo(s);
-  $("ansFacts").innerHTML = `<span class="tag">SRM ${srmInfo(s)}</span><span class="tag">IBU ${ibuInfo(s)}</span><span class="tag">ABV ${abvInfo(s)}%</span><span class="tag">${f.label}</span><p class="note">SRM・IBU・ABVは提供教材のスタイルガイド値を優先した一般的な範囲です。</p><p class="note">一般的な原材料：${ingredientInfo(s)}</p>${brandHtml(s)}`;
+  $("ansFacts").innerHTML = `<span class="tag">SRM ${srmInfo(s)}</span><span class="tag">IBU ${ibuInfo(s)}</span><span class="tag">ABV ${abvInfo(s)}%</span><span class="tag">${f.label}</span><p class="note">${L("SRM・IBU・ABVは提供教材のスタイルガイド値を優先した一般的な範囲です。","SRM, IBU, and ABV show typical style-guide ranges.")}</p><p class="note">${L("一般的な原材料","Typical ingredients")}: ${ingredientInfo(s)}</p>${brandHtml(s)}`;
   const rows = q.stepScore.map((x,i)=>{
     const lostAt = !x.kept;
-    return `<tr><td>${STAGES[i]}<br><span class="note">${lostAt?"正解を候補から外した":"候補 "+x.n+"件に残した"}</span></td><td>${x.pts}</td></tr>`;
+    return `<tr><td>${STAGES[i]}<br><span class="note">${lostAt?L("正解を候補から外した","Correct style removed"):L("候補 "+x.n+"件に残した",`Kept among ${x.n} choices`)}</span></td><td>${x.pts}</td></tr>`;
   }).join("");
   $("scoreTbl").innerHTML = rows +
-    `<tr><td>国 ${fin.country?"○":"×"}　スタイル ${fin.style?"○":"×"}</td><td>${finPts}</td></tr>` +
-    `<tr class="total"><td>合計</td><td>${total} / 100</td></tr>`;
+    `<tr><td>${L("国","Country")} ${fin.country?"○":"×"}　${L("スタイル","Style")} ${fin.style?"○":"×"}</td><td>${finPts}</td></tr>` +
+    `<tr class="total"><td>${L("合計","Total")}</td><td>${total} / 100</td></tr>`;
   const firstLoss = q.stepScore.findIndex(x=>!x.kept);
-  $("markers").innerHTML = `<ul>${s.markers.map(m=>`<li>${m}</li>`).join("")}</ul>` +
-    (firstLoss>=0 ? `<p class="note" style="margin-bottom:0">「${STAGES[firstLoss]}」の段階で正解を候補から外しています。ここまでの情報では、まだ正解を消せなかったはずです。</p>` : "");
-  $("similar").innerHTML = s.similar.map(id=>{ const t=S.find(x=>x.id===id); if(!t) return ""; return `<div><b>${t.style}<span class="note">　${t.country}</span></b>${t.markers[0]}</div>`; }).join("");
+  $("markers").innerHTML = `<ul>${(lang==="en"?[comparisonValue(s,"markers")]:s.markers).map(m=>`<li>${m}</li>`).join("")}</ul>` +
+    (firstLoss>=0 ? `<p class="note" style="margin-bottom:0">${L(`「${STAGES[firstLoss]}」の段階で正解を候補から外しています。`,`The correct style was removed at the ${STAGES[firstLoss]} stage.`)}</p>` : "");
+  $("similar").innerHTML = s.similar.map(id=>{ const t=S.find(x=>x.id===id); if(!t) return ""; return `<div><b>${styleLabel(t)}<span class="note">　${countryLabel(t.country)}</span></b>${lang==="en"?comparisonValue(t,"markers"):t.markers[0]}</div>`; }).join("");
   // full narration, beginner formatting for review regardless of mode
   const save=diff; diff=1; const hideSave=q.hide; q.hide={};
   $("fullNarr").innerHTML = [0,1,2,3,4].map(i=>`<p style="color:var(--mute);font-size:.85rem;margin-bottom:.2em">${STAGES[i]}</p>`+stepHtml(i,s)).join("");
@@ -957,7 +1115,9 @@ $("startBtn").onclick=()=>{
   else newOriginQuestion();
 };
 
+translateStatic();
 renderHome();
+showSurveyOnce();
 })();
 </script>
 </body>
