@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ビールテイスティングクイズ</title>
+<title>BEER SENSE｜ビールスタイル鑑定</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -13,15 +13,21 @@
   --ui:"Zen Kaku Gothic New",system-ui,sans-serif; --serif:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ui);font-size:16px;line-height:1.6}
+html,body{margin:0;background:radial-gradient(circle at 50% 0,#fff 0,#eef0ec 40%,#e4e8e3 100%);color:var(--ink);font-family:var(--ui);font-size:16px;line-height:1.6}
 button{font-family:inherit;font-size:1rem;cursor:pointer}
 button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 .wrap{max-width:660px;margin:0 auto;padding:20px 16px 60px}
 h1{font-family:var(--serif);font-weight:600;font-size:2.2rem;letter-spacing:.06em;margin:8px 0 2px}
 .sub{color:var(--mute);margin:0 0 28px}
-.home-hero{position:relative;margin:0 0 20px;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:#f5efe3;box-shadow:0 10px 28px rgba(28,34,38,.1)}
-.home-hero img{display:block;width:100%;aspect-ratio:16/7;object-fit:cover;object-position:center 33%}
-.home-hero-caption{position:absolute;left:12px;right:12px;bottom:10px;display:flex;justify-content:space-between;gap:10px;color:#fff;font-size:.72rem;font-weight:800;letter-spacing:.04em;text-shadow:0 1px 4px rgba(0,0,0,.9)}
+.brand-lockup{padding:12px 2px 18px;text-align:center}
+.brand-kicker{display:inline-block;padding:3px 10px;border:1px solid var(--amber);border-radius:999px;color:var(--amber);font-size:.65rem;font-weight:800;letter-spacing:.2em}
+.brand-lockup h1{margin:8px 0 0;font-family:var(--ui);font-size:3.15rem;font-weight:800;line-height:1;letter-spacing:.04em}
+.brand-lockup h1 span{color:var(--amber)}
+.brand-jp{margin:6px 0 3px;font-family:var(--serif);font-weight:600;letter-spacing:.18em;color:var(--ink2)}
+.brand-lockup .sub{margin:0;font-size:.88rem}
+.home-hero{position:relative;aspect-ratio:16/7;margin:0 0 20px;border-radius:16px;overflow:hidden;border:1px solid rgba(184,116,26,.35);background:#f5efe3 url("assets/tasting-guides-v1.png?v=3.7.0") center 33%/cover no-repeat;box-shadow:0 12px 32px rgba(28,34,38,.16)}
+.home-hero::after{content:"";position:absolute;inset:45% 0 0;background:linear-gradient(transparent,rgba(13,18,21,.72))}
+.home-hero-caption{position:absolute;z-index:1;left:12px;right:12px;bottom:10px;display:flex;justify-content:space-between;gap:10px;color:#fff;font-size:.72rem;font-weight:800;letter-spacing:.04em;text-shadow:0 1px 4px rgba(0,0,0,.9)}
 h2{font-size:1.05rem;font-weight:700;margin:26px 0 10px}
 .card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -59,7 +65,7 @@ h2{font-size:1.05rem;font-weight:700;margin:26px 0 10px}
 .narr details summary::before{content:"▸ ";}
 .narr details[open] summary::before{content:"▾ ";}
 .exam-opening{margin:0 0 20px;padding:18px 16px 16px;background:linear-gradient(145deg,#f7f3e9,#fff 60%,#eee8dc);border:1px solid #bcb4a6;border-radius:14px;box-shadow:inset 0 0 0 4px rgba(255,255,255,.55)}
-.exam-cast{display:block;width:100%;aspect-ratio:3/2;object-fit:cover;object-position:center 38%;margin:0 0 14px;border-radius:10px;border:1px solid rgba(76,73,67,.2)}
+.exam-cast{display:block;width:100%;aspect-ratio:3/2;background:#f5efe3 url("assets/tasting-guides-v1.png?v=3.7.0") center 38%/cover no-repeat;margin:0 0 14px;border-radius:10px;border:1px solid rgba(76,73,67,.2)}
 .exam-opening .opening-label{display:block;margin:0 0 10px;font-family:var(--ui);font-size:.68rem;font-weight:800;letter-spacing:.18em;color:var(--mute)}
 .exam-opening .speech{width:fit-content;max-width:88%;margin:7px 0;padding:9px 15px;background:#fff;border:1.5px solid #4c4943;border-radius:999px;font-family:var(--serif);font-weight:650;line-height:1.65;box-shadow:2px 2px 0 rgba(76,73,67,.1)}
 .exam-opening .speech.right{margin-left:auto}
@@ -164,7 +170,8 @@ li{margin:3px 0}
   .glass{width:64px;height:100px}
   .narr{font-size:1.04rem}
   h1{font-size:1.9rem}
-  .home-hero img{aspect-ratio:16/9;object-position:center 32%}
+  .brand-lockup h1{font-size:2.55rem}
+  .home-hero{aspect-ratio:16/9;background-position:center 32%}
   .cands{max-height:none;overflow:visible;padding-right:0}
   #candPane>.row .btn,#finalPane .btn,#result>.row .btn{width:100%}
   .compare-grid{grid-template-columns:1fr}
@@ -183,9 +190,8 @@ li{margin:3px 0}
 
 <!-- ===== HOME ===== -->
 <section id="home">
-  <h1>ビールテイスティングクイズ</h1>
-  <p class="sub">香りと味から、ビールのスタイルや香味の由来を学ぶ</p>
-  <div class="home-hero"><img src="assets/tasting-guides-v1.png?v=3.6.0" alt="ビールを観察する久世律と、香りを確かめる香月灯"><div class="home-hero-caption"><span>久世 律｜理論派</span><span>香月 灯｜感性派</span></div></div>
+  <header class="brand-lockup"><span class="brand-kicker">BLIND TASTING / STYLE EXAM</span><h1><span>BEER</span> SENSE</h1><p class="brand-jp">ビールスタイル鑑定</p><p class="sub">香りと味から、その一杯の正体を読み解く</p></header>
+  <div class="home-hero" role="img" aria-label="ビールを観察する久世律と、香りを確かめる香月灯"><div class="home-hero-caption"><span>久世 律｜理論派</span><span>香月 灯｜感性派</span></div></div>
 
   <div class="card">
     <h2 style="margin-top:0">モード</h2>
@@ -235,7 +241,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 3.6.0 · 2026-09-11</p>
+  <p class="version">Version 3.7.0 · 2026-09-11</p>
 </section>
 
 <!-- ===== STUDY ===== -->
@@ -570,7 +576,7 @@ const EXAM_OPENINGS = [
   ["目を逸らさないで。","泡の向こうに、このビールの生まれた土地が見えてきます。"]
 ];
 function examOpeningHtml(lines){
-  return `<div class="exam-opening" aria-label="試験開始のテイスティングコメント"><img class="exam-cast" src="assets/tasting-guides-v1.png?v=3.6.0" alt="理論派テイスターの久世律と、感性派テイスターの香月灯"><span class="opening-label">TASTING SCENE</span><div class="speech"><small>久世 律｜理論派</small>${lines[0]}</div><div class="speech right"><small>香月 灯｜感性派</small>${lines[1]}</div></div>`;
+  return `<div class="exam-opening" aria-label="試験開始のテイスティングコメント"><div class="exam-cast" role="img" aria-label="理論派テイスターの久世律と、感性派テイスターの香月灯"></div><span class="opening-label">TASTING SCENE</span><div class="speech"><small>久世 律｜理論派</small>${lines[0]}</div><div class="speech right"><small>香月 灯｜感性派</small>${lines[1]}</div></div>`;
 }
 
 // ---------- glass ----------
