@@ -273,7 +273,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 4.8.0 · 2026-09-12</p>
+  <p class="version">Version 4.8.1 · 2026-09-12</p>
 </section>
 
 <!-- ===== ORIGIN STORY ===== -->
@@ -586,7 +586,7 @@ async function trackPageView(){
   try{ if(sessionStorage.getItem(PAGE_VIEW_SENT)==="1") return; sessionStorage.setItem(PAGE_VIEW_SENT,"1"); }
   catch(e){ if(window.__beerSensePageViewSent) return; window.__beerSensePageViewSent=true; }
   const p=new URLSearchParams(location.search);
-  const payload={language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),entry_path:location.pathname.slice(0,100),app_version:"4.8.0"};
+  const payload={language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),entry_path:location.pathname.slice(0,100),app_version:"4.8.1"};
   try{
     const res=await fetch(`${SUPABASE_URL}/rest/v1/page_views`,{method:"POST",headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(payload),keepalive:true});
     if(!res.ok) throw new Error(String(res.status));
@@ -608,7 +608,7 @@ $("surveySubmit").disabled=true;
 $("surveyForm").onsubmit=async e=>{
   e.preventDefault(); const fd=new FormData(e.currentTarget), p=new URLSearchParams(location.search);
   if(isOwnerDevice()){ rememberSurvey(); return; }
-  const payload={profile_type:fd.get("profile_type"),purpose:fd.get("purpose"),experience:fd.get("experience"),language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),app_version:"4.8.0"};
+  const payload={profile_type:fd.get("profile_type"),purpose:fd.get("purpose"),experience:fd.get("experience"),language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),app_version:"4.8.1"};
   $("surveySubmit").disabled=true; $("surveyStatus").textContent=L("送信しています…","Sending…");
   try{
     const res=await fetch(`${SUPABASE_URL}/rest/v1/survey_responses`,{method:"POST",headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(payload)});
@@ -1261,7 +1261,7 @@ $("againBtn").onclick=newQuestion;
 $("homeBtn").onclick=()=>{ show("home"); renderHome(); };
 $("resultBackTop").onclick=()=>{ show("home"); renderHome(); };
 const STORY_PAGES=[
-  {img:"assets/story-origin-01.png?v=4.8.0",ja:[["","閉店間際の小さなクラフトビールバー。カウンターの端で、二人は同じ黄金色のビールに向き合っていた。"],["久世 律","SRMは、およそ三。白い泡はきめ細かく、持続性も高い……"],["香月 灯","春の果樹園みたい。白い花と、まだ青い果実の香り……"],["","互いの言葉が耳に入り、二人は初めて顔を見合わせる。"],["律","果樹園？　それではスタイルを特定できない。"],["灯","数字だけ見ていたら、このビールが何を語っているか分からないわ。"],["律","ビールは語らない。判断材料があるだけだ。"],["灯","なら、その判断材料だけで当ててみる？"]],en:[["","Near closing time at a small craft beer bar, two strangers face the same golden beer."],["Ritsu Kuze","About three SRM. Fine white foam, with strong retention..."],["Akari Kazuki","Like a spring orchard. White flowers and fruit that is still green..."],["","They hear each other and meet eyes for the first time."],["Ritsu","An orchard? That will not identify the style."],["Akari","If you only look at numbers, you will never hear what the beer is saying."],["Ritsu","Beer does not speak. It only provides evidence."],["Akari","Then why not identify it using only that evidence?"]]},
+  {img:"assets/story-origin-01.png?v=4.8.0",ja:[["","閉店間際の小さなクラフトビールバー。カウンターの端で、二人は同じ黄金色のビールに向き合っていた。"],["久世 律","SRMは、およそ３。白い泡はきめ細かく、持続性も高い……"],["香月 灯","春の果樹園みたい。白い花と、まだ青い果実の香り……"],["","互いの言葉が耳に入り、二人は初めて顔を見合わせる。"],["律","果樹園？　それではスタイルを特定できない。"],["灯","数字だけ見ていたら、このビールが何を語っているか分からないわ。"],["律","ビールは語らない。判断材料があるだけだ。"],["灯","なら、その判断材料だけで当ててみる？"]],en:[["","Near closing time at a small craft beer bar, two strangers face the same golden beer."],["Ritsu Kuze","About three SRM. Fine white foam, with strong retention..."],["Akari Kazuki","Like a spring orchard. White flowers and fruit that is still green..."],["","They hear each other and meet eyes for the first time."],["Ritsu","An orchard? That will not identify the style."],["Akari","If you only look at numbers, you will never hear what the beer is saying."],["Ritsu","Beer does not speak. It only provides evidence."],["Akari","Then why not identify it using only that evidence?"]]},
   {img:"assets/story-origin-02.png?v=4.8.0",ja:[["マスター","ちょうどいい。最後の一杯を、二人で当ててみませんか。"],["律","淡色。透明度は高い。泡持ちも良好。小麦系の濁りはない。"],["灯","光の中に、細い雨が降っているみたい。泡は柔らかいけれど、消えようとしない。"],["律","……表現は独特だが、観察自体は正確だな。"],["灯","洋梨、白い花……それから、少しだけ胡椒。"],["律","高い発酵由来のエステル。スパイシーなフェノール香。ホップ香もある。"],["灯","同じものを感じているのに、全然違う言葉になるのね。"],["律","君の言葉は曖昧だ。しかし……記憶には残る。"]],en:[["Master","Perfect timing. Why not identify the last glass together?"],["Ritsu","Pale, highly transparent, with good foam retention. No wheat haze."],["Akari","Like fine rain inside the light. The foam is soft, but refuses to disappear."],["Ritsu","...An unusual description, but the observation is accurate."],["Akari","Pear, white flowers...and just a little pepper."],["Ritsu","Strong fermentation esters, spicy phenols, and hop aroma."],["Akari","We sense the same things, yet use completely different words."],["Ritsu","Your words are imprecise. But...they stay in the memory."]]},
   {img:"assets/story-origin-03.png?v=4.8.0",ja:[["","二人が一口飲む。"],["灯","最初は蜂蜜みたいに優しい。でも、すぐに風が吹いて、甘さを全部さらっていく。"],["律","高アルコールだが、ボディは軽い。アタックに甘味、フィニッシュは強くドライ。"],["灯","見た目より、ずっと強いビール。"],["律","それが決め手だ。"],["律・灯","ベルジャン・ゴールデン・ストロング・エール。"]],en:[["","They each take a sip."],["Akari","Gentle as honey at first. Then a wind rises and carries all the sweetness away."],["Ritsu","High alcohol, yet light-bodied. Sweet on entry, intensely dry at the finish."],["Akari","Far stronger than it looks."],["Ritsu","That is the deciding clue."],["Ritsu & Akari","Belgian Golden Strong Ale."]]},
   {img:"assets/story-origin-04.png?v=4.8.0",ja:[["マスター","正解です。"],["灯","数字だけでは、あの果樹園にはたどり着けなかったでしょう？"],["律","君も、果樹園だけではスタイル名にたどり着けなかった。"],["灯","つまり？"],["律","僕の知識と、君の感覚。両方が必要だったということだ。"],["マスター","では、もう一杯だけ。"],["灯","今度は私が先に見抜く。"],["律","感覚だけで僕に勝つつもりか？"],["灯","あなたこそ、数字に見えないものを見落とさないで。"],["律","色、泡、香り、味、余韻――すべてが手がかりになる。"],["灯","一杯の中には、まだ名前のない景色がある。"],["二人","さあ、このビールの正体を見つけよう。"]],en:[["Master","Correct."],["Akari","Numbers alone would never have taken you to that orchard, would they?"],["Ritsu","And an orchard alone would not have given you the style name."],["Akari","Meaning?"],["Ritsu","My knowledge and your senses. We needed both."],["Master","Then, just one more glass."],["Akari","This time I will see through it first."],["Ritsu","You plan to beat me with intuition alone?"],["Akari","And you must not overlook what numbers cannot show."],["Ritsu","Color, foam, aroma, flavor, finish—everything is a clue."],["Akari","Inside every glass is a landscape that has not yet been named."],["Together","Now, let us discover the identity of this beer."]]}];
