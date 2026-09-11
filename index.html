@@ -55,6 +55,8 @@ h2{font-size:1.05rem;font-weight:700;margin:26px 0 10px}
 /* glass + narration */
 .tasting{display:grid;grid-template-columns:96px 1fr;gap:20px;align-items:start}
 .glass{width:96px;height:150px}
+.glass-stack{text-align:center}
+.glass-meta{margin:3px -5px 0;color:var(--ink2);font-family:var(--ui);font-size:.68rem;font-weight:700;line-height:1.45}
 .narr{font-family:var(--serif);font-size:1.12rem;line-height:1.95;color:var(--ink)}
 .narr p{margin:0 0 .9em}
 .narr .lbl{font-family:var(--ui);font-size:.75rem;color:var(--amber);margin-right:.5em;vertical-align:.1em}
@@ -66,15 +68,10 @@ h2{font-size:1.05rem;font-weight:700;margin:26px 0 10px}
 .narr details[open] summary::before{content:"▾ ";}
 .exam-opening{margin:0 0 20px;padding:18px 16px 16px;background:linear-gradient(145deg,#f7f3e9,#fff 60%,#eee8dc);border:1px solid #bcb4a6;border-radius:14px;box-shadow:inset 0 0 0 4px rgba(255,255,255,.55)}
 .exam-cast{position:relative;display:block;width:100%;aspect-ratio:3/2;background-color:#f5efe3;background-position:center;background-size:cover;background-repeat:no-repeat;margin:0 0 14px;border-radius:10px;border:1px solid rgba(76,73,67,.2);overflow:hidden}
-.scene-beer{position:absolute;right:8px;bottom:8px;display:flex;align-items:center;gap:7px;padding:6px 9px;background:rgba(20,27,31,.82);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:10px;backdrop-filter:blur(4px)}
-.scene-glass{position:relative;display:inline-block;width:28px;height:40px;border:1.5px solid #dfe5e7;border-radius:2px 2px 7px 7px;overflow:hidden;background:#fff;flex:0 0 auto}
-.scene-liquid{position:absolute;inset:3px 2px 2px;border-radius:1px 1px 5px 5px}
-.scene-foam{position:absolute;left:2px;right:2px;top:3px;border-radius:5px 5px 3px 3px}
-.scene-beer-label{font-family:var(--ui);font-size:.66rem;font-weight:700;line-height:1.35;text-shadow:none}
 .exam-opening .opening-label{display:block;margin:0 0 10px;font-family:var(--ui);font-size:.68rem;font-weight:800;letter-spacing:.18em;color:var(--mute)}
-.exam-opening .speech{width:fit-content;max-width:88%;margin:7px 0;padding:9px 15px;background:#fff;border:1.5px solid #4c4943;border-radius:999px;font-family:var(--serif);font-weight:650;line-height:1.65;box-shadow:2px 2px 0 rgba(76,73,67,.1)}
+.exam-opening .speech{width:fit-content;max-width:92%;margin:8px 0;padding:12px 18px 14px;background:#fff;border:1.5px solid #4c4943;border-radius:22px;font-family:var(--serif);font-weight:650;line-height:1.8;box-shadow:2px 2px 0 rgba(76,73,67,.1)}
 .exam-opening .speech.right{margin-left:auto}
-.exam-opening .speech small{display:block;margin-bottom:1px;font-family:var(--ui);font-size:.66rem;font-weight:800;letter-spacing:.06em;color:var(--amber)}
+.exam-opening .speech small{display:block;margin-bottom:4px;font-family:var(--ui);font-size:.66rem;font-weight:800;line-height:1.4;letter-spacing:.06em;color:var(--amber)}
 
 /* candidate groups */
 .grp{margin:12px 0}
@@ -246,7 +243,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 4.0.0 · 2026-09-11</p>
+  <p class="version">Version 4.1.0 · 2026-09-11</p>
 </section>
 
 <!-- ===== STUDY ===== -->
@@ -294,6 +291,7 @@ li{margin:3px 0}
 
   <div class="card">
     <div class="tasting">
+      <div class="glass-stack">
       <svg class="glass" viewBox="0 0 96 150" aria-hidden="true">
         <defs>
           <clipPath id="cup"><path d="M14 8 H82 L76 132 Q76 142 66 142 H30 Q20 142 20 132 Z"/></clipPath>
@@ -307,6 +305,8 @@ li{margin:3px 0}
         </g>
         <path d="M14 8 H82 L76 132 Q76 142 66 142 H30 Q20 142 20 132 Z" fill="none" stroke="#9AA4A8" stroke-width="1.6"/>
       </svg>
+      <p class="glass-meta" id="glassMeta"></p>
+      </div>
       <div class="narr" id="narr"></div>
     </div>
   </div>
@@ -318,6 +318,7 @@ li{margin:3px 0}
     <p class="hint" id="candHint"></p>
     <div class="row" style="margin-top:14px">
       <button class="btn" id="nextBtn">次のヒントへ</button>
+      <button class="btn ghost" id="backBtn">ホームへ戻る</button>
       <button class="btn ghost" id="quitBtn">中断してホームへ</button>
     </div>
   </div>
@@ -330,6 +331,7 @@ li{margin:3px 0}
       <label class="f" for="selStyle">スタイル</label>
       <select id="selStyle"></select>
       <button class="btn amber" id="answerBtn" disabled>答える</button>
+      <button class="btn ghost" id="finalBackBtn" style="margin-top:8px">前のヒントへ戻る</button>
     </div>
   </div>
 </section>
@@ -600,13 +602,9 @@ function makeGuideSequence(){
     return {portrait,line:lines[who]};
   });
 }
-function sceneBeerBadge(s){
-  const foam=foamProfile(s), foamColor=s.srm>=18?"#C9B490":"#F7F4EC";
-  return `<div class="scene-beer" aria-label="今回の一杯：SRM ${srmInfo(s)}、${foam.label}"><span class="scene-glass" aria-hidden="true"><span class="scene-liquid" style="background:${srmHex(s.srm)}"></span><span class="scene-foam" style="height:${Math.max(5,Math.round(foam.height*.7))}px;background:${foamColor}"></span></span><span class="scene-beer-label">今回の一杯<br>SRM ${srmInfo(s)}・${foam.label}</span></div>`;
-}
-function guideMomentHtml(moment,stage,s){
+function guideMomentHtml(moment,stage){
   const p=moment.portrait;
-  return `<div class="exam-opening" aria-label="${stage}のテイスティングコメント"><div class="exam-cast" role="img" aria-label="${p.role}テイスターの${p.name}" style="background-image:url('${p.img}')">${sceneBeerBadge(s)}</div><span class="opening-label">TASTING SCENE · ${stage}</span><div class="speech ${p.bubbleRight?'right':''}"><small>${p.name}｜${p.role}</small>${moment.line}</div></div>`;
+  return `<div class="exam-opening" aria-label="${stage}のテイスティングコメント"><div class="exam-cast" role="img" aria-label="${p.role}テイスターの${p.name}" style="background-image:url('${p.img}')"></div><span class="opening-label">TASTING SCENE · ${stage}</span><div class="speech ${p.bubbleRight?'right':''}"><small>${p.name}｜${p.role}</small>${moment.line}</div></div>`;
 }
 
 // ---------- glass ----------
@@ -620,6 +618,7 @@ function drawGlass(s){
   const dark = s.srm>=18;
   $("foam").setAttribute("height", low ? 6 : (/山|盛り上が|厚/.test(s.app) ? 26 : 16));
   $("foam").setAttribute("fill", dark ? "#C9B490" : "url(#foamG)");
+  $("glassMeta").innerHTML=`SRM ${srmInfo(s)}<br>${foamRetentionLabel(s)}`;
 }
 
 // ---------- quiz flow ----------
@@ -650,7 +649,7 @@ function renderStep(){
   $("activeGroupTest").classList.toggle("hidden", !quizPoolIds);
   const st=$("stages"); st.innerHTML = STAGES.map((n,i)=>`<div class="${i<q.step?'done':i===q.step?'now':''}">${n}</div>`).join("");
   // narration: previous steps collapsed while narrowing; all hints expanded for the final answer
-  let html=guideMomentHtml(q.guides[q.step],STAGES[q.step],q.s);
+  let html=guideMomentHtml(q.guides[q.step],STAGES[q.step]);
   if(q.step>0 && q.step<5){
     html += `<details><summary>これまでのメモ</summary><div class="prev">${[...Array(q.step).keys()].map(i=>stepHtml(i,q.s)).join("")}</div></details>`;
   }
@@ -689,6 +688,7 @@ function renderCands(){
   $("candHint").textContent = q.step===0 ? "見た目と合わないスタイルを外してください。迷うものは残して次のヒントへ。" : "新しい情報と合わないものを、前回の候補から外してください（点線は前回まで残っていた候補）。";
   $("nextBtn").disabled = n===0;
   $("nextBtn").textContent = q.step===4 ? "判定へ" : "次のヒントへ";
+  $("backBtn").textContent = q.step===0 ? "ホームへ戻る" : "前のヒントへ戻る";
 }
 function stepPts(n){ return Math.max(3, 12-2*(n-1)); }
 $("nextBtn").onclick=()=>{
@@ -698,6 +698,15 @@ $("nextBtn").onclick=()=>{
   q.step++; renderStep();
   requestAnimationFrame(()=>window.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"}));
 };
+function goBack(){
+  if(q.step===0){ show("home"); renderHome(); return; }
+  q.step--; q.stepScore.pop();
+  q.prevCands=q.step>0?new Set(q.stepScore[q.step-1].cands):null;
+  renderStep();
+  requestAnimationFrame(()=>window.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"}));
+}
+$("backBtn").onclick=goBack;
+$("finalBackBtn").onclick=goBack;
 $("quitBtn").onclick=()=>{ if(confirm("この一杯を中断しますか？")){ show("home"); renderHome(); } };
 
 // final cascade
@@ -817,6 +826,11 @@ function foamProfile(s){
   const low=/泡は薄|すぐ消え|すぐに膜|少なめ|消えやすい|短め|短く/.test(s.app);
   const high=/山|盛り上が|厚|濃密|長く残|持ちがよい|持続/.test(s.app);
   return low?{label:"泡 少なめ",height:7}:high?{label:"泡 豊か",height:17}:{label:"泡 標準",height:12};
+}
+function foamRetentionLabel(s){
+  if(/すぐ消え|消えやすい|短め|短く|すぐに膜/.test(s.app)) return "泡持ち：短め";
+  if(/長く残|持ちがよい|持続|崩れにくい/.test(s.app)) return "泡持ち：長め";
+  return "泡持ち：標準";
 }
 function miniBeerIcon(s){
   const foam=foamProfile(s), foamColor=s.srm>=18?"#C9B490":"#F7F4EC";
