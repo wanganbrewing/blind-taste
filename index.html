@@ -55,6 +55,10 @@ h2{font-size:1.05rem;font-weight:700;margin:26px 0 10px}
 .narr details summary{cursor:pointer;color:var(--mute);font-family:var(--ui);font-size:.85rem;margin-bottom:.6em;list-style:none}
 .narr details summary::before{content:"▸ ";}
 .narr details[open] summary::before{content:"▾ ";}
+.exam-opening{margin:0 0 20px;padding:18px 16px 16px;background:linear-gradient(145deg,#f7f3e9,#fff 60%,#eee8dc);border:1px solid #bcb4a6;border-radius:14px;box-shadow:inset 0 0 0 4px rgba(255,255,255,.55)}
+.exam-opening .opening-label{display:block;margin:0 0 10px;font-family:var(--ui);font-size:.68rem;font-weight:800;letter-spacing:.18em;color:var(--mute)}
+.exam-opening .speech{width:fit-content;max-width:88%;margin:7px 0;padding:9px 15px;background:#fff;border:1.5px solid #4c4943;border-radius:999px;font-family:var(--serif);font-weight:650;line-height:1.65;box-shadow:2px 2px 0 rgba(76,73,67,.1)}
+.exam-opening .speech.right{margin-left:auto}
 
 /* candidate groups */
 .grp{margin:12px 0}
@@ -179,7 +183,7 @@ li{margin:3px 0}
   <div class="card">
     <h2 style="margin-top:0">モード</h2>
     <div class="seg" id="modeSeg" role="group" aria-label="モード">
-      <button data-v="test" aria-pressed="true">テスト</button>
+      <button data-v="test" aria-pressed="true">試験</button>
       <button data-v="study" aria-pressed="false">試験対策</button>
       <button data-v="origin" aria-pressed="false">香味の由来</button>
     </div>
@@ -210,7 +214,7 @@ li{margin:3px 0}
     </div>
 
     <div style="margin-top:22px">
-      <button class="btn amber" id="startBtn">テイスティングを始める</button>
+      <button class="btn amber" id="startBtn">試験を始める</button>
     </div>
   </div>
 
@@ -224,7 +228,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 3.4.0 · 2026-09-10</p>
+  <p class="version">Version 3.5.0 · 2026-09-11</p>
 </section>
 
 <!-- ===== STUDY ===== -->
@@ -241,7 +245,7 @@ li{margin:3px 0}
   <div id="studyGroupView"></div>
 
   <div class="row" style="margin-top:22px">
-    <button class="btn amber" id="studyTestBtn">このグループでテスト</button>
+    <button class="btn amber" id="studyTestBtn">このグループで試験</button>
     <button class="btn ghost" id="studyRandomBtn">別のグループ</button>
     <button class="btn ghost" id="studyHomeBtn">ホームへ</button>
   </div>
@@ -454,7 +458,7 @@ function renderHome(){
   $("countryOptions").classList.toggle("hidden", appMode!=="test");
   $("countryTitle").textContent = appMode==="test" ? "出題する国" : "学習する国";
   $("countryHint").textContent = appMode==="test" ? "選んだ国のスタイルだけが出題・選択肢に入ります。" : "選んだ国のスタイルだけを学習できます。";
-  $("startBtn").textContent = appMode==="test" ? "テイスティングを始める" : appMode==="study" ? "試験対策を始める" : "由来当てを始める";
+  $("startBtn").textContent = appMode==="test" ? "試験を始める" : appMode==="study" ? "試験対策を始める" : "由来当てを始める";
   $("diffHint").textContent = DIFF_HINT[diffMode];
   $("diffSeg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String(+b.dataset.v===diffMode)));
   $("scopeSeg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.v===testScope)));
@@ -551,6 +555,16 @@ function stepHtml(i, s){
   }
 }
 const LEAD = ["グラスを光にかざす。","鼻を近づける。","一口。","飲み込んで、少し待つ。","もう一口、今度は喉に意識を向けて。"];
+const EXAM_OPENINGS = [
+  ["……待ってください。","この一杯、色だけで既に物語が始まっています。"],
+  ["静かに……。","グラスの中で、まだ名乗らない風景が揺れています。"],
+  ["なるほど……。","光にかざした瞬間、最初の手がかりが姿を現しました。"],
+  ["これは……。","焦らずに。まずは、この色が語る声を聴きましょう。"],
+  ["目を逸らさないで。","泡の向こうに、このビールの生まれた土地が見えてきます。"]
+];
+function examOpeningHtml(lines){
+  return `<div class="exam-opening" aria-label="試験開始のテイスティングコメント"><span class="opening-label">TASTING SCENE</span><div class="speech">${lines[0]}</div><div class="speech right">${lines[1]}</div></div>`;
+}
 
 // ---------- glass ----------
 const SRM_HEX = {1:"#F8F4B4",2:"#F6F095",3:"#F2E56C",4:"#EEDB4D",5:"#E7C93A",6:"#E0B33F",7:"#D9A231",8:"#D1902A",9:"#C98126",10:"#C17322",11:"#B8651F",12:"#AF581B",13:"#A64E18",14:"#9C4415",15:"#933C12",16:"#88340F",17:"#7E2D0D",18:"#74270B",19:"#6A2209",20:"#611D08",22:"#4F1606",25:"#3B0F04",28:"#2A0B03",30:"#220903",35:"#150502",40:"#0B0201"};
@@ -578,7 +592,7 @@ function newQuestion(){
   const p = pool(); const s = p[Math.floor(Math.random()*p.length)];
   diff = diffMode===0 ? 1+Math.floor(Math.random()*3) : diffMode;
   const ax=["malt","yeast","hop"];
-  q = { s, options:optionPool(p,s,diff), step:0, cands:new Set(), stepScore:[], hide:{aroma:ax[Math.floor(Math.random()*3)], taste:ax[Math.floor(Math.random()*3)]} };
+  q = { s, options:optionPool(p,s,diff), step:0, cands:new Set(), stepScore:[], opening:EXAM_OPENINGS[Math.floor(Math.random()*EXAM_OPENINGS.length)], hide:{aroma:ax[Math.floor(Math.random()*3)], taste:ax[Math.floor(Math.random()*3)]} };
   drawGlass(s);
   show("quiz"); renderStep();
 }
@@ -593,6 +607,7 @@ function renderStep(){
   const st=$("stages"); st.innerHTML = STAGES.map((n,i)=>`<div class="${i<q.step?'done':i===q.step?'now':''}">${n}</div>`).join("");
   // narration: previous steps collapsed while narrowing; all hints expanded for the final answer
   let html="";
+  if(q.step===0) html += examOpeningHtml(q.opening);
   if(q.step>0 && q.step<5){
     html += `<details><summary>これまでのメモ</summary><div class="prev">${[...Array(q.step).keys()].map(i=>stepHtml(i,q.s)).join("")}</div></details>`;
   }
