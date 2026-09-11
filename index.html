@@ -25,7 +25,7 @@ h1{font-family:var(--serif);font-weight:600;font-size:2.2rem;letter-spacing:.06e
 .brand-lockup h1 span{color:var(--amber)}
 .brand-jp{margin:6px 0 3px;font-family:var(--serif);font-weight:600;letter-spacing:.18em;color:var(--ink2)}
 .brand-lockup .sub{margin:0;font-size:.88rem}
-.home-hero{position:relative;aspect-ratio:16/7;margin:0 0 20px;border-radius:16px;overflow:hidden;border:1px solid rgba(184,116,26,.35);background:#f5efe3 url("assets/tasting-guides-v1.png?v=3.8.0") center 33%/cover no-repeat;box-shadow:0 12px 32px rgba(28,34,38,.16)}
+.home-hero{position:relative;aspect-ratio:16/7;margin:0 0 20px;border-radius:16px;overflow:hidden;border:1px solid rgba(184,116,26,.35);background:#f5efe3 url("assets/tasting-guides-v1.jpg?v=4.0.0") center 33%/cover no-repeat;box-shadow:0 12px 32px rgba(28,34,38,.16)}
 .home-hero::after{content:"";position:absolute;inset:45% 0 0;background:linear-gradient(transparent,rgba(13,18,21,.72))}
 .home-hero-caption{position:absolute;z-index:1;left:12px;right:12px;bottom:10px;display:flex;justify-content:space-between;gap:10px;color:#fff;font-size:.72rem;font-weight:800;letter-spacing:.04em;text-shadow:0 1px 4px rgba(0,0,0,.9)}
 h2{font-size:1.05rem;font-weight:700;margin:26px 0 10px}
@@ -65,7 +65,12 @@ h2{font-size:1.05rem;font-weight:700;margin:26px 0 10px}
 .narr details summary::before{content:"▸ ";}
 .narr details[open] summary::before{content:"▾ ";}
 .exam-opening{margin:0 0 20px;padding:18px 16px 16px;background:linear-gradient(145deg,#f7f3e9,#fff 60%,#eee8dc);border:1px solid #bcb4a6;border-radius:14px;box-shadow:inset 0 0 0 4px rgba(255,255,255,.55)}
-.exam-cast{display:block;width:100%;aspect-ratio:3/2;background-color:#f5efe3;background-position:center;background-size:cover;background-repeat:no-repeat;margin:0 0 14px;border-radius:10px;border:1px solid rgba(76,73,67,.2)}
+.exam-cast{position:relative;display:block;width:100%;aspect-ratio:3/2;background-color:#f5efe3;background-position:center;background-size:cover;background-repeat:no-repeat;margin:0 0 14px;border-radius:10px;border:1px solid rgba(76,73,67,.2);overflow:hidden}
+.scene-beer{position:absolute;right:8px;bottom:8px;display:flex;align-items:center;gap:7px;padding:6px 9px;background:rgba(20,27,31,.82);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:10px;backdrop-filter:blur(4px)}
+.scene-glass{position:relative;display:inline-block;width:28px;height:40px;border:1.5px solid #dfe5e7;border-radius:2px 2px 7px 7px;overflow:hidden;background:#fff;flex:0 0 auto}
+.scene-liquid{position:absolute;inset:3px 2px 2px;border-radius:1px 1px 5px 5px}
+.scene-foam{position:absolute;left:2px;right:2px;top:3px;border-radius:5px 5px 3px 3px}
+.scene-beer-label{font-family:var(--ui);font-size:.66rem;font-weight:700;line-height:1.35;text-shadow:none}
 .exam-opening .opening-label{display:block;margin:0 0 10px;font-family:var(--ui);font-size:.68rem;font-weight:800;letter-spacing:.18em;color:var(--mute)}
 .exam-opening .speech{width:fit-content;max-width:88%;margin:7px 0;padding:9px 15px;background:#fff;border:1.5px solid #4c4943;border-radius:999px;font-family:var(--serif);font-weight:650;line-height:1.65;box-shadow:2px 2px 0 rgba(76,73,67,.1)}
 .exam-opening .speech.right{margin-left:auto}
@@ -234,14 +239,14 @@ li{margin:3px 0}
   <div id="scoringInfo">
   <h2>採点のしかた</h2>
   <div class="card note">
-    <p style="margin-top:0">ヒントは「見た目 → 香り → 味 → 後味 → アルコール感」の順に開きます。各段階で「まだ候補に残るスタイル」を選び、最後に国とスタイルを一つ確定します。</p>
+    <p style="margin-top:0">ヒントは「見た目 → 香り → 味 → 後味 → アルコール感」の順に開きます。最初は全スタイルが候補です。各段階で「違う」と判断したものを外し、最後に国とスタイルを一つ確定します。</p>
     <p>各段階は、正解を候補に残していれば得点。候補が少ないほど高得点（1つで12点、5つで4点、6つ以上で3点）。正解を候補から落とした段階は0点。判定は国10点・スタイル30点。満点100点。</p>
     <p style="margin-bottom:0">当てる力より「消去の精度」を鍛えるための配点です。</p>
   </div>
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 3.8.0 · 2026-09-11</p>
+  <p class="version">Version 4.0.0 · 2026-09-11</p>
 </section>
 
 <!-- ===== STUDY ===== -->
@@ -307,8 +312,8 @@ li{margin:3px 0}
   </div>
 
   <div id="candPane">
-    <h2 id="candTitle">候補に残すスタイル <span class="count" id="candCount"></span></h2>
-    <p class="hint">国名を押すと、その国の全スタイルをまとめて候補に残せます。国は複数選択できます。</p>
+    <h2 id="candTitle">候補（違うスタイルを外す） <span class="count" id="candCount"></span></h2>
+    <p class="hint">最初は全候補が選択済みです。国名を押すと、その国の全スタイルをまとめて外す・戻すことができます。</p>
     <div class="cands" id="cands"></div>
     <p class="hint" id="candHint"></p>
     <div class="row" style="margin-top:14px">
@@ -570,12 +575,12 @@ function stepHtml(i, s){
 const LEAD = ["グラスを光にかざす。","鼻を近づける。","一口。","飲み込んで、少し待つ。","もう一口、今度は喉に意識を向けて。"];
 const GUIDE_PORTRAITS = {
   ritsu:[
-    {name:"久世 律",role:"理論派",img:"assets/guide-ritsu-observe-v1.png?v=3.8.0",bubbleRight:true},
-    {name:"久世 律",role:"理論派",img:"assets/guide-ritsu-think-v1.png?v=3.8.0",bubbleRight:false}
+    {name:"久世 律",role:"理論派",img:"assets/guide-ritsu-observe-v1.jpg?v=4.0.0",bubbleRight:true},
+    {name:"久世 律",role:"理論派",img:"assets/guide-ritsu-think-v1.jpg?v=4.0.0",bubbleRight:false}
   ],
   akari:[
-    {name:"香月 灯",role:"感性派",img:"assets/guide-akari-aroma-v1.png?v=3.8.0",bubbleRight:false},
-    {name:"香月 灯",role:"感性派",img:"assets/guide-akari-discover-v1.png?v=3.8.0",bubbleRight:true}
+    {name:"香月 灯",role:"感性派",img:"assets/guide-akari-aroma-v1.jpg?v=4.0.0",bubbleRight:false},
+    {name:"香月 灯",role:"感性派",img:"assets/guide-akari-discover-v1.jpg?v=4.0.0",bubbleRight:true}
   ]
 };
 const GUIDE_LINES = [
@@ -595,9 +600,13 @@ function makeGuideSequence(){
     return {portrait,line:lines[who]};
   });
 }
-function guideMomentHtml(moment,stage){
+function sceneBeerBadge(s){
+  const foam=foamProfile(s), foamColor=s.srm>=18?"#C9B490":"#F7F4EC";
+  return `<div class="scene-beer" aria-label="今回の一杯：SRM ${srmInfo(s)}、${foam.label}"><span class="scene-glass" aria-hidden="true"><span class="scene-liquid" style="background:${srmHex(s.srm)}"></span><span class="scene-foam" style="height:${Math.max(5,Math.round(foam.height*.7))}px;background:${foamColor}"></span></span><span class="scene-beer-label">今回の一杯<br>SRM ${srmInfo(s)}・${foam.label}</span></div>`;
+}
+function guideMomentHtml(moment,stage,s){
   const p=moment.portrait;
-  return `<div class="exam-opening" aria-label="${stage}のテイスティングコメント"><div class="exam-cast" role="img" aria-label="${p.role}テイスターの${p.name}" style="background-image:url('${p.img}')"></div><span class="opening-label">TASTING SCENE · ${stage}</span><div class="speech ${p.bubbleRight?'right':''}"><small>${p.name}｜${p.role}</small>${moment.line}</div></div>`;
+  return `<div class="exam-opening" aria-label="${stage}のテイスティングコメント"><div class="exam-cast" role="img" aria-label="${p.role}テイスターの${p.name}" style="background-image:url('${p.img}')">${sceneBeerBadge(s)}</div><span class="opening-label">TASTING SCENE · ${stage}</span><div class="speech ${p.bubbleRight?'right':''}"><small>${p.name}｜${p.role}</small>${moment.line}</div></div>`;
 }
 
 // ---------- glass ----------
@@ -626,7 +635,8 @@ function newQuestion(){
   const p = pool(); const s = p[Math.floor(Math.random()*p.length)];
   diff = diffMode===0 ? 1+Math.floor(Math.random()*3) : diffMode;
   const ax=["malt","yeast","hop"];
-  q = { s, options:optionPool(p,s,diff), step:0, cands:new Set(), stepScore:[], guides:makeGuideSequence(), hide:{aroma:ax[Math.floor(Math.random()*3)], taste:ax[Math.floor(Math.random()*3)]} };
+  const options=optionPool(p,s,diff);
+  q = { s, options, step:0, cands:new Set(options.map(x=>x.id)), stepScore:[], guides:makeGuideSequence(), hide:{aroma:ax[Math.floor(Math.random()*3)], taste:ax[Math.floor(Math.random()*3)]} };
   drawGlass(s);
   show("quiz"); renderStep();
 }
@@ -640,7 +650,7 @@ function renderStep(){
   $("activeGroupTest").classList.toggle("hidden", !quizPoolIds);
   const st=$("stages"); st.innerHTML = STAGES.map((n,i)=>`<div class="${i<q.step?'done':i===q.step?'now':''}">${n}</div>`).join("");
   // narration: previous steps collapsed while narrowing; all hints expanded for the final answer
-  let html=guideMomentHtml(q.guides[q.step],STAGES[q.step]);
+  let html=guideMomentHtml(q.guides[q.step],STAGES[q.step],q.s);
   if(q.step>0 && q.step<5){
     html += `<details><summary>これまでのメモ</summary><div class="prev">${[...Array(q.step).keys()].map(i=>stepHtml(i,q.s)).join("")}</div></details>`;
   }
@@ -676,7 +686,7 @@ function renderCands(){
     g.appendChild(r); box.appendChild(g);
   });
   const n=q.cands.size; $("candCount").textContent = n?`（${n}）`:"";
-  $("candHint").textContent = q.step===0 ? "見た目だけで考えられるスタイルを、広めに残してください。" : "前回の候補から、この情報で消えるものを外してください（点線は前回残していたもの）。";
+  $("candHint").textContent = q.step===0 ? "見た目と合わないスタイルを外してください。迷うものは残して次のヒントへ。" : "新しい情報と合わないものを、前回の候補から外してください（点線は前回まで残っていた候補）。";
   $("nextBtn").disabled = n===0;
   $("nextBtn").textContent = q.step===4 ? "判定へ" : "次のヒントへ";
 }
