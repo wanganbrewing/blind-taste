@@ -19,6 +19,9 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
 .wrap{max-width:660px;margin:0 auto;padding:20px 16px 60px}
 h1{font-family:var(--serif);font-weight:600;font-size:2.2rem;letter-spacing:.06em;margin:8px 0 2px}
 .sub{color:var(--mute);margin:0 0 28px}
+.home-hero{position:relative;margin:0 0 20px;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:#f5efe3;box-shadow:0 10px 28px rgba(28,34,38,.1)}
+.home-hero img{display:block;width:100%;aspect-ratio:16/7;object-fit:cover;object-position:center 33%}
+.home-hero-caption{position:absolute;left:12px;right:12px;bottom:10px;display:flex;justify-content:space-between;gap:10px;color:#fff;font-size:.72rem;font-weight:800;letter-spacing:.04em;text-shadow:0 1px 4px rgba(0,0,0,.9)}
 h2{font-size:1.05rem;font-weight:700;margin:26px 0 10px}
 .card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -161,6 +164,7 @@ li{margin:3px 0}
   .glass{width:64px;height:100px}
   .narr{font-size:1.04rem}
   h1{font-size:1.9rem}
+  .home-hero img{aspect-ratio:16/9;object-position:center 32%}
   .cands{max-height:none;overflow:visible;padding-right:0}
   #candPane>.row .btn,#finalPane .btn,#result>.row .btn{width:100%}
   .compare-grid{grid-template-columns:1fr}
@@ -181,6 +185,7 @@ li{margin:3px 0}
 <section id="home">
   <h1>ビールテイスティングクイズ</h1>
   <p class="sub">香りと味から、ビールのスタイルや香味の由来を学ぶ</p>
+  <div class="home-hero"><img src="assets/tasting-guides-v1.png" alt="ビールを観察する久世律と、香りを確かめる香月灯"><div class="home-hero-caption"><span>久世 律｜理論派</span><span>香月 灯｜感性派</span></div></div>
 
   <div class="card">
     <h2 style="margin-top:0">モード</h2>
