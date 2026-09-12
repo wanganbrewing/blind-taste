@@ -64,6 +64,7 @@ h2{font-size:1.05rem;font-weight:700;margin:26px 0 10px}
 .narr .desc{color:var(--ink2);font-size:.85em;font-family:var(--ui)}
 .narr .prev{color:var(--mute);font-size:.98rem}
 .narr .scene{font-family:var(--serif);color:var(--ink);font-style:italic;border-left:3px solid var(--amber);padding:.15em 0 .15em .9em;margin:.2em 0 1em}
+.narr .ritsu-block{border-left:3px solid #155B75;padding:.15em 0 .15em .9em;margin:.2em 0 1em}.narr .ritsu-block p:last-child{margin-bottom:0}
 .narr details summary{cursor:pointer;color:var(--mute);font-family:var(--ui);font-size:.85rem;margin-bottom:.6em;list-style:none}
 .narr details summary::before{content:"▸ ";}
 .narr details[open] summary::before{content:"▾ ";}
@@ -275,7 +276,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 4.8.7 · 2026-09-12</p>
+  <p class="version">Version 4.8.8 · 2026-09-12</p>
 </section>
 
 <!-- ===== ORIGIN STORY ===== -->
@@ -588,7 +589,7 @@ async function trackPageView(){
   try{ if(sessionStorage.getItem(PAGE_VIEW_SENT)==="1") return; sessionStorage.setItem(PAGE_VIEW_SENT,"1"); }
   catch(e){ if(window.__beerSensePageViewSent) return; window.__beerSensePageViewSent=true; }
   const p=new URLSearchParams(location.search);
-  const payload={language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),entry_path:location.pathname.slice(0,100),app_version:"4.8.7"};
+  const payload={language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),entry_path:location.pathname.slice(0,100),app_version:"4.8.8"};
   try{
     const res=await fetch(`${SUPABASE_URL}/rest/v1/page_views`,{method:"POST",headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(payload),keepalive:true});
     if(!res.ok) throw new Error(String(res.status));
@@ -610,7 +611,7 @@ $("surveySubmit").disabled=true;
 $("surveyForm").onsubmit=async e=>{
   e.preventDefault(); const fd=new FormData(e.currentTarget), p=new URLSearchParams(location.search);
   if(isOwnerDevice()){ rememberSurvey(); return; }
-  const payload={profile_type:fd.get("profile_type"),purpose:fd.get("purpose"),experience:fd.get("experience"),language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),app_version:"4.8.7"};
+  const payload={profile_type:fd.get("profile_type"),purpose:fd.get("purpose"),experience:fd.get("experience"),language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),app_version:"4.8.8"};
   $("surveySubmit").disabled=true; $("surveyStatus").textContent=L("送信しています…","Sending…");
   try{
     const res=await fetch(`${SUPABASE_URL}/rest/v1/survey_responses`,{method:"POST",headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(payload)});
@@ -734,6 +735,11 @@ function ritsuLead(i){
   const en=["Start with the appearance.","Break the aroma into its parts.","Now examine the flavor structure.","Check the finish.","Finally, separate warmth from weight."];
   return (lang==="en"?en:ja)[i];
 }
+function ritsuBlock(content){ return `<div class="ritsu-block">${content}</div>`; }
+function orderedVoices(i,akari,ritsu){
+  const first=q?.guides?.[i]?.portrait?.name==="久世 律"?"ritsu":"akari";
+  return first==="akari"?ritsu+akari:akari+ritsu;
+}
 function englishTraits(s){
   const all=plainHint(`${s.app} ${s.aroma.malt} ${s.aroma.yeast} ${s.aroma.hop} ${s.taste.malt} ${s.taste.yeast} ${s.taste.hop} ${s.taste.body} ${s.after}`);
   const aroma=[];
@@ -748,11 +754,24 @@ function englishTraits(s){
 }
 function englishStep(i,s){
   const t=englishTraits(s), hazy=/濁|霞/.test(s.app), dark=s.srm>=18, amber=s.srm>=9;
-  if(i===0) return `<p class="scene">${voiceCredit("akari")}${dark?"Deep shadows gather at the rim of the glass.":amber?"Amber light shifts as the glass turns.":"A bright first impression invites a closer look."}</p><p>${voiceCredit("ritsu")}${ritsuLead(i)} ${hazy?"Hazy":"Clear"}, ${dark?"dark brown to black":amber?"amber to copper":"pale gold to gold"}; SRM ${srmInfo(s)}. ${foamRetentionLabel(s)}</p>`;
-  if(i===1) return `<p class="scene">${voiceCredit("akari")}The aroma begins to reveal the beer's origin.</p><p>${voiceCredit("ritsu")}${ritsuLead(i)} <span class="lbl">Aroma</span>${t.aroma}.</p>`;
-  if(i===2) return `<p class="scene">${voiceCredit("akari")}Flavor turns the aroma into structure.</p><p>${voiceCredit("ritsu")}${ritsuLead(i)} <span class="lbl">Flavor</span>${s.srm>=18?"Dark malt depth":s.srm>=9?"Toasty malt depth":"A clean, pale malt base"}, with ${s.ibu>=45?"firm":"low to moderate"} bitterness and a ${s.abv>=8?"full":"balanced"} body.</p>`;
-  if(i===3) return `<p class="scene">${voiceCredit("akari")}The finish leaves the final clue.</p><p>${voiceCredit("ritsu")}${ritsuLead(i)} ${/ドライ|切れ|すっと消|短い/.test(t.all)?"Dry and clean":"Rounded and lingering"}, with ${s.ibu>=45?"a pronounced bitter close":"a restrained bitter close"}.</p>`;
-  return `<p class="scene">${voiceCredit("akari")}Warmth and weight reveal the strength.</p><p>${voiceCredit("ritsu")}${ritsuLead(i)} ${s.abv>=8?"Pronounced warming alcohol and a full impression.":s.abv<=4.5?"Light alcohol presence and easy drinkability.":"Moderate, integrated alcohol warmth."} ABV ${abvInfo(s)}%.</p>`;
+  let akari,ritsu;
+  if(i===0){
+    akari=`<p class="scene">${voiceCredit("akari")}${dark?"Deep shadows gather at the rim of the glass.":amber?"Amber light shifts as the glass turns.":"A bright first impression invites a closer look."}</p>`;
+    ritsu=ritsuBlock(`<p>${voiceCredit("ritsu")}${ritsuLead(i)} ${hazy?"Hazy":"Clear"}, ${dark?"dark brown to black":amber?"amber to copper":"pale gold to gold"}; SRM ${srmInfo(s)}. ${foamRetentionLabel(s)}</p>`);
+  }else if(i===1){
+    akari=`<p class="scene">${voiceCredit("akari")}The aroma begins to reveal the beer's origin.</p>`;
+    ritsu=ritsuBlock(`<p>${voiceCredit("ritsu")}${ritsuLead(i)} <span class="lbl">Aroma</span>${t.aroma}.</p>`);
+  }else if(i===2){
+    akari=`<p class="scene">${voiceCredit("akari")}Flavor turns the aroma into structure.</p>`;
+    ritsu=ritsuBlock(`<p>${voiceCredit("ritsu")}${ritsuLead(i)} <span class="lbl">Flavor</span>${s.srm>=18?"Dark malt depth":s.srm>=9?"Toasty malt depth":"A clean, pale malt base"}, with ${s.ibu>=45?"firm":"low to moderate"} bitterness and a ${s.abv>=8?"full":"balanced"} body.</p>`);
+  }else if(i===3){
+    akari=`<p class="scene">${voiceCredit("akari")}The finish leaves the final clue.</p>`;
+    ritsu=ritsuBlock(`<p>${voiceCredit("ritsu")}${ritsuLead(i)} ${/ドライ|切れ|すっと消|短い/.test(t.all)?"Dry and clean":"Rounded and lingering"}, with ${s.ibu>=45?"a pronounced bitter close":"a restrained bitter close"}.</p>`);
+  }else{
+    akari=`<p class="scene">${voiceCredit("akari")}Warmth and weight reveal the strength.</p>`;
+    ritsu=ritsuBlock(`<p>${voiceCredit("ritsu")}${ritsuLead(i)} ${s.abv>=8?"Pronounced warming alcohol and a full impression.":s.abv<=4.5?"Light alcohol presence and easy drinkability.":"Moderate, integrated alcohol warmth."} ABV ${abvInfo(s)}%.</p>`);
+  }
+  return orderedVoices(i,akari,ritsu);
 }
 function sensoryScene(i,s){
   const all=plainHint(`${s.app} ${s.aroma.malt} ${s.aroma.yeast} ${s.aroma.hop} ${s.taste.malt} ${s.taste.yeast} ${s.taste.hop} ${s.taste.body} ${s.after}`);
@@ -784,15 +803,17 @@ function sensoryScene(i,s){
 }
 function stepHtml(i, s){
   if(lang==="en") return englishStep(i,s);
-  const scene=`<p class="scene">${voiceCredit("akari")}${sensoryScene(i,s)}</p>`;
-  const ritsu=`<p>${voiceCredit("ritsu")}${ritsuLead(i)}</p>`;
+  const akari=`<p class="scene">${voiceCredit("akari")}${sensoryScene(i,s)}</p>`;
+  const lead=`<p>${voiceCredit("ritsu")}${ritsuLead(i)}</p>`;
+  let ritsu="";
   switch(i){
-    case 0: return scene+`<p>${voiceCredit("ritsu")}${ritsuLead(i)} ${fmt(s.app)}</p>`;
-    case 1: return scene+ritsu+axesHtml("aroma", s.aroma);
-    case 2: return scene+ritsu+axesHtml("taste", s.taste) + `<p>${diff<3?'<span class="lbl">口当たり</span>':''}${fmt(s.taste.body)}</p>`;
-    case 3: return scene+`<p>${voiceCredit("ritsu")}${ritsuLead(i)} ${fmt(s.after)}</p>`;
-    case 4: return scene+`<p>${voiceCredit("ritsu")}${ritsuLead(i)} ${fmt(s.alcohol)}</p>`;
+    case 0: ritsu=ritsuBlock(`<p>${voiceCredit("ritsu")}${ritsuLead(i)} ${fmt(s.app)}</p>`); break;
+    case 1: ritsu=ritsuBlock(lead+axesHtml("aroma", s.aroma)); break;
+    case 2: ritsu=ritsuBlock(lead+axesHtml("taste", s.taste) + `<p>${diff<3?'<span class="lbl">口当たり</span>':''}${fmt(s.taste.body)}</p>`); break;
+    case 3: ritsu=ritsuBlock(`<p>${voiceCredit("ritsu")}${ritsuLead(i)} ${fmt(s.after)}</p>`); break;
+    case 4: ritsu=ritsuBlock(`<p>${voiceCredit("ritsu")}${ritsuLead(i)} ${fmt(s.alcohol)}</p>`); break;
   }
+  return orderedVoices(i,akari,ritsu);
 }
 const LEAD = lang==="en"?["Hold the glass to the light.","Bring the glass to your nose.","Take a sip.","Swallow, then wait.","Take another sip and notice the warmth."]:["グラスを光にかざす。","鼻を近づける。","一口。","飲み込んで、少し待つ。","もう一口、今度は喉に意識を向けて。"];
 const GUIDE_PORTRAITS = {
