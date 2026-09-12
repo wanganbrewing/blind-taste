@@ -276,7 +276,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 4.8.9 · 2026-09-12</p>
+  <p class="version">Version 4.8.10 · 2026-09-12</p>
 </section>
 
 <!-- ===== ORIGIN STORY ===== -->
@@ -450,6 +450,11 @@ const savedLang=localStorage.getItem("beerSenseLang");
 const browserLang=(navigator.languages?.[0]||navigator.language||"ja").toLowerCase();
 let lang=requestedLang==="ja"||requestedLang==="en"?requestedLang:savedLang==="ja"||savedLang==="en"?savedLang:browserLang.startsWith("ja")?"ja":"en";
 const L=(ja,en)=>lang==="en"?en:ja;
+const metricLabel=kind=>({
+  srm:L("SRM (色)","SRM (color)"),
+  abv:L("ABV (alc%)","ABV (alc%)"),
+  ibu:L("IBU (苦み)","IBU (bitterness)")
+})[kind];
 const styleLabel=s=>lang==="en"?(I18N.styles[s.id]||s.id.replaceAll("_"," ")):s.style;
 const countryLabel=c=>lang==="en"?(I18N.countries[c]||c):c;
 const STAGES = lang==="en"?["Appearance","Aroma","Flavor","Finish","Alcohol","Identify"]:["見た目","香り","味","後味","アルコール","判定"];
@@ -589,7 +594,7 @@ async function trackPageView(){
   try{ if(sessionStorage.getItem(PAGE_VIEW_SENT)==="1") return; sessionStorage.setItem(PAGE_VIEW_SENT,"1"); }
   catch(e){ if(window.__beerSensePageViewSent) return; window.__beerSensePageViewSent=true; }
   const p=new URLSearchParams(location.search);
-  const payload={language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),entry_path:location.pathname.slice(0,100),app_version:"4.8.9"};
+  const payload={language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),entry_path:location.pathname.slice(0,100),app_version:"4.8.10"};
   try{
     const res=await fetch(`${SUPABASE_URL}/rest/v1/page_views`,{method:"POST",headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(payload),keepalive:true});
     if(!res.ok) throw new Error(String(res.status));
@@ -611,7 +616,7 @@ $("surveySubmit").disabled=true;
 $("surveyForm").onsubmit=async e=>{
   e.preventDefault(); const fd=new FormData(e.currentTarget), p=new URLSearchParams(location.search);
   if(isOwnerDevice()){ rememberSurvey(); return; }
-  const payload={profile_type:fd.get("profile_type"),purpose:fd.get("purpose"),experience:fd.get("experience"),language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),app_version:"4.8.9"};
+  const payload={profile_type:fd.get("profile_type"),purpose:fd.get("purpose"),experience:fd.get("experience"),language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),app_version:"4.8.10"};
   $("surveySubmit").disabled=true; $("surveyStatus").textContent=L("送信しています…","Sending…");
   try{
     const res=await fetch(`${SUPABASE_URL}/rest/v1/survey_responses`,{method:"POST",headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(payload)});
@@ -758,7 +763,7 @@ function englishStep(i,s,akariFirst=false){
   let akari,ritsu;
   if(i===0){
     akari=`<p class="scene">${voiceCredit("akari")}${dark?"Deep shadows gather at the rim of the glass.":amber?"Amber light shifts as the glass turns.":"A bright first impression invites a closer look."}</p>`;
-    ritsu=ritsuBlock(`<p>${voiceCredit("ritsu")}${ritsuLead(i)} ${hazy?"Hazy":"Clear"}, ${dark?"dark brown to black":amber?"amber to copper":"pale gold to gold"}; SRM ${srmInfo(s)}. ${foamRetentionLabel(s)}</p>`);
+    ritsu=ritsuBlock(`<p>${voiceCredit("ritsu")}${ritsuLead(i)} ${hazy?"Hazy":"Clear"}, ${dark?"dark brown to black":amber?"amber to copper":"pale gold to gold"}; ${metricLabel("srm")} ${srmInfo(s)}. ${foamRetentionLabel(s)}</p>`);
   }else if(i===1){
     akari=`<p class="scene">${voiceCredit("akari")}The aroma begins to reveal the beer's origin.</p>`;
     ritsu=ritsuBlock(`<p>${voiceCredit("ritsu")}${ritsuLead(i)} <span class="lbl">Aroma</span>${t.aroma}.</p>`);
@@ -770,7 +775,7 @@ function englishStep(i,s,akariFirst=false){
     ritsu=ritsuBlock(`<p>${voiceCredit("ritsu")}${ritsuLead(i)} ${/ドライ|切れ|すっと消|短い/.test(t.all)?"Dry and clean":"Rounded and lingering"}, with ${s.ibu>=45?"a pronounced bitter close":"a restrained bitter close"}.</p>`);
   }else{
     akari=`<p class="scene">${voiceCredit("akari")}Warmth and weight reveal the strength.</p>`;
-    ritsu=ritsuBlock(`<p>${voiceCredit("ritsu")}${ritsuLead(i)} ${s.abv>=8?"Pronounced warming alcohol and a full impression.":s.abv<=4.5?"Light alcohol presence and easy drinkability.":"Moderate, integrated alcohol warmth."} ABV ${abvInfo(s)}%.</p>`);
+    ritsu=ritsuBlock(`<p>${voiceCredit("ritsu")}${ritsuLead(i)} ${s.abv>=8?"Pronounced warming alcohol and a full impression.":s.abv<=4.5?"Light alcohol presence and easy drinkability.":"Moderate, integrated alcohol warmth."} ${metricLabel("abv")} ${abvInfo(s)}%.</p>`);
   }
   return orderedVoices(i,akari,ritsu,akariFirst);
 }
@@ -892,7 +897,7 @@ function drawGlass(s){
   const dark = s.srm>=18;
   $("foam").setAttribute("height", low ? 6 : (/山|盛り上が|厚/.test(s.app) ? 26 : 16));
   $("foam").setAttribute("fill", dark ? "#C9B490" : "url(#foamG)");
-  $("glassMeta").innerHTML=`SRM ${srmInfo(s)}<br>${foamRetentionLabel(s)}`;
+  $("glassMeta").innerHTML=`${metricLabel("srm")} ${srmInfo(s)}<br>${foamRetentionLabel(s)}`;
 }
 
 // ---------- quiz flow ----------
@@ -1033,20 +1038,20 @@ function comparisonValue(s, kind){
   if(lang==="en"){
     const t=englishTraits(s), f=fermentationInfo(s);
     if(kind==="fermentation") return `${f.label} — ${f.note}`;
-    if(kind==="appearance") return `${/濁|霞/.test(s.app)?"Hazy":"Clear"}; SRM ${srmInfo(s)}; ${foamRetentionLabel(s)}.`;
+    if(kind==="appearance") return `${/濁|霞/.test(s.app)?"Hazy":"Clear"}; ${metricLabel("srm")} ${srmInfo(s)}; ${foamRetentionLabel(s)}.`;
     if(kind==="aroma") return `${t.aroma}.`;
     if(kind==="taste") return `${s.srm>=18?"Dark malt depth":s.srm>=9?"Toasty malt":"Pale malt"}, ${s.ibu>=45?"firm":"restrained"} bitterness, ${s.abv>=8?"full":"balanced"} body.`;
     if(kind==="after") return `${/ドライ|切れ|すっと消|短い/.test(t.all)?"Dry, clean finish":"Rounded, lingering finish"}.`;
-    if(kind==="strength") return `${abvInfo(s)}% ABV — ${s.abv>=8?"warming and full":s.abv<=4.5?"light and easy-drinking":"moderate warmth"}.`;
+    if(kind==="strength") return `${metricLabel("abv")} ${abvInfo(s)}% — ${s.abv>=8?"warming and full":s.abv<=4.5?"light and easy-drinking":"moderate warmth"}.`;
     if(kind==="ingredients") return ingredientInfo(s);
-    return `SRM ${srmInfo(s)}, IBU ${ibuInfo(s)}, ABV ${abvInfo(s)}%; ${t.aroma}.`;
+    return `${metricLabel("srm")} ${srmInfo(s)}, ${metricLabel("ibu")} ${ibuInfo(s)}, ${metricLabel("abv")} ${abvInfo(s)}%; ${t.aroma}.`;
   }
   if(kind==="fermentation"){ const f=fermentationInfo(s); return `${f.label}　${f.note}`; }
   if(kind==="appearance") return studyPlain(s.app);
   if(kind==="aroma") return studyPlain(`${s.aroma.malt} ${s.aroma.yeast} ${s.aroma.hop}`);
   if(kind==="taste") return studyPlain(`${s.taste.malt} ${s.taste.yeast} ${s.taste.hop} ${s.taste.body}`);
   if(kind==="after") return studyPlain(s.after);
-  if(kind==="strength") return `${abvInfo(s)}%　${studyPlain(s.alcohol)}`;
+  if(kind==="strength") return `${metricLabel("abv")} ${abvInfo(s)}%　${studyPlain(s.alcohol)}`;
   if(kind==="ingredients") return ingredientInfo(s);
   return s.markers.join("／");
 }
@@ -1070,11 +1075,11 @@ const COUNTRY_STUDY_GUIDES = [
 ];
 const STUDY_GROUPS = [
   ...COUNTRY_STUDY_GUIDES.map(x=>({id:`country_${x.country}`,name:`国別：${x.country}`,note:x.lead,country:x.country,overview:x,category:"国別の全体像"})),
-  {id:"color_straw", name:"色別：極淡色・麦わら色", note:"SRM 1〜3。非常に淡い色のスタイルを、軽さ・苦味・香りで比較。", srm:[1,3],category:"色別"},
-  {id:"color_gold", name:"色別：金色", note:"SRM 4〜6。金色のスタイルを、麦芽の厚み・ホップ・発酵香で比較。", srm:[4,6],category:"色別"},
-  {id:"color_amber", name:"色別：琥珀色・銅色", note:"SRM 7〜14。琥珀から銅色のスタイルを、カラメル感・果実香・苦味で比較。", srm:[7,14],category:"色別"},
-  {id:"color_brown", name:"色別：褐色", note:"SRM 15〜24。褐色のスタイルを、パン・ナッツ・チョコ・焙煎感で比較。", srm:[15,24],category:"色別"},
-  {id:"color_black", name:"色別：濃褐色・黒色", note:"SRM 25〜40。濃褐色から黒色のスタイルを、焙煎強度・甘さ・ボディで比較。", srm:[25,40],category:"色別"},
+  {id:"color_straw", name:"色別：極淡色・麦わら色", note:"SRM (色) 1〜3。非常に淡い色のスタイルを、軽さ・苦味・香りで比較。", srm:[1,3],category:"色別"},
+  {id:"color_gold", name:"色別：金色", note:"SRM (色) 4〜6。金色のスタイルを、麦芽の厚み・ホップ・発酵香で比較。", srm:[4,6],category:"色別"},
+  {id:"color_amber", name:"色別：琥珀色・銅色", note:"SRM (色) 7〜14。琥珀から銅色のスタイルを、カラメル感・果実香・苦味で比較。", srm:[7,14],category:"色別"},
+  {id:"color_brown", name:"色別：褐色", note:"SRM (色) 15〜24。褐色のスタイルを、パン・ナッツ・チョコ・焙煎感で比較。", srm:[15,24],category:"色別"},
+  {id:"color_black", name:"色別：濃褐色・黒色", note:"SRM (色) 25〜40。濃褐色から黒色のスタイルを、焙煎強度・甘さ・ボディで比較。", srm:[25,40],category:"色別"},
   {id:"pale_lager", name:"淡色ラガー", note:"麦芽の丸さ、ホップの強さ、軽快さの違いを比較。", ids:["helles","pils","czech_pils","export","american_lager","american_light_lager","mexican_lager","rice_lager","alsatian_pils","italian_pils"]},
   {id:"amber_lager", name:"琥珀色ラガー", note:"トースト、カラメル、甘さ、ドライさの境界を比較。", ids:["vienna","marzen","festbier","polotmave","kellerbier","cal_common"]},
   {id:"american_lagers", name:"アメリカンスタイル・ラガー", note:"軽さ、色、ライ麦のスパイス感、副原料の違いを比較。", ids:["american_light_lager","american_lager","american_amber_lager","american_dark_lager","rye_lager"]},
@@ -1170,11 +1175,11 @@ function foamRetentionLabel(s){
 }
 function miniBeerIcon(s){
   const foam=foamProfile(s), foamColor=s.srm>=18?"#C9B490":"#F7F4EC";
-  return `<div class="mini-profile" aria-label="SRM ${srmInfo(s)}、IBU ${ibuInfo(s)}、ABV ${abvInfo(s)}%、${foam.label}"><span class="mini-glass" aria-hidden="true"><span class="mini-liquid" style="background:${srmHex(s.srm)}"></span><span class="mini-foam" style="height:${foam.height}px;background:${foamColor}"></span></span><span class="mini-caption">SRM ${srmInfo(s)}　・　IBU ${ibuInfo(s)}<br>ABV ${abvInfo(s)}%　・　${foam.label}</span></div>`;
+  return `<div class="mini-profile" aria-label="${metricLabel("srm")} ${srmInfo(s)}、${metricLabel("ibu")} ${ibuInfo(s)}、${metricLabel("abv")} ${abvInfo(s)}%、${foam.label}"><span class="mini-glass" aria-hidden="true"><span class="mini-liquid" style="background:${srmHex(s.srm)}"></span><span class="mini-foam" style="height:${foam.height}px;background:${foamColor}"></span></span><span class="mini-caption">${metricLabel("srm")} ${srmInfo(s)}　・　${metricLabel("ibu")} ${ibuInfo(s)}<br>${metricLabel("abv")} ${abvInfo(s)}%　・　${foam.label}</span></div>`;
 }
 function answerBeerIcon(s){
   const foam=foamProfile(s), foamColor=s.srm>=18?"#C9B490":"#F7F4EC";
-  return `<div class="answer-beer-icon" role="img" aria-label="${styleLabel(s)} color and foam: SRM ${srmInfo(s)}, ${foam.label}"><span class="beer-liquid" style="background:${srmHex(s.srm)}"></span><span class="beer-foam" style="height:${Math.round(foam.height*1.6)}px;background:${foamColor}"></span></div>`;
+  return `<div class="answer-beer-icon" role="img" aria-label="${styleLabel(s)} color and foam: ${metricLabel("srm")} ${srmInfo(s)}, ${foam.label}"><span class="beer-liquid" style="background:${srmHex(s.srm)}"></span><span class="beer-foam" style="height:${Math.round(foam.height*1.6)}px;background:${foamColor}"></span></div>`;
 }
 function groupStyles(g){
   if(g.country) return S.filter(s=>s.country===g.country);
@@ -1188,11 +1193,11 @@ function renderStudyGroup(g){
   const styles=groupStyles(g);
   $("studyGroupNote").textContent=studyGroupNote(g,styles.length);
   const parts=lang==="en"?[["Appearance","appearance"],["Aroma","aroma"],["Flavor & Body","taste"],["Finish","after"],["Strength & Warmth","strength"],["Ingredients","ingredients"],["Fermentation","fermentation"]]:[["外観","appearance"],["香り","aroma"],["味・口当たり","taste"],["後味","after"],["度数・温感","strength"],["原材料","ingredients"],["発酵方式","fermentation"]];
-  const overview=g.overview?(lang==="en"?`<div class="country-overview"><span class="eyebrow">COUNTRY OVERVIEW</span><h2>${countryLabel(g.overview.country)}</h2><p class="country-lead">Compare the country's major styles through fermentation, malt, hops, aroma, and finish.</p><ul><li>Start with fermentation and color.</li><li>Then compare malt depth, hop expression, and yeast character.</li><li>Use SRM, IBU, and ABV to separate close styles.</li></ul></div>`:`<div class="country-overview"><span class="eyebrow">国別の大きな特徴</span><h2>${g.overview.country}</h2><p class="country-lead">${g.overview.lead}</p><ul>${g.overview.points.map(p=>`<li>${p}</li>`).join("")}</ul></div>`):"";
+  const overview=g.overview?(lang==="en"?`<div class="country-overview"><span class="eyebrow">COUNTRY OVERVIEW</span><h2>${countryLabel(g.overview.country)}</h2><p class="country-lead">Compare the country's major styles through fermentation, malt, hops, aroma, and finish.</p><ul><li>Start with fermentation and color.</li><li>Then compare malt depth, hop expression, and yeast character.</li><li>Use ${metricLabel("srm")}, ${metricLabel("ibu")}, and ${metricLabel("abv")} to separate close styles.</li></ul></div>`:`<div class="country-overview"><span class="eyebrow">国別の大きな特徴</span><h2>${g.overview.country}</h2><p class="country-lead">${g.overview.lead}</p><ul>${g.overview.points.map(p=>`<li>${p}</li>`).join("")}</ul></div>`):"";
   $("studyGroupView").innerHTML=`
     ${overview}
     <div class="key-differences"><span class="eyebrow">${L("試験で迷ったら最初にここを見る","START HERE WHEN STYLES LOOK SIMILAR")}</span><h2>${L("見分け方：違いのポイント","How to Tell Them Apart")}</h2><p class="note">${L("各スタイルを判定する決め手を、暗記用にまとめています。","Key identification clues for each style.")}</p>${featureCards(styles,"markers")}</div>
-    <div class="group-part"><h2>${studyGroupLabel(g)} — ${L("スタイル別まとめ","Style Summary")}</h2><div class="style-summary-list">${styles.map(s=>`<article class="style-summary"><span class="country-badge">${countryLabel(s.country)}</span><h3>${styleLabel(s)} ${sourceBadge(s)}</h3><p class="style-meta">SRM ${srmInfo(s)}　・　IBU ${ibuInfo(s)}　・　ABV ${abvInfo(s)}%</p><div class="group-swatch" style="background:${srmHex(s.srm)}"></div>${parts.map(([label,key])=>`<div class="style-fact"><b>${label}</b><p>${comparisonValue(s,key)}</p></div>`).join("")}${brandHtml(s)}</article>`).join("")}</div><p class="hint">${L("SRM・IBU・ABVは提供教材のスタイルガイド値を優先した一般的な範囲です。","SRM, IBU, and ABV show typical style-guide ranges.")}</p></div>`;
+    <div class="group-part"><h2>${studyGroupLabel(g)} — ${L("スタイル別まとめ","Style Summary")}</h2><div class="style-summary-list">${styles.map(s=>`<article class="style-summary"><span class="country-badge">${countryLabel(s.country)}</span><h3>${styleLabel(s)} ${sourceBadge(s)}</h3><p class="style-meta">${metricLabel("srm")} ${srmInfo(s)}　・　${metricLabel("ibu")} ${ibuInfo(s)}　・　${metricLabel("abv")} ${abvInfo(s)}%</p><div class="group-swatch" style="background:${srmHex(s.srm)}"></div>${parts.map(([label,key])=>`<div class="style-fact"><b>${label}</b><p>${comparisonValue(s,key)}</p></div>`).join("")}${brandHtml(s)}</article>`).join("")}</div><p class="hint">${L("SRM (色)・IBU (苦み)・ABV (alc%)は提供教材のスタイルガイド値を優先した一般的な範囲です。","SRM (color), IBU (bitterness), and ABV (alc%) show typical style-guide ranges.")}</p></div>`;
   window.scrollTo({top:0,behavior:"auto"});
 }
 function setupStudyGroups(selected){
@@ -1273,7 +1278,7 @@ function renderResult(fin, finPts, total, g){
   $("answerBeer").innerHTML = answerBeerIcon(s);
   $("ansLine").innerHTML = `${styleLabel(s)} ${sourceBadge(s)}<small>${countryLabel(s.country)}${lang==="ja"?` ／ ${s.region}`:""}</small>` + (fin.style?"":`<small>${L("あなたの答え","Your answer")}: ${countryLabel(g.c)} / ${g.st||"—"}</small>`);
   const f=fermentationInfo(s);
-  $("ansFacts").innerHTML = `<span class="tag">SRM ${srmInfo(s)}</span><span class="tag">IBU ${ibuInfo(s)}</span><span class="tag">ABV ${abvInfo(s)}%</span><span class="tag">${f.label}</span><p class="note">${L("SRM・IBU・ABVは提供教材のスタイルガイド値を優先した一般的な範囲です。","SRM, IBU, and ABV show typical style-guide ranges.")}</p><p class="note">${L("一般的な原材料","Typical ingredients")}: ${ingredientInfo(s)}</p>${brandHtml(s)}`;
+  $("ansFacts").innerHTML = `<span class="tag">${metricLabel("srm")} ${srmInfo(s)}</span><span class="tag">${metricLabel("ibu")} ${ibuInfo(s)}</span><span class="tag">${metricLabel("abv")} ${abvInfo(s)}%</span><span class="tag">${f.label}</span><p class="note">${L("SRM (色)・IBU (苦み)・ABV (alc%)は提供教材のスタイルガイド値を優先した一般的な範囲です。","SRM (color), IBU (bitterness), and ABV (alc%) show typical style-guide ranges.")}</p><p class="note">${L("一般的な原材料","Typical ingredients")}: ${ingredientInfo(s)}</p>${brandHtml(s)}`;
   const rows = q.stepScore.map((x,i)=>{
     const lostAt = !x.kept;
     return `<tr><td>${STAGES[i]}<br><span class="note">${lostAt?L("正解を候補から外した","Correct style removed"):L("候補 "+x.n+"件に残した",`Kept among ${x.n} choices`)}</span></td><td>${x.pts}</td></tr>`;
