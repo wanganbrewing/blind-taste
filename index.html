@@ -276,7 +276,7 @@ li{margin:3px 0}
   </div>
 
   <div id="statsBox"></div>
-  <p class="version">Version 4.8.8 · 2026-09-12</p>
+  <p class="version">Version 4.8.9 · 2026-09-12</p>
 </section>
 
 <!-- ===== ORIGIN STORY ===== -->
@@ -589,7 +589,7 @@ async function trackPageView(){
   try{ if(sessionStorage.getItem(PAGE_VIEW_SENT)==="1") return; sessionStorage.setItem(PAGE_VIEW_SENT,"1"); }
   catch(e){ if(window.__beerSensePageViewSent) return; window.__beerSensePageViewSent=true; }
   const p=new URLSearchParams(location.search);
-  const payload={language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),entry_path:location.pathname.slice(0,100),app_version:"4.8.8"};
+  const payload={language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),entry_path:location.pathname.slice(0,100),app_version:"4.8.9"};
   try{
     const res=await fetch(`${SUPABASE_URL}/rest/v1/page_views`,{method:"POST",headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(payload),keepalive:true});
     if(!res.ok) throw new Error(String(res.status));
@@ -611,7 +611,7 @@ $("surveySubmit").disabled=true;
 $("surveyForm").onsubmit=async e=>{
   e.preventDefault(); const fd=new FormData(e.currentTarget), p=new URLSearchParams(location.search);
   if(isOwnerDevice()){ rememberSurvey(); return; }
-  const payload={profile_type:fd.get("profile_type"),purpose:fd.get("purpose"),experience:fd.get("experience"),language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),app_version:"4.8.8"};
+  const payload={profile_type:fd.get("profile_type"),purpose:fd.get("purpose"),experience:fd.get("experience"),language:lang,source:(p.get("utm_source")||"").slice(0,100),medium:(p.get("utm_medium")||"").slice(0,100),campaign:(p.get("utm_campaign")||"").slice(0,100),app_version:"4.8.9"};
   $("surveySubmit").disabled=true; $("surveyStatus").textContent=L("送信しています…","Sending…");
   try{
     const res=await fetch(`${SUPABASE_URL}/rest/v1/survey_responses`,{method:"POST",headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(payload)});
@@ -736,7 +736,8 @@ function ritsuLead(i){
   return (lang==="en"?en:ja)[i];
 }
 function ritsuBlock(content){ return `<div class="ritsu-block">${content}</div>`; }
-function orderedVoices(i,akari,ritsu){
+function orderedVoices(i,akari,ritsu,akariFirst=false){
+  if(akariFirst) return akari+ritsu;
   const first=q?.guides?.[i]?.portrait?.name==="久世 律"?"ritsu":"akari";
   return first==="akari"?ritsu+akari:akari+ritsu;
 }
@@ -752,7 +753,7 @@ function englishTraits(s){
   if(/酸|野生|革|馬小屋/.test(all)) aroma.push("tart or rustic fermentation");
   return {all,aroma:aroma.length?aroma.join(", "):"subtle malt and fermentation character"};
 }
-function englishStep(i,s){
+function englishStep(i,s,akariFirst=false){
   const t=englishTraits(s), hazy=/濁|霞/.test(s.app), dark=s.srm>=18, amber=s.srm>=9;
   let akari,ritsu;
   if(i===0){
@@ -771,7 +772,7 @@ function englishStep(i,s){
     akari=`<p class="scene">${voiceCredit("akari")}Warmth and weight reveal the strength.</p>`;
     ritsu=ritsuBlock(`<p>${voiceCredit("ritsu")}${ritsuLead(i)} ${s.abv>=8?"Pronounced warming alcohol and a full impression.":s.abv<=4.5?"Light alcohol presence and easy drinkability.":"Moderate, integrated alcohol warmth."} ABV ${abvInfo(s)}%.</p>`);
   }
-  return orderedVoices(i,akari,ritsu);
+  return orderedVoices(i,akari,ritsu,akariFirst);
 }
 function sensoryScene(i,s){
   const all=plainHint(`${s.app} ${s.aroma.malt} ${s.aroma.yeast} ${s.aroma.hop} ${s.taste.malt} ${s.taste.yeast} ${s.taste.hop} ${s.taste.body} ${s.after}`);
@@ -801,8 +802,8 @@ function sensoryScene(i,s){
   }
   return s.abv>=8 ? "胸の奥に小さな暖炉がともる。熱は声を荒らげず、ゆっくりと身体の内側へ広がっていく。" : s.abv<=4.5 ? "羽が触れるほどの軽い温度。それでも存在は消えず、涼しい風のように輪郭を残す。" : "穏やかな温度が喉を通り、全体を一つに結ぶ。強さではなく、調和として感じる温かさだ。";
 }
-function stepHtml(i, s){
-  if(lang==="en") return englishStep(i,s);
+function stepHtml(i, s, akariFirst=false){
+  if(lang==="en") return englishStep(i,s,akariFirst);
   const akari=`<p class="scene">${voiceCredit("akari")}${sensoryScene(i,s)}</p>`;
   const lead=`<p>${voiceCredit("ritsu")}${ritsuLead(i)}</p>`;
   let ritsu="";
@@ -813,7 +814,7 @@ function stepHtml(i, s){
     case 3: ritsu=ritsuBlock(`<p>${voiceCredit("ritsu")}${ritsuLead(i)} ${fmt(s.after)}</p>`); break;
     case 4: ritsu=ritsuBlock(`<p>${voiceCredit("ritsu")}${ritsuLead(i)} ${fmt(s.alcohol)}</p>`); break;
   }
-  return orderedVoices(i,akari,ritsu);
+  return orderedVoices(i,akari,ritsu,akariFirst);
 }
 const LEAD = lang==="en"?["Hold the glass to the light.","Bring the glass to your nose.","Take a sip.","Swallow, then wait.","Take another sip and notice the warmth."]:["グラスを光にかざす。","鼻を近づける。","一口。","飲み込んで、少し待つ。","もう一口、今度は喉に意識を向けて。"];
 const GUIDE_PORTRAITS = {
@@ -928,7 +929,7 @@ function renderStep(){
     html += `<details><summary>${L("これまでのメモ","Previous Notes")}</summary><div class="prev">${[...Array(q.step).keys()].map(i=>stepHtml(i,q.s)).join("")}</div></details>`;
   }
   if(q.step<5) html += `<p style="color:var(--mute);font-size:.95rem">${LEAD[q.step]}</p>` + stepHtml(q.step,q.s);
-  else { html += `<div class="prev">${[...Array(5).keys()].map(i=>`<p style="color:var(--mute);font-size:.85rem;margin-bottom:.2em">${STAGES[i]}</p>`+stepHtml(i,q.s)).join("")}</div><p><b>${L("さて。国とスタイルは？","Now identify the country and style.")}</b></p>`; }
+  else { html += `<div class="prev">${[...Array(5).keys()].map(i=>`<p style="color:var(--mute);font-size:.85rem;margin-bottom:.2em">${STAGES[i]}</p>`+stepHtml(i,q.s,true)).join("")}</div><p><b>${L("さて。国とスタイルは？","Now identify the country and style.")}</b></p>`; }
   $("narr").innerHTML = html;
 
   if(q.step<5){ $("candPane").classList.remove("hidden"); $("finalPane").classList.add("hidden"); renderCands(); }
