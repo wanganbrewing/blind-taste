@@ -578,6 +578,7 @@ const store = {
 // ---------- anonymous first-visit survey ----------
 const SUPABASE_URL="https://utjonxifozzjkfadnpmc.supabase.co";
 const SUPABASE_KEY="sb_publishable_Vu-Ey5Q5YnwY-ZAbbSktgg_QNcWoAaL";
+const SURVEY_ENABLED=false; // Temporarily pause the introductory survey.
 const SURVEY_DONE="beerSenseSurveyV1";
 const OWNER_DEVICE="beerSenseOwnerDevice";
 const PAGE_VIEW_SENT="beerSensePageViewV1";
@@ -603,6 +604,7 @@ async function trackPageView(){
 function closeSurvey(){ $("surveyOverlay").classList.add("hidden"); document.body.style.overflow=""; }
 function rememberSurvey(){ try{localStorage.setItem(SURVEY_DONE,"1");}catch(e){} closeSurvey(); }
 function showSurveyOnce(){
+  if(!SURVEY_ENABLED){ closeSurvey(); return; }
   if(isOwnerDevice()) return;
   let done=false; try{done=localStorage.getItem(SURVEY_DONE)==="1";}catch(e){}
   if(!done){ $("surveyOverlay").classList.remove("hidden"); document.body.style.overflow="hidden"; }
